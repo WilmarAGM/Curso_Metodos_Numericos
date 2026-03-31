@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Método SOR — Profe W</title>
+<link rel="stylesheet" href="../css/global.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  header p.subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.75;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    padding: 13px 22px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active {
+    color: var(--paper);
+    font-weight: 600;
+  }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition {
+    border-left: 4px solid var(--forest);
+  }
+  .card.theorem {
+    border-left: 4px solid var(--slate);
+    background: #f8f9fb;
+  }
+  .card.example-card {
+    border-left: 4px solid var(--rust);
+  }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 0.97em;
+  }
+
+  /* ─── Details / reveal ─── */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  summary {
+    background: var(--cream);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--slate);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--rust);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px;
+    background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Profe W tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-profe .icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Classification grid ─── */
+  .omega-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .omega-card {
+    border-radius: 4px;
+    padding: 18px 16px;
+    text-align: center;
+    border: 1px solid var(--rule);
+  }
+  .omega-card .range {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .omega-card .name { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+  .omega-card .desc { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+  .omega-card.sub { background: #eef4fb; border-color: #b0c8e4; }
+  .omega-card.sub .range { color: #2a5fa8; }
+  .omega-card.exact { background: #edf7ef; border-color: #89c49a; }
+  .omega-card.exact .range { color: var(--forest); }
+  .omega-card.over { background: #fef3ec; border-color: #e8a878; }
+  .omega-card.over .range { color: var(--rust); }
+
+  /* ─── Step-by-step ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ─── Interactive Quiz ─── */
+  .quiz-question {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 26px;
+    margin: 18px 0;
+  }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 10px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.93rem;
+    color: var(--ink);
+    transition: all 0.15s;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong .opt-label { background: #c0392b; color: white; }
+  .feedback {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .feedback .icon { font-size: 1rem; margin-right: 6px; }
+
+  /* ─── Progress ─── */
+  .quiz-score {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 24px;
+    border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Convergence visualization ─── */
+  canvas { width: 100%; border: 1px solid var(--rule); border-radius: 4px; display: block; background: white; }
+
+  /* ─── Input range ─── */
+  .slider-row {
+    display: flex; gap: 16px; align-items: center;
+    background: var(--cream); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 14px 18px; margin: 12px 0;
+  }
+  .slider-row label { font-size: 0.9rem; white-space: nowrap; min-width: 60px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--rust); }
+  .slider-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem; font-weight: 600;
+    color: var(--rust); min-width: 50px; text-align: right;
+  }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center;
+    padding: 28px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* ─── Convergence table ─── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: var(--slate); color: white; padding: 9px 14px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--rule); }
+  tr:nth-child(even) td { background: var(--cream); }
+  tr.highlight-row td { background: #fffbde; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .omega-grid { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 14px; }
+    header { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-topbar" aria-label="Navegación principal"><a class="site-back" href="../index.html">⬅ Volver al inicio</a></nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Material Interactivo</div>
+  <h1>Método de Relajación<br><em>S.O.R.</em></h1>
+  <p class="subtitle">Successive Over-Relaxation — Convergencia acelerada de sistemas lineales</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Introducción</button>
+  <button onclick="showSection('concepts',this)">② Conceptos Clave</button>
+  <button onclick="showSection('examples',this)">③ Ejemplos Resueltos</button>
+  <button onclick="showSection('activity',this)">④ Actividades</button>
+  <button onclick="showSection('conclusion',this)">⑤ Conclusión</button>
+</nav>
+
+<!-- ══════════════ SECCIÓN 1: INTRODUCCIÓN ══════════════ -->
+<main>
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>Introducción al Método S.O.R.</h2>
+
+  <p>Los <strong>métodos de relajación</strong> nacen de la necesidad de acelerar la convergencia en los métodos iterativos clásicos para resolver sistemas lineales \(Ax = b\). El método S.O.R. (<em>Successive Over-Relaxation</em>) generaliza el método de Gauss-Seidel mediante la introducción de un parámetro de relajación \(\omega > 0\).</p>
+
+  <div class="card definition">
+    <div class="card-label">Idea central</div>
+    <p>Se busca que la <strong>sucesión de residuales</strong> \(\{r^{(k)}\}_{k=1}^{\infty}\), donde</p>
+    <div class="math-block">$$r^{(k)} = Ax^{(k)} - b$$</div>
+    <p>converja hacia \(\mathbf{0}\) de forma <em>significativamente más rápida</em> que los métodos clásicos, controlando la velocidad con el parámetro \(\omega\).</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Consejo del Profe W</div>
+      <p>Piensa en \(\omega\) como el "volante" de una bicicleta: si giras poco (\(\omega < 1\)), avanzas despacio pero con control; si giras justo (\(\omega = 1\)), es Gauss-Seidel; si giras más (\(\omega > 1\)), aceleras… siempre que no te pases de \(\omega = 2\).</p>
+    </div>
+  </div>
+
+  <h3>Clasificación según \(\omega\)</h3>
+  <div class="omega-grid">
+    <div class="omega-card sub">
+      <div class="range">\(0 < \omega < 1\)</div>
+      <div class="name">Sub-relajación</div>
+      <div class="desc">Converge más lento, pero puede estabilizar sistemas difíciles</div>
+    </div>
+    <div class="omega-card exact">
+      <div class="range">\(\omega = 1\)</div>
+      <div class="name">Gauss-Seidel</div>
+      <div class="desc">Caso particular del método S.O.R.</div>
+    </div>
+    <div class="omega-card over">
+      <div class="range">\(1 < \omega < 2\)</div>
+      <div class="name">Sobre-relajación</div>
+      <div class="desc">Mayor velocidad de convergencia cuando \(\omega\) es óptimo</div>
+    </div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">⚠️</div>
+    <div class="tip-body">
+      <div class="tip-label">Condición necesaria de convergencia</div>
+      <p>Para que el método pueda converger, el parámetro <strong>debe satisfacer</strong> \(0 < \omega < 2\). Valores fuera de este rango garantizan divergencia.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: CONCEPTOS CLAVE ══════════════ -->
+<div class="section" id="concepts">
+  <h2><span class="section-num">Sección 02</span>Conceptos Clave</h2>
+
+  <h3>2.1 Fórmula escalar de iteración</h3>
+  <p>Partiendo de la ecuación escalar de Gauss-Seidel y ponderando con el parámetro \(\omega\):</p>
+  <div class="math-block">
+    $$x_i^{(k+1)} = (1-\omega)\,x_i^{(k)} + \omega\!\left(\frac{b_i}{a_{i,i}} - \frac{1}{a_{i,i}}\sum_{j=1}^{i-1}a_{i,j}x_j^{(k+1)} - \frac{1}{a_{i,i}}\sum_{j=i+1}^{n}a_{i,j}x_j^{(k)}\right)$$
+  </div>
+  <p>para \(i = 1, \ldots, n\).</p>
+
+  <details>
+    <summary>¿Cómo se interpreta esta fórmula?</summary>
+    <p>La fórmula combina <strong>dos estimaciones</strong>:</p>
+    <ul style="margin-left: 18px; margin-top: 8px; line-height: 2;">
+      <li><strong>\((1-\omega)\,x_i^{(k)}\):</strong> una fracción del valor anterior (memoria del paso previo)</li>
+      <li><strong>\(\omega \cdot(\ldots)\):</strong> la corrección de Gauss-Seidel multiplicada por \(\omega\)</li>
+    </ul>
+    <p style="margin-top: 10px;">Cuando \(\omega = 1\) el primer término desaparece y recuperamos exactamente Gauss-Seidel.</p>
+  </details>
+
+  <h3>2.2 Construcción matricial</h3>
+  <p>Descomponemos \(A = D - L - U\) donde \(D\) es la diagonal, \(L\) la triangular inferior estricta con signo negativo y \(U\) la triangular superior estricta con signo negativo. El desarrollo es:</p>
+
+  <div class="card">
+    <div class="card-label">Derivación paso a paso</div>
+    <div class="math-block">
+      $$\begin{align}
+      (D - L - U)\,x &= b \\[4pt]
+      \omega(D - L - U)\,x &= \omega b \\[4pt]
+      \omega(D - L - U)\,x + Dx - Dx &= \omega b \\[4pt]
+      (D - \omega L)\,x &= \bigl[(1-\omega)D + \omega U\bigr]x + \omega b \\[8pt]
+      \boxed{x = (D-\omega L)^{-1}\bigl[(1-\omega)D+\omega U\bigr]x + \omega(D-\omega L)^{-1}b}
+      \end{align}$$
+    </div>
+  </div>
+
+  <p>Definimos:</p>
+  <div class="math-block">
+    $$T_\omega := (D-\omega L)^{-1}\bigl[(1-\omega)D+\omega U\bigr], \qquad c_\omega := \omega(D-\omega L)^{-1}b$$
+  </div>
+  <p>La <strong>sucesión matricial</strong> del método S.O.R. es:</p>
+  <div class="math-block">
+    $$x^{(k+1)} = T_\omega\, x^{(k)} + c_\omega$$
+  </div>
+
+  <h3>2.3 Teorema de convergencia</h3>
+  <div class="card theorem">
+    <div class="card-label">Teorema 1 — Condición necesaria</div>
+    <p>Si \(a_{i,i} \neq 0\) para \(i = 1,\ldots,n\), entonces:</p>
+    <div class="math-block">$$\rho(T_\omega) \geq |\omega - 1|$$</div>
+    <p>Para converger necesitamos \(\rho(T_\omega) < 1\), lo que impone obligatoriamente \(|\omega - 1| < 1\), es decir:</p>
+    <div class="math-block">$$0 < \omega < 2$$</div>
+  </div>
+
+  <details>
+    <summary>¿Por qué implica \(0 &lt; \omega &lt; 2\)?</summary>
+    <p>De \(|\omega - 1| < 1\):</p>
+    <div class="math-block">
+      $$\begin{align}
+      -1 &< \omega - 1 < 1 \\
+      0 &< \omega < 2 \quad \checkmark
+      \end{align}$$
+    </div>
+    <p>Esta condición es <em>necesaria</em> pero no suficiente para la convergencia del método.</p>
+  </details>
+
+  <h3>2.4 Matrices especiales y \(\omega\) óptimo</h3>
+  <div class="card definition">
+    <div class="card-label">Definición — Matriz definida positiva</div>
+    <p>Una matriz \(A \in \mathbb{R}^{n\times n}\) es <strong>definida positiva</strong> si es simétrica (\(A = A^T\)) y además \(y^T A y > 0\) para todo \(y \in \mathbb{R}^n\), \(y \neq \mathbf{0}\).</p>
+  </div>
+  <div class="card definition">
+    <div class="card-label">Definición — Matriz tridiagonal</div>
+    <p>Una matriz \(A\) es <strong>tridiagonal</strong> si tiene ancho de banda 3, con entradas no nulas únicamente en la diagonal principal, una superdiagonal y una subdiagonal.</p>
+    <div class="math-block">
+      $$A = \begin{pmatrix} a_{1,1} & a_{1,2} & 0 & \cdots & 0 \\ a_{2,1} & a_{2,2} & a_{2,3} & & \vdots \\ 0 & \ddots & \ddots & \ddots & 0 \\ \vdots & & a_{n-1,n-2} & a_{n-1,n-1} & a_{n-1,n} \\ 0 & \cdots & 0 & a_{n,n-1} & a_{n,n} \end{pmatrix}$$
+    </div>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema 2 — Convergencia especial y \(\omega\) óptimo</div>
+    <p>Si \(A\) es <strong>simétrica definida positiva y tridiagonal</strong>, entonces Jacobi y Gauss-Seidel convergen y además:</p>
+    <div class="math-block">$$\rho(T_{GS}) = [\rho(T_J)]^2 < 1$$</div>
+    <p>El valor óptimo de \(\omega\) que maximiza la velocidad de convergencia es:</p>
+    <div class="math-block">$$\omega_{opt} = \frac{2}{1 + \sqrt{1 - [\rho(T_J)]^2}}$$</div>
+    <p>y en ese caso el radio espectral del método S.O.R. óptimo es:</p>
+    <div class="math-block">$$\rho(T_{\omega_{opt}}) = \omega_{opt} - 1$$</div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Consejo del Profe W</div>
+      <p>El Teorema 2 es la joya del método: si tu matriz cumple las condiciones, <em>siempre</em> puedes calcular \(\omega_{opt}\) y obtener la convergencia más rápida posible con S.O.R. Memoriza la fórmula de \(\omega_{opt}\).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: EJEMPLOS RESUELTOS ══════════════ -->
+<div class="section" id="examples">
+  <h2><span class="section-num">Sección 03</span>Ejemplos Resueltos</h2>
+
+  <!-- EJEMPLO 1 -->
+  <div class="card example-card">
+    <div class="card-label">Ejemplo 1 — Matriz no simétrica</div>
+    <p>Dado el sistema \(Ax = b\):</p>
+    <div class="math-block">
+      $$\begin{cases} 4x_1 + 7x_2 - x_3 = 1 \\ 2x_1 - 4x_2 - 3x_3 = -1 \\ -x_1 + 3x_2 - 5x_3 = 4 \end{cases}$$
+    </div>
+    <p>Analizar la convergencia del método S.O.R. para <strong>dos valores de \(\omega\)</strong>:</p>
+  </div>
+
+  <details>
+    <summary>Ver solución completa — Ejemplo 1</summary>
+    <div>
+      <h3 style="margin-top:0">Identificación de la matriz</h3>
+      <div class="math-block">
+        $$A = \begin{pmatrix} 4 & 7 & -1 \\ 2 & -4 & -3 \\ -1 & 3 & -5 \end{pmatrix}, \quad b = \begin{pmatrix} 1 \\ -1 \\ 4 \end{pmatrix}$$
+      </div>
+      <p>La matriz <strong>no es simétrica</strong> (\(A \neq A^T\)), por lo que el Teorema 2 <em>no aplica</em>. Se deben probar valores de \(\omega\) directamente calculando el radio espectral \(\rho(T_\omega)\).</p>
+
+      <h3>Caso 1: \(\omega_1 = \tfrac{3}{2}\)</h3>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span>Se construyen \(D\), \(L\) y \(U\) a partir de \(A = D - L - U\).</span></li>
+        <li><span class="step-num">2</span><span>Se calcula \(T_{\omega_1} = (D - \omega_1 L)^{-1}\bigl[(1-\omega_1)D + \omega_1 U\bigr]\).</span></li>
+        <li><span class="step-num">3</span><span>Se computan los valores propios de \(T_{\omega_1}\) y se obtiene el radio espectral.</span></li>
+      </ul>
+      <div class="math-block">
+        $$\rho(T_{\omega_1}) \approx 3.4209 > 1$$
+      </div>
+      <div class="tip-profe" style="margin:12px 0 0;">
+        <div class="icon">❌</div>
+        <div class="tip-body">
+          <div class="tip-label">Conclusión</div>
+          <p>Como \(\rho(T_{\omega_1}) > 1\), la sucesión <strong>no converge</strong> para ningún vector inicial \(x^{(0)}\).</p>
+        </div>
+      </div>
+
+      <h3>Caso 2: \(\omega_2 = \tfrac{1}{2}\)</h3>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span>Se construyen nuevamente \(D\), \(L\) y \(U\) (son los mismos).</span></li>
+        <li><span class="step-num">2</span><span>Se calcula \(T_{\omega_2} = (D - \omega_2 L)^{-1}\bigl[(1-\omega_2)D + \omega_2 U\bigr]\).</span></li>
+        <li><span class="step-num">3</span><span>Se obtiene el radio espectral de \(T_{\omega_2}\).</span></li>
+      </ul>
+      <div class="math-block">
+        $$\rho(T_{\omega_2}) \approx 0.5458 < 1$$
+      </div>
+      <div class="tip-profe" style="margin:12px 0 0;">
+        <div class="icon">✅</div>
+        <div class="tip-body">
+          <div class="tip-label">Conclusión</div>
+          <p>Como \(\rho(T_{\omega_2}) < 1\), la sucesión <strong>converge para todo \(x^{(0)}\)</strong>. El valor \(\omega_2 = \tfrac{1}{2}\) corresponde a sub-relajación (más conservador, pero efectivo aquí).</p>
+        </div>
+      </div>
+
+      <h3>Lección del Ejemplo 1</h3>
+      <p>Para matrices <strong>no simétricas</strong>, la elección de \(\omega\) es crítica y no se puede calcular \(\omega_{opt}\) con la fórmula del Teorema 2. Hay que explorar numéricamente o usar heurísticas.</p>
+    </div>
+  </details>
+
+  <!-- EJEMPLO 2 -->
+  <div class="card example-card" style="margin-top: 30px;">
+    <div class="card-label">Ejemplo 2 — Matriz simétrica definida positiva (cálculo de \(\omega_{opt}\))</div>
+    <p>Dado el sistema con:</p>
+    <div class="math-block">
+      $$A = \begin{pmatrix} 4 & -1 & 0 & 0 \\ -1 & 4 & -1 & 0 \\ 0 & -1 & 4 & -1 \\ 0 & 0 & -1 & 4 \end{pmatrix}, \quad b = \begin{pmatrix} 5 \\ -3 \\ 8 \\ 13 \end{pmatrix}$$
+    </div>
+    <p>Calcular \(\omega_{opt}\) y comparar iteraciones requeridas para una tolerancia de \(10^{-8}\).</p>
+  </div>
+
+  <details>
+    <summary>Ver solución completa — Ejemplo 2</summary>
+    <div>
+      <h3 style="margin-top:0">Paso 1: Verificar las condiciones del Teorema 2</h3>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span><strong>¿Es simétrica?</strong> Sí: \(a_{1,2} = a_{2,1} = -1\), \(a_{2,3} = a_{3,2} = -1\), \(a_{3,4} = a_{4,3} = -1\). Por tanto \(A = A^T\). ✓</span></li>
+        <li><span class="step-num">2</span><span><strong>¿Es definida positiva?</strong> Como es simétrica tridiagonal con diagonal dominante (\(4 > 2\cdot1\)), todos sus valores propios son positivos. ✓</span></li>
+        <li><span class="step-num">3</span><span><strong>¿Es tridiagonal?</strong> Sí: sólo tiene entradas no nulas en la diagonal principal y las dos diagonales adyacentes. ✓</span></li>
+      </ul>
+      <p>Se cumplen todas las condiciones del <strong>Teorema 2</strong>. Podemos calcular \(\omega_{opt}\).</p>
+
+      <h3>Paso 2: Radio espectral de Jacobi</h3>
+      <p>Para esta matriz tridiagonal, la matriz de iteración de Jacobi es:</p>
+      <div class="math-block">
+        $$T_J = D^{-1}(L+U) = \frac{1}{4}\begin{pmatrix} 0 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 0 & 1 & 0 & 1 \\ 0 & 0 & 1 & 0 \end{pmatrix}$$
+      </div>
+      <p>Calculando los valores propios de \(T_J\), se obtiene:</p>
+      <div class="math-block">
+        $$\rho(T_J) \approx 0.4045$$
+      </div>
+
+      <h3>Paso 3: Cálculo de \(\omega_{opt}\)</h3>
+      <div class="math-block">
+        $$\begin{align}
+        \omega_{opt} &= \frac{2}{1 + \sqrt{1 - [\rho(T_J)]^2}} \\[8pt]
+        &= \frac{2}{1 + \sqrt{1 - [0.4045]^2}} \\[8pt]
+        &= \frac{2}{1 + \sqrt{1 - 0.1636}} \\[8pt]
+        &= \frac{2}{1 + \sqrt{0.8364}} \\[8pt]
+        &= \frac{2}{1 + 0.9146} \\[8pt]
+        &= \frac{2}{1.9146} \\[8pt]
+        &\approx \boxed{1.04464}
+        \end{align}$$
+      </div>
+
+      <h3>Paso 4: Radio espectral con \(\omega_{opt}\)</h3>
+      <div class="math-block">
+        $$\rho(T_{\omega_{opt}}) = \omega_{opt} - 1 \approx 1.04464 - 1 = 0.04464$$
+      </div>
+      <p>Esto es <em>mucho menor</em> que \(\rho(T_{GS}) = [\rho(T_J)]^2 \approx 0.1636\), explicando la dramática aceleración.</p>
+
+      <h3>Comparación de convergencia (tolerancia \(10^{-8}\))</h3>
+      <table>
+        <thead>
+          <tr><th>Método</th><th>\(\omega\)</th><th>\(\rho(T_\omega)\)</th><th>Iteraciones</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Gauss-Seidel (S.O.R. con \(\omega=1\))</td><td>\(1\)</td><td>\(\approx 0.1636\)</td><td>50</td></tr>
+          <tr class="highlight-row"><td>S.O.R. Óptimo</td><td>\(\approx 1.04464\)</td><td>\(\approx 0.04464\)</td><td>20</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip-profe" style="margin-top: 14px;">
+        <div class="icon">🎓</div>
+        <div class="tip-body">
+          <div class="tip-label">Consejo del Profe W</div>
+          <p>¡Con \(\omega_{opt} \approx 1.04464\) necesitamos <strong>40% menos iteraciones</strong> que Gauss-Seidel! La diferencia puede ser aún más espectacular en sistemas grandes. Siempre conviene calcular \(\omega_{opt}\) cuando la matriz cumple las condiciones del Teorema 2.</p>
+        </div>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: ACTIVIDADES ══════════════ -->
+<div class="section" id="activity">
+  <h2><span class="section-num">Sección 04</span>Actividades Interactivas</h2>
+
+  <h3>4.1 Preguntas de Verificación</h3>
+
+  <!-- Q1 -->
+  <div class="quiz-question" id="q1">
+    <p class="q">1. ¿Cuál es la condición necesaria sobre \(\omega\) para garantizar la posibilidad de convergencia del método S.O.R.?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(1,'a','b')"><span class="opt-label">A</span>\(\omega > 0\) cualquiera</button>
+      <button class="opt-btn" onclick="checkQ(1,'b','b')"><span class="opt-label">B</span>\(0 < \omega < 2\)</button>
+      <button class="opt-btn" onclick="checkQ(1,'c','b')"><span class="opt-label">C</span>\(\omega = 1\)</button>
+      <button class="opt-btn" onclick="checkQ(1,'d','b')"><span class="opt-label">D</span>\(1 < \omega < 2\)</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-question" id="q2">
+    <p class="q">2. ¿A qué método clásico equivale S.O.R. cuando \(\omega = 1\)?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(2,'a','b')"><span class="opt-label">A</span>Método de Jacobi</button>
+      <button class="opt-btn" onclick="checkQ(2,'b','b')"><span class="opt-label">B</span>Método de Gauss-Seidel</button>
+      <button class="opt-btn" onclick="checkQ(2,'c','b')"><span class="opt-label">C</span>Método de eliminación de Gauss</button>
+      <button class="opt-btn" onclick="checkQ(2,'d','b')"><span class="opt-label">D</span>Método de la potencia</button>
+    </div>
+    <div class="feedback" id="fb2"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-question" id="q3">
+    <p class="q">3. Si \(\rho(T_J) = 0.6\) para una matriz simétrica definida positiva y tridiagonal, ¿cuál es \(\rho(T_{GS})\)?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(3,'a','c')"><span class="opt-label">A</span>\(0.6\)</button>
+      <button class="opt-btn" onclick="checkQ(3,'b','c')"><span class="opt-label">B</span>\(0.3\)</button>
+      <button class="opt-btn" onclick="checkQ(3,'c','c')"><span class="opt-label">C</span>\(0.36\)</button>
+      <button class="opt-btn" onclick="checkQ(3,'d','c')"><span class="opt-label">D</span>\(0.6^{1/2} \approx 0.775\)</button>
+    </div>
+    <div class="feedback" id="fb3"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="quiz-question" id="q4">
+    <p class="q">4. ¿Qué relación establece el Teorema 2 entre los radios espectrales de Jacobi y Gauss-Seidel para matrices simétricas definidas positivas y tridiagonales?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(4,'a','a')"><span class="opt-label">A</span>\(\rho(T_{GS}) = [\rho(T_J)]^2\)</button>
+      <button class="opt-btn" onclick="checkQ(4,'b','a')"><span class="opt-label">B</span>\(\rho(T_{GS}) = \rho(T_J)/2\)</button>
+      <button class="opt-btn" onclick="checkQ(4,'c','a')"><span class="opt-label">C</span>\(\rho(T_{GS}) = \rho(T_J)\)</button>
+      <button class="opt-btn" onclick="checkQ(4,'d','a')"><span class="opt-label">D</span>\(\rho(T_{GS}) = \sqrt{\rho(T_J)}\)</button>
+    </div>
+    <div class="feedback" id="fb4"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="quiz-question" id="q5">
+    <p class="q">5. En el Ejemplo 1 del PDF, ¿con cuál valor de \(\omega\) converge el método?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(5,'a','b')"><span class="opt-label">A</span>\(\omega = 3/2\), pues \(\rho \approx 3.42 < 1\)</button>
+      <button class="opt-btn" onclick="checkQ(5,'b','b')"><span class="opt-label">B</span>\(\omega = 1/2\), pues \(\rho \approx 0.55 < 1\)</button>
+      <button class="opt-btn" onclick="checkQ(5,'c','b')"><span class="opt-label">C</span>Ambos valores convergen</button>
+      <button class="opt-btn" onclick="checkQ(5,'d','b')"><span class="opt-label">D</span>Ninguno de los dos converge</button>
+    </div>
+    <div class="feedback" id="fb5"></div>
+  </div>
+
+  <div class="quiz-score" id="quizScore" style="display:none">
+    <div>
+      <div class="score-label">Puntaje Final</div>
+      <div style="font-size:0.85rem; opacity:0.7; margin-top:4px; font-family:'JetBrains Mono',monospace">Preguntas respondidas correctamente</div>
+    </div>
+    <div class="score-val" id="scoreVal">—</div>
+  </div>
+
+  <!-- 4.2 EXPLORADOR INTERACTIVO -->
+  <h3 style="margin-top: 36px;">4.2 Explorador de \(\omega_{opt}\)</h3>
+  <p>Ajusta el radio espectral de Jacobi \(\rho(T_J)\) y observa cómo cambia el \(\omega_{opt}\) calculado.</p>
+
+  <div class="slider-row">
+    <label>\(\rho(T_J)\)</label>
+    <input type="range" id="rhoSlider" min="0.01" max="0.99" step="0.01" value="0.4045" oninput="updateOmega()">
+    <span class="slider-val" id="rhoVal">0.4045</span>
+  </div>
+
+  <div class="card" id="omegaResult" style="text-align:center; padding: 20px;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:8px;">RESULTADO</div>
+    <div id="omegaDisplay" style="font-size:1.1rem;"></div>
+  </div>
+
+  <canvas id="convergenceChart" height="220"></canvas>
+  <p style="text-align:center; font-size:0.8rem; color:var(--muted); margin-top:6px;">Comparación de \(\rho(T_\omega)\) vs \(\omega \in (0,2)\). La línea roja marca \(\omega_{opt}\).</p>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: CONCLUSIÓN ══════════════ -->
+<div class="section" id="conclusion">
+  <h2><span class="section-num">Sección 05</span>Conclusión</h2>
+
+  <p>El método S.O.R. es una herramienta poderosa en el análisis numérico para la resolución iterativa de sistemas lineales. Su efectividad depende crucialmente de la elección del parámetro \(\omega\).</p>
+
+  <div class="card">
+    <div class="card-label">Resumen de puntos clave</div>
+    <ul class="steps">
+      <li><span class="step-num">1</span><span><strong>Generalización:</strong> S.O.R. generaliza Gauss-Seidel mediante el parámetro \(\omega\). Para \(\omega=1\) recuperamos exactamente Gauss-Seidel.</span></li>
+      <li><span class="step-num">2</span><span><strong>Condición necesaria:</strong> Se requiere \(0 < \omega < 2\) para que la convergencia sea posible (Teorema 1).</span></li>
+      <li><span class="step-num">3</span><span><strong>Caso especial:</strong> Para matrices simétricas definidas positivas y tridiagonales, el Teorema 2 garantiza convergencia y permite calcular \(\omega_{opt}\) de forma explícita.</span></li>
+      <li><span class="step-num">4</span><span><strong>Impacto del \(\omega_{opt}\):</strong> En el Ejemplo 2, el uso de \(\omega_{opt} \approx 1.045\) redujo el número de iteraciones de 50 a 20, un <em>ahorro del 60%</em>.</span></li>
+      <li><span class="step-num">5</span><span><strong>Matrices no simétricas:</strong> La elección de \(\omega\) es delicada y debe verificarse numéricamente calculando \(\rho(T_\omega)\).</span></li>
+    </ul>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Mensaje final del Profe W</div>
+      <p>El método S.O.R. ilustra un principio fundamental en métodos numéricos: <em>un parámetro bien elegido puede transformar dramáticamente la eficiencia de un algoritmo</em>. Cuando trabajes con sistemas grandes y estructurados, siempre pregúntate: ¿puedo calcular \(\omega_{opt}\)? Si la respuesta es sí, úsalo sin dudar.</p>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <div class="math-block" style="display:inline-block; padding: 20px 36px;">
+      $$\omega_{opt} = \frac{2}{1 + \sqrt{1 - [\rho(T_J)]^2}}$$
+    </div>
+    <p style="font-size:0.85rem; color:var(--muted); margin-top:8px; font-style:italic;">La fórmula más importante del método S.O.R.</p>
+  </div>
+</div>
+
+</main>
+
+<footer>Material elaborado por Profe W · Análisis Numérico · Método S.O.R.</footer>
+
+<script>
+// ─── Tab navigation ───
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  // Re-render MathJax on new section
+  if (window.MathJax) MathJax.typesetPromise();
+  if (id === 'activity') setTimeout(drawChart, 300);
+}
+
+// ─── Quiz ───
+const quizState = { answered: {}, correct: 0 };
+const messages = {
+  correct: [
+    "¡Correcto! Muy bien razonado.",
+    "¡Exacto! Eso es análisis numérico.",
+    "¡Perfecto! Vas dominando el S.O.R.",
+    "¡Excelente! El Profe W está orgulloso."
+  ],
+  wrong: [
+    "No es correcto. Revisa las definiciones.",
+    "Casi, pero no es la opción correcta. Relee la sección teórica.",
+    "Incorrecto. Consulta los teoremas del material."
+  ]
+};
+
+function checkQ(qNum, chosen, correct) {
+  if (quizState.answered[qNum]) return;
+  quizState.answered[qNum] = true;
+
+  const container = document.getElementById('q' + qNum);
+  const btns = container.querySelectorAll('.opt-btn');
+  const letters = ['a','b','c','d'];
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (letters[i] === correct) btn.classList.add('correct');
+    else if (letters[i] === chosen && chosen !== correct) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('fb' + qNum);
+  fb.classList.add('show');
+  const isCorrect = chosen === correct;
+  fb.classList.add(isCorrect ? 'ok' : 'err');
+  const pool = messages[isCorrect ? 'correct' : 'wrong'];
+  fb.innerHTML = `<span class="icon">${isCorrect ? '✅' : '❌'}</span> ${pool[Math.floor(Math.random()*pool.length)]}`;
+
+  if (isCorrect) quizState.correct++;
+  if (Object.keys(quizState.answered).length === 5) showFinalScore();
+}
+
+function showFinalScore() {
+  const sc = document.getElementById('quizScore');
+  sc.style.display = 'flex';
+  document.getElementById('scoreVal').textContent = quizState.correct + '/5';
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+// ─── Omega explorer ───
+function updateOmega() {
+  const rho = parseFloat(document.getElementById('rhoSlider').value);
+  document.getElementById('rhoVal').textContent = rho.toFixed(4);
+  const denom = 1 + Math.sqrt(1 - rho * rho);
+  const omOpt = 2 / denom;
+  const rhoOpt = omOpt - 1;
+  const rhoGS = rho * rho;
+  document.getElementById('omegaDisplay').innerHTML =
+    `\\[\\omega_{opt} = \\frac{2}{1+\\sqrt{1-${rho.toFixed(4)}^2}} \\approx ${omOpt.toFixed(5)}, \\qquad \\rho(T_{\\omega_{opt}}) = ${rhoOpt.toFixed(5)}\\]<br>
+     <span style="font-size:0.9rem; color:var(--muted);">Gauss-Seidel necesitaría \\(\\rho(T_{GS}) = ${rhoGS.toFixed(5)}\\)</span>`;
+  if (window.MathJax) MathJax.typesetPromise([document.getElementById('omegaDisplay')]);
+  drawChart();
+}
+
+// ─── Convergence chart ───
+function drawChart() {
+  const canvas = document.getElementById('convergenceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth, H = 220;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  const rho = parseFloat(document.getElementById('rhoSlider').value);
+  const denom = 1 + Math.sqrt(1 - rho * rho);
+  const omOpt = 2 / denom;
+
+  const pad = { l: 48, r: 20, t: 20, b: 36 };
+  const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+
+  // Grid
+  ctx.strokeStyle = '#e8e2d4'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (i / 4) * ph;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#7a6f63'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ph); ctx.lineTo(pad.l + pw, pad.t + ph); ctx.stroke();
+
+  // Labels y-axis
+  ctx.fillStyle = '#7a6f63'; ctx.font = '11px JetBrains Mono, monospace'; ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = 1 - i * 0.25;
+    const y = pad.t + (i / 4) * ph;
+    ctx.fillText(v.toFixed(2), pad.l - 6, y + 4);
+  }
+  // x-axis labels
+  ctx.textAlign = 'center'; ctx.font = '11px JetBrains Mono, monospace';
+  [0, 0.5, 1.0, 1.5, 2.0].forEach(v => {
+    if (v === 0) return;
+    const x = pad.l + ((v / 2) * pw);
+    ctx.fillText(v.toFixed(1), x, pad.t + ph + 18);
+  });
+
+  // Axis labels
+  ctx.fillStyle = '#3d4a5c'; ctx.font = '12px Source Serif 4, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('ω', pad.l + pw / 2, H - 2);
+  ctx.save(); ctx.translate(14, pad.t + ph / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('ρ(Tω)', 0, 0); ctx.restore();
+
+  // Convergence threshold line
+  ctx.strokeStyle = '#89c49a'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  const y1 = pad.t + (1 - 1) / 1 * ph; // at ρ=1
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l + pw, pad.t); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // S.O.R. curve
+  ctx.strokeStyle = '#b84c1e'; ctx.lineWidth = 2.5; ctx.beginPath();
+  let first = true;
+  for (let px = 0; px <= pw; px++) {
+    const om = (px / pw) * 1.99 + 0.005;
+    // Approximate rho(Tomega) for tridiagonal case
+    let rhoOm;
+    if (om <= omOpt) rhoOm = 1 - om * Math.sqrt(1 - rho*rho);
+    else rhoOm = om - 1;
+    rhoOm = Math.max(0, Math.min(1.0, rhoOm));
+    const cx = pad.l + px, cy = pad.t + (1 - rhoOm) * ph;
+    first ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    first = false;
+  }
+  ctx.stroke();
+
+  // Omega opt vertical
+  const xOpt = pad.l + ((omOpt / 2) * pw);
+  ctx.strokeStyle = '#c9973a'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(xOpt, pad.t); ctx.lineTo(xOpt, pad.t + ph); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#c9973a'; ctx.font = 'bold 11px JetBrains Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText('ω_opt=' + omOpt.toFixed(3), xOpt, pad.t + 14);
+}
+
+// ─── Init ───
+window.addEventListener('load', () => {
+  updateOmega();
+  setTimeout(drawChart, 500);
+});
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orden de Convergencia — Profe W</title>
+<link rel="stylesheet" href="../css/global.css">
+
+<!-- 1. CONFIGURACIÓN DE MATHJAX PARA ACEPTAR $ $ -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    }
+  };
+</script>
+<!-- 2. CARGAMOS MATHJAX -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  header p.subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.75;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    padding: 13px 22px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active {
+    color: var(--paper);
+    font-weight: 600;
+  }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+  
+  .highlight-math { color: var(--rust); font-weight: bold; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 0.97em;
+  }
+
+  /* ─── Profe W tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Details / Reveal ─── */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  summary {
+    background: var(--cream);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--slate);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--rust);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px;
+    background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Classification grid ─── */
+  .omega-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .omega-card { border-radius: 4px; padding: 18px 16px; text-align: center; border: 1px solid var(--rule); }
+  .omega-card .name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+  .omega-card .desc { font-size: 0.9rem; color: var(--muted); }
+  .omega-card.lineal { background: #edf7ef; border-color: #89c49a; }
+  .omega-card.cuadratica { background: #fef3ec; border-color: #e8a878; }
+
+  /* ─── Botones ─── */
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 12px 20px; font-family: 'Source Serif 4', serif; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; display: block; width: 100%; margin-bottom: 15px;
+  }
+  .btn-primary:hover:not(:disabled) { background: #9d3d15; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ─── Tablas ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; background: white; text-align: center; }
+  th { background: var(--slate); color: white; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 1px; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace;}
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+
+  /* ─── Interactive Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong .opt-label { background: #c0392b; color: white; }
+  
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .feedback .icon { font-size: 1rem; margin-right: 6px; }
+
+  /* ─── Progress ─── */
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .omega-grid { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 14px; }
+    header { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-topbar" aria-label="Navegación principal"><a class="site-back" href="../index.html">⬅ Volver al inicio</a></nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Raíces de Ecuaciones</div>
+  <h1>Orden de <em>Convergencia</em></h1>
+  <p class="subtitle">La velocidad matemática a la que nos acercamos a la verdad</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① El Concepto</button>
+  <button onclick="showSection('metodos',this)">② Bisección vs Punto Fijo</button>
+  <button onclick="showSection('newton',this)">③ El Rey: Newton</button>
+  <button onclick="showSection('carrera',this)">④ Carrera (Simulador)</button>
+  <button onclick="showSection('quiz',this)">⑤ Banco de Preguntas</button>
+</nav>
+
+<!-- ══════════════ SECCIÓN 1: EL CONCEPTO ══════════════ -->
+<main>
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>El Concepto Fundamental</h2>
+
+  <p>En el cálculo numérico, generar una sucesión $\{p_n\}$ que llegue a la raíz exacta $p$ es solo la mitad del trabajo. La pregunta crítica para un ingeniero es: <strong>¿Qué tan rápido llegamos allí?</strong></p>
+  
+  <p>Para medir esto, en lugar de mirar los puntos $p_n$, miramos el <strong>Error Absoluto</strong> en cada paso. Llamemos al error de la iteración actual $E_n = |p_n - p|$ y al error del siguiente paso $E_{n+1} = |p_{n+1} - p|$.</p>
+
+  <div class="card definition">
+    <div class="card-label">Definición Formal</div>
+    <p>Diremos que una sucesión converge a $p$ con <strong>orden de convergencia $\alpha$</strong> si existe una constante $C > 0$ tal que:</p>
+    <div class="math-block">
+      $$ \lim_{n \to \infty} \frac{|p_{n+1} - p|}{|p_n - p|^\alpha} = C $$
+    </div>
+    <p>O de manera más amigable y equivalente, el error futuro está acotado por una proporción del error actual elevado a $\alpha$:</p>
+    <div class="math-block">
+      $$ |p_{n+1} - p| \le C |p_n - p|^\alpha \quad \Longrightarrow \quad E_{n+1} \le C (E_n)^\alpha $$
+    </div>
+  </div>
+
+  <h3>Los dos reyes del orden</h3>
+  <p>Dependiendo del valor que tome $\alpha$ (alfa), clasificamos la "velocidad" del método numérico:</p>
+
+  <div class="omega-grid">
+    <div class="omega-card lineal">
+      <div class="name">Convergencia Lineal ($\alpha = 1$)</div>
+      <div class="math-block" style="padding: 10px; margin: 8px 0; background: transparent; border: none;">$$E_{n+1} \le C \cdot E_n$$</div>
+      <div class="desc">El error nuevo es una fracción constante del anterior. Es como ir a pie: constante pero lento.</div>
+    </div>
+    <div class="omega-card cuadratica">
+      <div class="name">Convergencia Cuadrática ($\alpha = 2$)</div>
+      <div class="math-block" style="padding: 10px; margin: 8px 0; background: transparent; border: none;">$$E_{n+1} \le C \cdot (E_n)^2$$</div>
+      <div class="desc">El error nuevo es el <em>cuadrado</em> del anterior. Si el error era $0.1$, ahora es $0.01$. ¡Es un auto acelerando!</div>
+    </div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">💡</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición del Profe W</div>
+      <p>Imagina que tu error actual es de $10^{-2}$ (dos decimales correctos). <br><br>
+      Con orden <strong>lineal</strong>, en el siguiente paso tu error será algo como $0.5 \times 10^{-2}$. Ganaste un poco de precisión.<br>
+      Con orden <strong>cuadrático</strong>, elevarás ese error al cuadrado: $(10^{-2})^2 = 10^{-4}$. ¡Acabas de duplicar la cantidad de decimales correctos de golpe!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: MÉTODOS CLÁSICOS ══════════════ -->
+<div class="section" id="metodos">
+  <h2><span class="section-num">Sección 02</span>Análisis: Bisección y Punto Fijo</h2>
+
+  <p>Ahora que sabemos cómo se mide la velocidad, evaluemos a los métodos clásicos.</p>
+
+  <div class="card theorem">
+    <div class="card-label">1. Método de Bisección</div>
+    <p>Sabemos que en Bisección, el intervalo se corta exactamente a la mitad en cada paso. Por definición, la distancia entre nuestra aproximación y la raíz real siempre cumple:</p>
+    <div class="math-block">
+      $$|p_{n+1} - p| \le \frac{1}{2} |p_n - p|$$
+    </div>
+    <p>Si comparamos esto con nuestra fórmula general $E_{n+1} \le C (E_n)^\alpha$, vemos claramente que $\alpha = 1$ y $C = 1/2$.</p>
+    <p><strong>Veredicto:</strong> La Bisección converge de manera <span class="highlight-math">Lineal (orden uno).</span></p>
+  </div>
+
+  <h3>2. Método de Punto Fijo</h3>
+  <p>Aquí la cosa se pone interesante. El método de punto fijo usa una función iterativa $p_{n+1} = g(p_n)$ para hallar la raíz $p$ donde $p = g(p)$.</p>
+  
+  <details>
+    <summary>Ver la demostración matemática usando Series de Taylor</summary>
+    <p>Para saber cómo se comporta el error $p_{n+1} - p$, hacemos una expansión de Taylor para $g(x)$ centrada en la raíz exacta $p$:</p>
+    <div class="math-block">
+      $$g(x) = g(p) + g'(p)(x - p) + \frac{g''(p)}{2}(x - p)^2 + \frac{g'''(p)}{6}(x - p)^3 + \dots$$
+    </div>
+    <p>Evaluamos esta serie en nuestra aproximación actual $x = p_n$. Recordando que $g(p_n) = p_{n+1}$ y $g(p) = p$, reemplazamos:</p>
+    <div class="math-block">
+      $$p_{n+1} = p + g'(p)(p_n - p) + \frac{g''(p)}{2}(p_n - p)^2 + \dots$$
+    </div>
+    <p>Pasamos la $p$ al lado izquierdo para formar el Error $(p_{n+1} - p)$:</p>
+    <div class="math-block">
+      $$p_{n+1} - p = g'(p)(p_n - p) + \frac{g''(p)}{2}(p_n - p)^2 + \dots$$
+    </div>
+  </details>
+
+  <p>Gracias a la demostración de Taylor, descubrimos que el orden de convergencia de Punto Fijo <strong>depende completamente de la primera derivada $g'(p)$</strong> evaluada en la raíz.</p>
+
+  <div class="omega-grid">
+    <div class="omega-card lineal">
+      <div class="name">Si $g'(p) \neq 0$</div>
+      <p style="font-size: 0.9rem; margin-top:10px;">El término dominante es el primero. Al dividir y sacar el límite nos queda:</p>
+      <div class="math-block" style="padding:5px; margin: 5px 0; background: transparent; border:none;">$$ \lim_{n \to \infty} \frac{|p_{n+1} - p|}{|p_n - p|^1} = |g'(p)| $$</div>
+      <div class="desc" style="font-weight:bold; color:var(--rust);">Orden Lineal ($\alpha=1$)</div>
+    </div>
+    <div class="omega-card cuadratica">
+      <div class="name">Si $g'(p) = 0$</div>
+      <p style="font-size: 0.9rem; margin-top:10px;">¡El primer término desaparece! El error ahora depende del término elevado al cuadrado:</p>
+      <div class="math-block" style="padding:5px; margin: 5px 0; background: transparent; border:none;">$$ \lim_{n \to \infty} \frac{|p_{n+1} - p|}{|p_n - p|^2} = \left| \frac{g''(p)}{2} \right| $$</div>
+      <div class="desc" style="font-weight:bold; color:var(--rust);">Orden Cuadrático ($\alpha=2$)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: NEWTON-RAPHSON ══════════════ -->
+<div class="section" id="newton">
+  <h2><span class="section-num">Sección 03</span>El Caso Especial: Newton-Raphson</h2>
+
+  <p>Si acabamos de descubrir que un Método de Punto Fijo se vuelve ultra rápido (Cuadrático) cuando $g'(p) = 0$, ¿qué tal si <em>inventamos</em> una función $g(x)$ que siempre cumpla esa condición mágicamente?</p>
+  
+  <p>Eso es exactamente lo que hace el método de <strong>Newton-Raphson</strong>. Se define la función iterativa de punto fijo de la siguiente manera:</p>
+
+  <div class="math-block" style="text-align: center;">
+    $$ g(x) = x - \frac{f(x)}{f'(x)} $$
+  </div>
+
+  <div class="card example-card">
+    <div class="card-label">Demostración: ¿Por qué Newton es Cuadrático?</div>
+    <p>Queremos comprobar si la derivada $g'(p)$ de esa función realmente da cero en la raíz $p$. Derivemos usando la regla del cociente:</p>
+    
+    <div class="math-block">
+      $$ g'(x) = 1 - \frac{(f'(x))^2 - f(x)f''(x)}{(f'(x))^2} $$
+    </div>
+    
+    <p>Operando las fracciones algebraicamente:</p>
+    
+    <div class="math-block">
+      $$ g'(x) = \frac{(f'(x))^2 - [(f'(x))^2 - f(x)f''(x)]}{(f'(x))^2} = \frac{f(x)f''(x)}{(f'(x))^2} $$
+    </div>
+
+    <p>Ahora, recordemos que $p$ es la raíz exacta de nuestra función original, lo que significa por definición que $f(p) = 0$. Evaluemos nuestra derivada en $p$:</p>
+
+    <div class="math-block" style="font-size: 1.1em; border-left: 4px solid var(--forest);">
+      $$ g'(p) = \frac{f(p)f''(p)}{(f'(p))^2} = \frac{0 \cdot f''(p)}{(f'(p))^2} = 0 $$
+    </div>
+
+    <p style="margin-top:15px;"><strong>Conclusión Épica:</strong> Dado que $g'(p) = 0$, hemos probado teóricamente que el método de Newton-Raphson converge con <strong>Orden Dos (Cuadrático)</strong>, siempre y cuando $f'(p) \neq 0$ (es decir, que la derivada no sea cero en la raíz).</p>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: SIMULADOR ══════════════ -->
+<div class="section" id="carrera">
+  <h2><span class="section-num">Sección 04</span>Carrera de Errores (Simulador)</h2>
+
+  <p>La teoría dice que el orden cuadrático es mucho más rápido. Vamos a verlo visualmente en una simulación donde comparamos el comportamiento del Error $E_n$ paso a paso.</p>
+  
+  <p>Supongamos que ambos métodos arrancan con un error inicial $E_0 = 0.5$ (medio metro de la raíz, por ejemplo). Observa los decimales.</p>
+
+  <div class="card">
+    <div class="card-label">Panel de Simulación</div>
+    <p style="font-size: 0.9rem; color: var(--muted);">
+      <strong>Fórmulas usadas:</strong><br>
+      Lineal (Ej. Bisección): $E_{n+1} = 0.5 \times E_n$<br>
+      Cuadrático (Ej. Newton): $E_{n+1} = 1.0 \times (E_n)^2$
+    </p>
+
+    <button class="btn-primary" id="btn-iterar-sim" onclick="iterarCarrera()">Ejecutar Siguiente Iteración</button>
+    <button class="btn-primary" id="btn-reset-sim" onclick="resetCarrera()" style="display: none; background: var(--slate);">Reiniciar Carrera</button>
+
+    <div class="table-wrapper">
+      <table id="tabla-carrera">
+        <thead>
+          <tr>
+            <th>Iteración ($n$)</th>
+            <th>Error Método Lineal ($\alpha = 1$)</th>
+            <th>Error Método Cuadrático ($\alpha = 2$)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-carrera">
+          <!-- JS inserta contenido aquí -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="tip-profe">
+    <div class="icon">🏁</div>
+    <div class="tip-body">
+      <div class="tip-label">Análisis de la Carrera</div>
+      <p>Mientras el método lineal suma un cero (un decimal de precisión) cada 3 o 4 pasos, ¡el método cuadrático <strong>duplica la cantidad de ceros en cada paso</strong>! En computación, esto significa ahorrar valiosos milisegundos de procesamiento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: QUIZ / BANCO DE PREGUNTAS ══════════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 05</span>Banco de Preguntas Interactivo</h2>
+  <p>Pon a prueba lo que acabas de aprender sobre la teoría de la convergencia.</p>
+
+  <!-- Q1 -->
+  <div class="quiz-question" id="q1">
+    <p class="q">1. Según la fórmula del límite del error, si $\alpha = 2$, ¿qué tipo de convergencia tenemos?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(1,'a','b')"><span class="opt-label">A</span>Convergencia Lineal</button>
+      <button class="opt-btn" onclick="checkQ(1,'b','b')"><span class="opt-label">B</span>Convergencia Cuadrática</button>
+      <button class="opt-btn" onclick="checkQ(1,'c','b')"><span class="opt-label">C</span>Convergencia Exponencial</button>
+      <button class="opt-btn" onclick="checkQ(1,'d','b')"><span class="opt-label">D</span>Divergencia</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-question" id="q2">
+    <p class="q">2. ¿Con qué orden de convergencia opera el Método de Bisección, dado que su error se reduce a la mitad ($|p_{n+1} - p| \le \frac{1}{2}|p_n - p|$) en cada paso?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(2,'a','a')"><span class="opt-label">A</span>Lineal (Orden Uno)</button>
+      <button class="opt-btn" onclick="checkQ(2,'b','a')"><span class="opt-label">B</span>Cuadrática (Orden Dos)</button>
+      <button class="opt-btn" onclick="checkQ(2,'c','a')"><span class="opt-label">C</span>Cúbica (Orden Tres)</button>
+      <button class="opt-btn" onclick="checkQ(2,'d','a')"><span class="opt-label">D</span>No converge sistemáticamente</button>
+    </div>
+    <div class="feedback" id="fb2"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-question" id="q3">
+    <p class="q">3. En un método de punto fijo iterativo ($p_{n+1} = g(p_n)$), ¿cuál es la condición matemática estricta para que la convergencia pase de ser lineal a ser CUADRÁTICA?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(3,'a','c')"><span class="opt-label">A</span>Que la segunda derivada sea cero: $g''(p) = 0$</button>
+      <button class="opt-btn" onclick="checkQ(3,'b','c')"><span class="opt-label">B</span>Que la función original sea cero: $g(p) = 0$</button>
+      <button class="opt-btn" onclick="checkQ(3,'c','c')"><span class="opt-label">C</span>Que la primera derivada sea cero: $g'(p) = 0$</button>
+      <button class="opt-btn" onclick="checkQ(3,'d','c')"><span class="opt-label">D</span>Que la constante $C$ sea mayor a 1</button>
+    </div>
+    <div class="feedback" id="fb3"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="quiz-question" id="q4">
+    <p class="q">4. Construimos un método de punto fijo usando $g(x) = x - \frac{f(x)}{f'(x)}$. Sabiendo que al evaluar $g'(p)$ el resultado es cero, ¿cómo se llama este método y cuál es su orden?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(4,'a','d')"><span class="opt-label">A</span>Secante - Orden Lineal</button>
+      <button class="opt-btn" onclick="checkQ(4,'b','d')"><span class="opt-label">B</span>Bisección - Orden Cuadrático</button>
+      <button class="opt-btn" onclick="checkQ(4,'c','d')"><span class="opt-label">C</span>Newton-Raphson - Orden Lineal</button>
+      <button class="opt-btn" onclick="checkQ(4,'d','d')"><span class="opt-label">D</span>Newton-Raphson - Orden Cuadrático</button>
+    </div>
+    <div class="feedback" id="fb4"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="quiz-question" id="q5">
+    <p class="q">5. Si un método es de "Convergencia Lineal" y $C = 0.5$, ¿qué significa esto físicamente respecto al error?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(5,'a','a')"><span class="opt-label">A</span>Que en cada paso el error nuevo es, a lo sumo, la mitad del error anterior.</button>
+      <button class="opt-btn" onclick="checkQ(5,'b','a')"><span class="opt-label">B</span>Que el error desaparecerá en exactamente dos pasos.</button>
+      <button class="opt-btn" onclick="checkQ(5,'c','a')"><span class="opt-label">C</span>Que el error se eleva a $0.5$ (raíz cuadrada) en cada paso.</button>
+      <button class="opt-btn" onclick="checkQ(5,'d','a')"><span class="opt-label">D</span>Que el método diverge porque $0.5 > 0$.</button>
+    </div>
+    <div class="feedback" id="fb5"></div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="quiz-question" id="q6">
+    <p class="q">6. ¿Qué herramienta matemática se utilizó en la teoría para analizar el error de $p_{n+1} - p$ y revelar de qué derivadas dependía?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(6,'a','b')"><span class="opt-label">A</span>El Teorema de Pitágoras</button>
+      <button class="opt-btn" onclick="checkQ(6,'b','b')"><span class="opt-label">B</span>La expansión en Series de Taylor</button>
+      <button class="opt-btn" onclick="checkQ(6,'c','b')"><span class="opt-label">C</span>El Teorema de Bolzano</button>
+      <button class="opt-btn" onclick="checkQ(6,'d','b')"><span class="opt-label">D</span>La regla de L'Hôpital</button>
+    </div>
+    <div class="feedback" id="fb6"></div>
+  </div>
+
+  <!-- Score Board -->
+  <div class="quiz-score" id="quizScore" style="display:none">
+    <div>
+      <div class="score-label">Puntaje Final de Evaluación</div>
+      <div style="font-size:0.85rem; opacity:0.7; margin-top:4px; font-family:'JetBrains Mono',monospace">Preguntas teóricas dominadas</div>
+    </div>
+    <div class="score-val" id="scoreVal">—</div>
+  </div>
+</div>
+
+</main>
+
+<footer>Material elaborado basándose en los apuntes PDF de Orden de Convergencia · Adaptación didáctica Profe W</footer>
+
+<script>
+// ─── Navegación de Tabs ───
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  
+  // Re-renderizar matemáticas si hubo cambios de visibilidad
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+// ─── Simulador de Carrera de Errores ───
+let iter = 0;
+let eLin = 0.5;
+let eQuad = 0.5;
+
+function initCarreraTable() {
+    const tbody = document.getElementById('tbody-carrera');
+    tbody.innerHTML = `<tr>
+        <td>${iter} (Inicio)</td>
+        <td>${eLin.toFixed(1)}</td>
+        <td>${eQuad.toFixed(1)}</td>
+    </tr>`;
+}
+
+function iterarCarrera() {
+    if(iter >= 6) return; // Evitar underflow masivo en JS
+    iter++;
+    
+    // Fórmulas de la carrera
+    eLin = 0.5 * eLin;
+    eQuad = 1.0 * (eQuad * eQuad);
+
+    const tbody = document.getElementById('tbody-carrera');
+    let tr = document.createElement('tr');
+    
+    // Formatear salida para que se vean los ceros
+    let formatQuad = eQuad < 1e-10 ? eQuad.toExponential(4) : eQuad.toFixed(8);
+    let formatLin = eLin.toFixed(8);
+
+    tr.innerHTML = `
+        <td style="font-weight:bold;">${iter}</td>
+        <td>${formatLin}</td>
+        <td style="color:var(--rust); font-weight:bold;">${formatQuad}</td>
+    `;
+    tbody.appendChild(tr);
+
+    if (eQuad === 0 || iter >= 6) {
+        document.getElementById('btn-iterar-sim').style.display = 'none';
+        document.getElementById('btn-reset-sim').style.display = 'block';
+        
+        let finale = document.createElement('tr');
+        finale.innerHTML = `<td colspan="3" style="background:#edf7ef; color:var(--forest); font-family:'Source Serif 4', serif;"><strong>¡El Cuadrático llegó al límite de precisión de la máquina!</strong></td>`;
+        tbody.appendChild(finale);
+    }
+}
+
+function resetCarrera() {
+    iter = 0;
+    eLin = 0.5;
+    eQuad = 0.5;
+    initCarreraTable();
+    document.getElementById('btn-iterar-sim').style.display = 'block';
+    document.getElementById('btn-reset-sim').style.display = 'none';
+}
+
+// Inicializar tabla simulador al cargar
+window.onload = () => { initCarreraTable(); };
+
+
+// ─── Sistema de Actividades Evaluativas (Quiz) ───
+const quizState = { answered: {}, correct: 0 };
+const messages = {
+  correct:[
+    "¡Correcto! Excelente deducción analítica.",
+    "¡Exacto! Tienes dominada la teoría.",
+    "¡Perfecto! El álgebra no te intimida.",
+    "¡Muy bien! Estás listo para programar estos algoritmos."
+  ],
+  wrong:[
+    "No es correcto. Revisa el planteamiento de la fórmula original.",
+    "Casi, pero no. Relee la sección de demostraciones.",
+    "Incorrecto. Recuerda las definiciones de límite de error."
+  ]
+};
+
+// Respuestas: Q1:B, Q2:A, Q3:C, Q4:D, Q5:A, Q6:B
+function checkQ(qNum, chosen, correct) {
+  if (quizState.answered[qNum]) return;
+  quizState.answered[qNum] = true;
+
+  const container = document.getElementById('q' + qNum);
+  const btns = container.querySelectorAll('.opt-btn');
+  const letters = ['a','b','c','d'];
+  
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (letters[i] === correct) btn.classList.add('correct');
+    else if (letters[i] === chosen && chosen !== correct) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('fb' + qNum);
+  fb.classList.add('show');
+  const isCorrect = chosen === correct;
+  fb.classList.add(isCorrect ? 'ok' : 'err');
+  const pool = messages[isCorrect ? 'correct' : 'wrong'];
+  
+  // Feedback explicativo personalizado
+  let extraFB = "";
+  if(qNum === 1 && isCorrect) extraFB = " En la ecuación, $\\alpha$ es el exponente. Si es 2, el error se eleva al cuadrado.";
+  if(qNum === 2 && isCorrect) extraFB = " El exponente oculto del error derecho es 1, por tanto $\\alpha = 1$.";
+  if(qNum === 3 && isCorrect) extraFB = " La serie de Taylor demuestra que si $g'(p)=0$, el término de error $(p_n-p)^1$ desaparece, dejando al $(p_n-p)^2$ como dominante.";
+  if(qNum === 4 && isCorrect) extraFB = " Al evaluar la derivada de la fórmula de Newton, obtuvimos exactamente $g'(p)=0$, garantizando el orden 2.";
+  if(qNum === 5 && isCorrect) extraFB = " La constante $C$ (como el $1/2$ en Bisección) indica la proporción geométrica en la que se reduce el error.";
+  if(qNum === 6 && isCorrect) extraFB = " Las Series de Taylor nos permiten representar una función como una suma infinita de sus derivadas, lo que reveló el secreto del punto fijo.";
+
+  fb.innerHTML = `<span class="icon">${isCorrect ? '✅' : '❌'}</span> ${pool[Math.floor(Math.random()*pool.length)]} ${extraFB}`;
+  
+  if (isCorrect) quizState.correct++;
+  if (Object.keys(quizState.answered).length === 6) showFinalScore();
+  
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+function showFinalScore() {
+  const sc = document.getElementById('quizScore');
+  sc.style.display = 'flex';
+  document.getElementById('scoreVal').textContent = quizState.correct + '/6';
+}
+</script>
+</body>
+</html>

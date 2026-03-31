@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen: Métodos Numéricos - Profe W</title>
+
+    <!-- Librerías Requeridas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Source Serif 4', Georgia, serif;
+            background-color: var(--paper);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ink);
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        code, .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        /* HEADER */
+        header {
+            background-color: var(--ink);
+            color: var(--paper);
+            padding: 3rem 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-badge {
+            display: inline-block;
+            background-color: var(--slate);
+            color: var(--paper);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            color: var(--paper);
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header h1 em {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        header p {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--rule);
+            font-size: 1.1rem;
+        }
+
+        .author-tag {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--gold);
+            font-weight: bold;
+            border: 1px solid var(--gold);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* TIP PROFE */
+        .tip-profe {
+            background: linear-gradient(135deg, #fffcf5 0%, #f7f1e3 100%);
+            border: 1px solid var(--gold);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            box-shadow: 0 4px 12px rgba(201, 151, 58, 0.15);
+        }
+
+        .tip-profe .icon {
+            font-size: 2rem;
+        }
+
+        .tip-profe .tip-content {
+            flex: 1;
+        }
+
+        .tip-profe .tip-label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        /* QUIZ CARDS Y CONTENEDORES */
+        .card {
+            background-color: #fff;
+            border: 1px solid var(--rule);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            border-left: 6px solid var(--slate);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .quiz-options.row {
+            flex-direction: row;
+        }
+
+        .quiz-option {
+            background-color: #fff;
+            border: 1px solid var(--rule);
+            padding: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Source Serif 4', serif;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .quiz-option:hover:not(:disabled) {
+            background-color: var(--cream);
+            border-color: var(--gold);
+        }
+
+        .quiz-option.correct {
+            background-color: rgba(45, 92, 62, 0.1);
+            border-color: var(--forest);
+            color: var(--forest);
+            font-weight: 600;
+        }
+
+        .quiz-option.incorrect {
+            background-color: rgba(184, 76, 30, 0.1);
+            border-color: var(--rust);
+            color: var(--rust);
+            font-weight: 600;
+        }
+
+        .quiz-option:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* INPUTS NUMERICOS */
+        .numeric-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+
+        .numeric-input-group input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            max-width: 200px;
+        }
+
+        .numeric-input-group input:disabled {
+            background-color: var(--cream);
+            cursor: not-allowed;
+        }
+
+        .numeric-input-group input.correct {
+            border-color: var(--forest);
+            background-color: rgba(45, 92, 62, 0.1);
+            color: var(--forest);
+        }
+
+        .numeric-input-group input.incorrect {
+            border-color: var(--rust);
+            background-color: rgba(184, 76, 30, 0.1);
+            color: var(--rust);
+        }
+
+        button.btn {
+            background-color: var(--slate);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        button.btn:hover:not(:disabled) {
+            background-color: var(--ink);
+        }
+
+        button.btn-primary {
+            background-color: var(--rust);
+        }
+
+        button.btn-primary:hover:not(:disabled) {
+            background-color: #963d17;
+        }
+
+        button.btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .quiz-feedback {
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            background-color: var(--cream);
+            border-left: 4px solid var(--gold);
+            display: none;
+            font-size: 0.95rem;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quiz-score-container {
+            text-align: center;
+            padding: 3rem;
+            background: var(--ink);
+            color: var(--paper);
+            border-radius: 8px;
+            margin-top: 3rem;
+            display: none;
+        }
+
+        .quiz-score-container h3 {
+            color: var(--gold);
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="site-topbar" aria-label="Navegación principal"><a class="site-back" href="../index.html">⬅ Volver al inicio</a></nav>
+
+    <header>
+        <div class="header-badge">Evaluación Práctica</div>
+        <h1>Parcial <em>Resuelto</em></h1>
+        <p>Métodos Numéricos (PP_2019B)</p>
+        <div class="author-tag">Profe W</div>
+    </header>
+
+    <main>
+        <div class="tip-profe">
+            <div class="icon">📝</div>
+            <div class="tip-content">
+                <span class="tip-label">Instrucciones del Examen</span>
+                <p>A continuación se presenta el examen interactivo basado en la prueba teórica real. Selecciona la opción correcta o escribe tu respuesta numérica y presiona el botón. Cada pregunta mostrará inmediatamente la <strong>retroalimentación oficial</strong> detallada.</p>
+            </div>
+        </div>
+
+        <div id="quiz-container">
+            <!-- Las preguntas se renderizan aquí dinámicamente vía JS -->
+        </div>
+
+        <div class="quiz-score-container" id="quiz-score">
+            <h3 id="score-text">Puntaje Final: 0/10</h3>
+            <p>¡Gracias por completar la evaluación!</p>
+            <button class="btn btn-primary" onclick="resetQuiz()" style="margin-top: 1.5rem;">Reintentar Evaluación</button>
+        </div>
+    </main>
+
+    <script>
+        const quizQuestions =[
+            {
+                type: "tf",
+                q: "1. Considere los intervalos \\(\\{[a_n, b_n]\\}\\) obtenidos con el método de bisección, de forma que \\(x_n = \\frac{a_n + b_n}{2}\\) converge a la raíz \\(p\\). Entonces se cumple estrictamente que \\( \\left| p - \\frac{a_{n+1} + b_{n+1}}{2} \\right| \\le \\left| p - \\frac{a_n + b_n}{2} \\right| \\) para todo \\(n \\ge 1\\).",
+                ans: false, // Falso
+                feed: "<strong>La afirmación es falsa.</strong> En el método de bisección, aunque el intervalo se reduce en cada paso, la distancia del punto medio al cero no tiene por qué disminuir de manera monótona. Si el cero queda en la mitad opuesta al punto medio anterior, el nuevo punto medio puede alejarse de la raíz. Lo único garantizado es la cota global:<br><br> $$ |p - x_n| \\le \\frac{b_0 - a_0}{2^n} $$"
+            },
+            {
+                type: "tf",
+                q: "2. Sean dos funciones de iteración \\(g_1\\) y \\(g_2\\) que cumplen el T.E.U.P.F. en \\([a,b]\\). Si \\( \\max |g_1'(x)| = 0.75 \\) y \\( \\max |g_2'(x)| = 0.77 \\), entonces la sucesión generada con \\(g_2\\) converge más rápido.",
+                ans: false, // Falso
+                feed: "<strong>La afirmación es falsa.</strong> En una iteración de punto fijo, la rapidez de convergencia asintótica está controlada por la constante \\( q = \\max |g'(x)| \\). Como \\( q_1 = 0.75 < q_2 = 0.77 \\), la iteración asociada a \\( g_1 \\) converge más rápido que la asociada a \\( g_2 \\)."
+            },
+            {
+                type: "tf",
+                q: "3. Sea el sistema \\( Ax = b \\) con \\( A \\) simétrica y tridiagonal. Si el espectro de la matriz \\( A \\) es \\( \\sigma(A) = \\{0.65, 1.63, 3.67, 7.65\\} \\), entonces el método de Jacobi converge para todo vector inicial \\(x^{(0)}\\).",
+                ans: true, // Verdadero
+                feed: "<strong>La afirmación es verdadera.</strong> Dado que todos los autovalores de \\(A\\) son positivos y la matriz es simétrica y tridiagonal, entonces \\(A\\) es <em>definida positiva</em>. Por el teorema correspondiente, el método de Jacobi converge para todo vector inicial en este escenario."
+            },
+            {
+                type: "tf",
+                q: "4. Si la matriz de iteración de Gauss-Seidel \\( T_{GS} \\) tiene un espectro \\( \\sigma(T_{GS}) = \\{0, 0.125, -1.005, 0.33 \\pm 0.104i\\} \\), entonces el método converge para todo vector inicial.",
+                ans: false, // Falso
+                feed: "<strong>La afirmación es falsa.</strong> La convergencia de Gauss-Seidel exige que el radio espectral sea estrictamente menor a uno: \\(\\rho(T_{GS}) < 1\\). Sin embargo, evaluando el espectro obtenemos \\(\\rho(T_{GS}) = |-1.005| = 1.005 > 1\\). Por tanto, el método no converge."
+            },
+            {
+                type: "numeric",
+                q: "5. Sea \\( f \\) continua en \\([2, 5]\\) con un único cero \\( p \\). Al usar bisección, ¿cuál es el menor número de iteraciones \\( n \\) (entero) necesarias para garantizar un error \\( |x_n - p| \\le 10^{-5} \\)? (Use la fórmula teórica de cota de error \\( \\frac{b-a}{2^n} \\)).",
+                ans: 19,
+                feed: "Para bisección en \\([2, 5]\\), utilizando la cota solicitada, tenemos:<br> $$ |x_n - p| \\le \\frac{5 - 2}{2^n} = \\frac{3}{2^n} $$ Queremos \\( \\frac{3}{2^n} \\le 10^{-5} \\). Despejando:<br> $$ 2^n \\ge 3 \\times 10^5 \\implies n \\ge \\log_2(3 \\times 10^5) \\approx 18.1946 $$ Por lo tanto, el menor número de iteraciones enteras necesario es <strong>19</strong>."
+            },
+            {
+                type: "mc",
+                q: "6. Considere la matriz de iteración: <br> $$ T = \\begin{pmatrix} 0 & -1/4 & 1/4 \\\\ 1/2 & -1/8 & -7/8 \\\\ -3/4 & -5/16 & 5/16 \\end{pmatrix} $$ Calcule la norma 1 (\\( \\|T\\|_1 \\)) y la norma infinito (\\( \\|T\\|_\\infty \\)).",
+                opts:[
+                    "\\( \\|T\\|_1 = 23/16 \\) y \\( \\|T\\|_\\infty = 3/2 \\)",
+                    "\\( \\|T\\|_1 = 3/2 \\) y \\( \\|T\\|_\\infty = 23/16 \\)",
+                    "\\( \\|T\\|_1 = 5/4 \\) y \\( \\|T\\|_\\infty = 11/8 \\)",
+                    "\\( \\|T\\|_1 = 11/16 \\) y \\( \\|T\\|_\\infty = 3/2 \\)"
+                ],
+                ans: 0,
+                feed: "<strong>Correcto.</strong> La norma 1 es el máximo de las sumas absolutas por columna: \\( c_1 = \\frac{5}{4}, c_2 = \\frac{11}{16}, c_3 = \\frac{23}{16} \\). Así, \\( \\|T\\|_1 = 23/16 \\).<br>La norma infinito es el máximo de sumas absolutas por fila: \\( r_1 = \\frac{1}{2}, r_2 = \\frac{3}{2}, r_3 = \\frac{11}{8} \\). Así, \\( \\|T\\|_\\infty = 3/2 \\)."
+            },
+            {
+                type: "numeric",
+                q: "7. Considere \\( f(x) = x^2 - 3x + 3 - \\frac{1}{x} \\). Se sabe que \\( \\hat{x} = 1 \\) es raíz. ¿Cuál es la multiplicidad \\( m \\) de la raíz?",
+                ans: 3,
+                feed: "Se tiene que: <br> $$ f(x) = \\frac{x^3 - 3x^2 + 3x - 1}{x} = \\frac{(x - 1)^3}{x} $$ Es evidente que el factor \\((x-1)\\) está elevado a la potencia 3, por lo tanto, la multiplicidad es <strong>\\( m = 3 \\)</strong>."
+            },
+            {
+                type: "mc",
+                q: "8. Para la función del punto anterior (donde \\( \\hat{x} = 1 \\) es raíz múltiple), ¿cuál es el orden de convergencia de la sucesión generada por la iteración de Newton estándar?",
+                opts:[
+                    "Orden de convergencia 2 (Cuadrático)",
+                    "Orden de convergencia 3 (Cúbico)",
+                    "Orden de convergencia 1 (Lineal)",
+                    "Orden de convergencia fraccionario"
+                ],
+                ans: 2,
+                feed: "<strong>Correcto.</strong> Para una raíz múltiple (\\(m > 1\\)), el método de Newton estándar pierde su famosa convergencia cuadrática y pasa a converger <strong>linealmente</strong> (orden 1). Se requiere el Newton Modificado o Acelerado para recuperar el orden 2."
+            },
+            {
+                type: "mc",
+                q: "9. Considere el siguiente sistema lineal (NO lo reordene):<br> $$ \\begin{cases} 4x - y + z = 3 \\\\ -x + 5y - 2z = -1 \\\\ x - 2y + 7z = 1 \\end{cases} $$ ¿Qué se puede decir de la convergencia de Jacobi y Gauss-Seidel?",
+                opts:[
+                    "Sólo Jacobi converge.",
+                    "Sólo Gauss-Seidel converge.",
+                    "Ambos métodos convergen para cualquier vector inicial.",
+                    "Ninguno de los métodos tiene convergencia garantizada."
+                ],
+                ans: 2,
+                feed: "<strong>Correcto.</strong> Revisando la matriz de coeficientes, se observa que es estrictamente diagonal dominante por filas:<br> \\(|4| > |-1| + |1|\\), <br> \\(|5| > |-1| + |-2|\\), <br> \\(|7| > |1| + |-2|\\). <br>Por tanto, el teorema de convergencia garantiza que <strong>ambos métodos</strong> convergen para cualquier vector inicial."
+            },
+            {
+                type: "mc",
+                q: "10. Para el sistema no lineal \\( F(X) = 0 \\) derivado de hallar los puntos críticos de \\( h(x,y) = x^3 y - 3\\ln(x) - e^{2y} \\), tomamos \\( X^{(0)} = [1, 0]^T \\). ¿Cuál es la primera iteración de Newton \\( X^{(1)} \\)?",
+                opts:[
+                    "\\( \\begin{pmatrix} 1/3 \\\\ -1/3 \\end{pmatrix} \\)",
+                    "\\( \\begin{pmatrix} 4/3 \\\\ 0 \\end{pmatrix} \\)",
+                    "\\( \\begin{pmatrix} -3 \\\\ -1 \\end{pmatrix} \\)",
+                    "\\( \\begin{pmatrix} 1 \\\\ 0 \\end{pmatrix} \\)"
+                ],
+                ans: 1,
+                feed: "<strong>Correcto.</strong> <br>El sistema es \\( F(X) = \\begin{pmatrix} 3x^2y - 3/x \\\\ x^3 - 2e^{2y} \\end{pmatrix} \\). <br>En \\( X^{(0)} = (1,0) \\), \\( F(X^{(0)}) = \\begin{pmatrix} -3 \\\\ -1 \\end{pmatrix} \\) y la Jacobiana \\( J_F(X^{(0)}) = \\begin{pmatrix} 9 & 3 \\\\ 3 & -4 \\end{pmatrix} \\). <br>Resolviendo \\( J_F s = F \\) da el paso \\( s = \\begin{pmatrix} -1/3 \\\\ 0 \\end{pmatrix} \\).<br>Finalmente, \\( X^{(1)} = X^{(0)} - s = \\begin{pmatrix} 1 \\\\ 0 \\end{pmatrix} - \\begin{pmatrix} -1/3 \\\\ 0 \\end{pmatrix} = \\begin{pmatrix} 4/3 \\\\ 0 \\end{pmatrix} \\)."
+            }
+        ];
+
+        let quizScore = 0;
+        let answeredQuestions = 0;
+
+        function buildQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            quizScore = 0;
+            answeredQuestions = 0;
+            document.getElementById('quiz-score').style.display = 'none';
+
+            quizQuestions.forEach((q, qIndex) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.id = `q-card-${qIndex}`;
+
+                // Título de la pregunta
+                const questionTitle = document.createElement('h3');
+                questionTitle.style.fontSize = '1.1rem';
+                questionTitle.style.marginBottom = '1.2rem';
+                questionTitle.innerHTML = q.q;
+                card.appendChild(questionTitle);
+
+                // Contenedor de Opciones
+                const optsDiv = document.createElement('div');
+
+                if (q.type === 'tf') {
+                    optsDiv.className = 'quiz-options row';
+                    const btnT = document.createElement('button');
+                    btnT.className = 'quiz-option';
+                    btnT.innerText = 'Verdadero';
+                    btnT.onclick = () => handleAnswerTFMC(qIndex, true, btnT, optsDiv);
+                    
+                    const btnF = document.createElement('button');
+                    btnF.className = 'quiz-option';
+                    btnF.innerText = 'Falso';
+                    btnF.onclick = () => handleAnswerTFMC(qIndex, false, btnF, optsDiv);
+
+                    optsDiv.appendChild(btnT);
+                    optsDiv.appendChild(btnF);
+                } 
+                else if (q.type === 'mc') {
+                    optsDiv.className = 'quiz-options';
+                    q.opts.forEach((optStr, oIndex) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'quiz-option';
+                        btn.innerHTML = optStr;
+                        btn.onclick = () => handleAnswerTFMC(qIndex, oIndex, btn, optsDiv);
+                        optsDiv.appendChild(btn);
+                    });
+                }
+                else if (q.type === 'numeric') {
+                    optsDiv.className = 'numeric-input-group';
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.placeholder = 'Ingresa el número...';
+                    input.id = `num-in-${qIndex}`;
+
+                    const btnWrap = document.createElement('button');
+                    btnWrap.className = 'btn btn-primary';
+                    btnWrap.innerText = 'Validar';
+                    btnWrap.onclick = () => handleAnswerNumeric(qIndex, input, btnWrap);
+
+                    // Add enter key support
+                    input.addEventListener("keypress", function(event) {
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            btnWrap.click();
+                        }
+                    });
+
+                    optsDiv.appendChild(input);
+                    optsDiv.appendChild(btnWrap);
+                }
+
+                card.appendChild(optsDiv);
+
+                // Contenedor de Feedback
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'quiz-feedback';
+                feedbackDiv.id = `feedback-${qIndex}`;
+                feedbackDiv.innerHTML = q.feed;
+                card.appendChild(feedbackDiv);
+
+                container.appendChild(card);
+            });
+
+            // Re-render MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function lockQuestion(qIndex) {
+            const card = document.getElementById(`q-card-${qIndex}`);
+            card.style.borderLeftColor = 'var(--muted)';
+            answeredQuestions++;
+            if (answeredQuestions === quizQuestions.length) {
+                showFinalScore();
+            }
+        }
+
+        function showFeedback(qIndex) {
+            const fb = document.getElementById(`feedback-${qIndex}`);
+            fb.style.display = 'block';
+            if (window.MathJax) {
+                MathJax.typesetPromise([fb]);
+            }
+        }
+
+        // Handler para Múltiple Opción y Verdadero/Falso
+        function handleAnswerTFMC(qIndex, selectedValue, btn, optsDiv) {
+            const questionDef = quizQuestions[qIndex];
+            
+            // Bloquear botones
+            const buttons = optsDiv.querySelectorAll('.quiz-option');
+            buttons.forEach(b => b.disabled = true);
+
+            const isCorrect = (selectedValue === questionDef.ans);
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                quizScore++;
+            } else {
+                btn.classList.add('incorrect');
+                // Buscar y marcar el correcto
+                if (questionDef.type === 'tf') {
+                    // El correcto era el otro
+                    const correctBtn = Array.from(buttons).find(b => 
+                        (questionDef.ans === true && b.innerText === 'Verdadero') || 
+                        (questionDef.ans === false && b.innerText === 'Falso')
+                    );
+                    if (correctBtn) correctBtn.classList.add('correct');
+                } else if (questionDef.type === 'mc') {
+                    // questionDef.ans contiene el índice
+                    buttons[questionDef.ans].classList.add('correct');
+                }
+            }
+
+            showFeedback(qIndex);
+            lockQuestion(qIndex);
+        }
+
+        // Handler para Input Numérico
+        function handleAnswerNumeric(qIndex, inputElem, btnElem) {
+            const val = parseFloat(inputElem.value);
+            if (isNaN(val)) return; // No hacer nada si está vacío o inválido
+
+            inputElem.disabled = true;
+            btnElem.disabled = true;
+
+            const questionDef = quizQuestions[qIndex];
+            const isCorrect = (val === questionDef.ans);
+
+            if (isCorrect) {
+                inputElem.classList.add('correct');
+                quizScore++;
+            } else {
+                inputElem.classList.add('incorrect');
+            }
+
+            showFeedback(qIndex);
+            lockQuestion(qIndex);
+        }
+
+        function showFinalScore() {
+            const scoreDiv = document.getElementById('quiz-score');
+            const scoreText = document.getElementById('score-text');
+            scoreText.innerText = `Puntaje Final: ${quizScore} / ${quizQuestions.length}`;
+            scoreDiv.style.display = 'block';
+            
+            // Animación y scroll
+            setTimeout(() => {
+                scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 300);
+        }
+
+        function resetQuiz() {
+            buildQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Inicializar el quiz cuando cargue la página
+        window.onload = () => {
+            buildQuiz();
+        };
+    </script>
+</body>
+</html>

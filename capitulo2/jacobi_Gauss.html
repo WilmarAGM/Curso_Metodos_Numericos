@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Métodos Iterativos: Jacobi y Gauss-Seidel</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      loader: { load: ['[tex]/color', '[tex]/boldsymbol'] },
+      tex: {
+        packages: { '[+]': ['color', 'boldsymbol'] },
+        inlineMath: [['$', '$'],['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']]
+      },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(201,151,58,.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(184,76,30,.08), transparent 26%),
+        linear-gradient(180deg, #fbf7f0 0%, var(--paper) 100%);
+      color: var(--ink);
+      font-family: "Source Serif 4", Georgia, serif;
+      line-height: 1.68;
+    }
+
+    .wrap { width: min(1200px, calc(100vw - 28px)); margin: 0 auto; padding: 18px 0 56px; }
+
+    header {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, rgba(45,92,62,.08), rgba(61,74,92,.08)), linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.35));
+      border: 1px solid var(--rule); border-radius: 28px;
+      box-shadow: var(--shadow-elevated); padding: 26px 26px 22px; margin-bottom: 16px;
+    }
+    header::after {
+      content:""; position:absolute; inset:auto -80px -90px auto;
+      width:260px; height:260px; border-radius:50%;
+      background: radial-gradient(circle, rgba(201,151,58,.18), transparent 64%); pointer-events:none;
+    }
+    .header-badge {
+      display:inline-flex; align-items:center; gap:10px; padding:8px 14px;
+      border-radius:999px; background:rgba(45,92,62,.10); color:var(--forest);
+      border:1px solid rgba(45,92,62,.18); font-weight:700; letter-spacing:.03em;
+      font-size:.88rem; margin-bottom:14px;
+    }
+    .header-badge::before {
+      content:""; width:10px; height:10px; border-radius:50%;
+      background:var(--forest); box-shadow:0 0 0 4px rgba(45,92,62,.12);
+    }
+    h1 { margin:0 0 10px; font-family:"Playfair Display",Georgia,serif; font-size:clamp(2.15rem,4vw,3.55rem); line-height:1.05; letter-spacing:-.02em; }
+    h1 em { color:var(--gold); font-style:italic; }
+    .subtitle { font-size:1.05rem; color:var(--slate); max-width:980px; margin:0; }
+    .author-tag {
+      position:absolute; right:18px; top:18px;
+      font-family:"JetBrains Mono",monospace; font-size:.85rem; color:var(--ink);
+      background:rgba(237,232,220,.95); border:1px solid var(--rule);
+      padding:10px 12px; border-radius:14px; box-shadow:0 10px 22px rgba(26,20,18,.06);
+    }
+
+    .tabs {
+      position:sticky; top:0; z-index:60; display:flex; flex-wrap:nowrap; gap:8px;
+      overflow-x:auto; padding:10px 8px 12px; margin:0 0 18px;
+      background:rgba(245,240,232,.90); backdrop-filter:blur(8px);
+      border:1px solid rgba(200,191,175,.65); border-radius:20px;
+      box-shadow:0 12px 28px rgba(26,20,18,.05);
+    }
+    .tabs button {
+      appearance:none; border:1px solid transparent; background:transparent;
+      color:var(--slate); font-family:"Source Serif 4",serif; font-size:.95rem;
+      font-weight:600; padding:10px 14px; border-radius:999px; cursor:pointer;
+      white-space:nowrap; transition:.2s ease;
+    }
+    .tabs button:hover { background:rgba(61,74,92,.06); color:var(--ink); }
+    .tabs button.active { color:var(--ink); background:rgba(201,151,58,.12); border-color:rgba(201,151,58,.2); box-shadow:inset 0 -3px 0 var(--gold); }
+
+    .section { display:none; animation:fadeUp .28s ease; }
+    .section.active { display:block; }
+    @keyframes fadeUp { from{opacity:.35;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    .card {
+      background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.30));
+      border:1px solid var(--rule); border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-elevated); padding:22px; margin:0 0 16px;
+    }
+    .card h2,.card h3,.card h4 { font-family:"Playfair Display",Georgia,serif; margin:0 0 10px; line-height:1.18; letter-spacing:-.01em; }
+    .card h2 { font-size:1.95rem; }
+    .card h3 { font-size:1.38rem; }
+    .card h4 { font-size:1.12rem; color:var(--forest); }
+
+    .card.definition { border-left:7px solid var(--forest); }
+    .card.theorem { border-left:7px solid var(--gold); background:linear-gradient(180deg,rgba(255,248,233,.80),rgba(255,255,255,.45)); }
+    .card.example-card { border-left:7px solid var(--rust); background:linear-gradient(180deg,rgba(255,245,240,.82),rgba(255,255,255,.45)); }
+    .card.jacobi-card { border-left:7px solid var(--k-color); background:linear-gradient(180deg,rgba(21,101,192,.05),rgba(255,255,255,.45)); }
+    .card.gs-card { border-left:7px solid var(--k1-color); background:linear-gradient(180deg,rgba(183,28,28,.05),rgba(255,255,255,.45)); }
+    .card.bridge-card { border:2px dashed var(--gold); background:linear-gradient(180deg,rgba(201,151,58,.07),rgba(255,255,255,.50)); }
+    .card.purple-card { border-left:7px solid var(--purple); background:linear-gradient(180deg,rgba(106,27,154,.05),rgba(255,255,255,.45)); }
+
+    .tip-profe {
+      border:1px dashed rgba(184,76,30,.5); background:rgba(184,76,30,.06);
+      padding:14px 16px; border-radius:18px; color:#6e3721; margin-top:14px;
+    }
+    .tip-k {
+      border:1px dashed var(--k-border); background:var(--k-bg);
+      padding:14px 16px; border-radius:18px; color:var(--k-color); margin-top:10px;
+    }
+    .tip-k1 {
+      border:1px dashed var(--k1-border); background:var(--k1-bg);
+      padding:14px 16px; border-radius:18px; color:var(--k1-color); margin-top:10px;
+    }
+
+    /* ── Iteration color system ─────────────────────────── */
+    .iter-legend {
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+      padding:12px 16px; border-radius:14px;
+      background:rgba(255,255,255,.55); border:1px solid var(--rule);
+      margin-bottom:14px;
+    }
+    .iter-legend span { font-size:.9rem; font-weight:600; }
+    .pill-k {
+      display:inline-flex; align-items:center; gap:4px; padding:4px 10px;
+      background:var(--k-bg); color:var(--k-color); border:1px solid var(--k-border);
+      border-radius:999px; font-weight:700; font-family:"JetBrains Mono",monospace;
+      font-size:.85rem; white-space:nowrap;
+    }
+    .pill-k1 {
+      display:inline-flex; align-items:center; gap:4px; padding:4px 10px;
+      background:var(--k1-bg); color:var(--k1-color); border:1px solid var(--k1-border);
+      border-radius:999px; font-weight:700; font-family:"JetBrains Mono",monospace;
+      font-size:.85rem; white-space:nowrap;
+    }
+    .eq-line {
+      display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+      padding:10px 14px; border-radius:14px; margin-bottom:8px;
+      background:rgba(255,255,255,.5); border:1px solid rgba(200,191,175,.6);
+    }
+    .eq-lhs { color:var(--k1-color); font-weight:700; }
+    .eq-rhs-k { color:var(--k-color); font-weight:600; }
+    .eq-rhs-k1 { color:var(--k1-color); font-weight:600; }
+    .bridge-note {
+      font-size:.9rem; color:var(--muted); font-style:italic; margin-top:6px; padding-left:4px;
+    }
+    /* ── Bridge table ── */
+    .bridge-table { width:100%; border-collapse:collapse; margin:14px 0; font-size:.9rem; }
+    .bridge-table th { padding:8px 10px; background:rgba(61,74,92,.10); color:var(--slate); font-weight:700; border:1px solid rgba(200,191,175,.9); text-align:center; }
+    .bridge-table td { padding:8px 10px; border:1px solid rgba(200,191,175,.9); text-align:center; }
+    .bridge-table td.coef-k { background:var(--k-bg); color:var(--k-color); font-weight:700; font-family:"JetBrains Mono",monospace; }
+    .bridge-table td.coef-c { background:rgba(106,27,154,.08); color:var(--purple); font-weight:700; font-family:"JetBrains Mono",monospace; }
+    .bridge-table tr.row-eq { }
+    .arrow-row { text-align:center; padding:6px 0; font-size:1.3rem; color:var(--gold); }
+    /* ── Steps ── */
+    .steps { counter-reset:step; display:grid; gap:12px; margin:14px 0 0; }
+    .step { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:start; padding:14px; border:1px solid rgba(200,191,175,.78); background:rgba(255,255,255,.35); border-radius:18px; }
+    .step-num { display:inline-grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--forest); color:#fff; font-weight:700; font-family:"JetBrains Mono",monospace; flex:none; }
+    .step-num.blue { background:var(--k-color); }
+    .step-num.red { background:var(--k1-color); }
+    .step-num.gold { background:var(--gold); color:var(--ink); }
+    .step strong { color:var(--ink); }
+
+    .math-block { background:rgba(61,74,92,.06); border:1px solid rgba(61,74,92,.12); border-radius:18px; padding:14px 16px; margin:14px 0; overflow-x:auto; }
+    .math-block.k-block { background:var(--k-bg); border-color:var(--k-border); }
+    .math-block.k1-block { background:var(--k1-bg); border-color:var(--k1-border); }
+    .math-block.gold-block { background:rgba(201,151,58,.08); border-color:rgba(201,151,58,.25); }
+
+    .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .grid-auto { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; }
+
+    .muted { color:var(--muted); }
+    .small { font-size:.95rem; }
+    .code { font-family:"JetBrains Mono",monospace; font-size:.92rem; background:rgba(26,20,18,.05); padding:2px 6px; border-radius:8px; }
+
+    label { display:block; font-weight:700; color:var(--slate); margin-bottom:6px; font-size:.95rem; }
+    input,select,textarea { width:100%; border:1px solid var(--rule); border-radius:14px; background:rgba(255,255,255,.82); color:var(--ink); padding:10px 12px; font-family:"JetBrains Mono",monospace; font-size:.93rem; outline:none; transition:.18s ease; }
+    input:focus,select:focus,textarea:focus { border-color:rgba(201,151,58,.85); box-shadow:0 0 0 4px rgba(201,151,58,.14); }
+    textarea { min-height:104px; resize:vertical; }
+
+    .matrix-grid { display:grid; gap:8px; margin-top:10px; }
+    .matrix-grid.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .matrix-grid.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .matrix-grid input { text-align:center; font-size:.98rem; padding:11px 8px; }
+
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-top:12px; }
+    .btn { appearance:none; border:1px solid rgba(61,74,92,.18); background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(240,236,228,.88)); color:var(--ink); border-radius:14px; padding:11px 16px; font-family:"JetBrains Mono",monospace; font-weight:600; cursor:pointer; transition:.18s ease; box-shadow:0 8px 18px rgba(26,20,18,.05); }
+    .btn:hover { transform:translateY(-1px); border-color:rgba(184,76,30,.3); }
+    .btn.primary { background:linear-gradient(180deg,rgba(184,76,30,.95),rgba(161,60,20,.95)); color:#fff; border-color:rgba(184,76,30,.25); }
+    .btn.secondary { background:linear-gradient(180deg,rgba(45,92,62,.95),rgba(36,75,49,.95)); color:#fff; border-color:rgba(45,92,62,.25); }
+    .btn.blue-btn { background:linear-gradient(180deg,rgba(21,101,192,.90),rgba(13,71,161,.90)); color:#fff; border-color:rgba(21,101,192,.25); }
+    .btn.red-btn { background:linear-gradient(180deg,rgba(183,28,28,.90),rgba(136,14,14,.90)); color:#fff; border-color:rgba(183,28,28,.25); }
+
+    .result-box { margin-top:14px; padding:14px 16px; border-radius:18px; background:rgba(61,74,92,.05); border:1px solid rgba(61,74,92,.12); overflow-x:auto; }
+    .result-box.success { background:rgba(45,125,70,.08); border-color:rgba(45,125,70,.18); }
+    .result-box.warn { background:rgba(201,151,58,.09); border-color:rgba(201,151,58,.22); }
+    .result-box.error { background:rgba(163,58,49,.08); border-color:rgba(163,58,49,.18); }
+
+    table { width:100%; border-collapse:collapse; margin-top:12px; font-family:"JetBrains Mono",monospace; font-size:.92rem; }
+    th,td { border:1px solid rgba(200,191,175,.9); padding:8px 10px; text-align:center; vertical-align:middle; }
+    th { background:rgba(61,74,92,.08); color:var(--slate); font-weight:700; }
+    tr.good td { background:rgba(45,125,70,.09); }
+    tr.bad td { background:rgba(163,58,49,.09); }
+
+    .inline-badge { display:inline-block; padding:4px 8px; border-radius:999px; font-family:"JetBrains Mono",monospace; font-size:.82rem; font-weight:700; border:1px solid transparent; }
+    .inline-badge.good { background:rgba(45,125,70,.12); color:var(--success); border-color:rgba(45,125,70,.2); }
+    .inline-badge.bad { background:rgba(163,58,49,.12); color:var(--danger); border-color:rgba(163,58,49,.2); }
+    .inline-badge.info { background:rgba(61,74,92,.1); color:var(--slate); border-color:rgba(61,74,92,.16); }
+
+    .quiz-item { border:1px solid var(--rule); border-radius:18px; background:rgba(255,255,255,.42); padding:16px; margin-bottom:14px; }
+    .quiz-item.correct { border-color:rgba(45,125,70,.35); background:rgba(45,125,70,.08); }
+    .quiz-item.wrong { border-color:rgba(163,58,49,.35); background:rgba(163,58,49,.08); }
+    .q-title { font-weight:700; margin-bottom:10px; color:var(--ink); }
+    .q-type-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight:700; font-family:"JetBrains Mono",monospace; margin-bottom:8px; }
+    .q-type-badge.mcq { background:rgba(45,92,62,.12); color:var(--forest); border:1px solid rgba(45,92,62,.2); }
+    .q-type-badge.num { background:rgba(21,101,192,.12); color:var(--k-color); border:1px solid var(--k-border); }
+    .choices { display:grid; gap:8px; }
+    .choices label { display:flex; align-items:center; gap:10px; margin:0; padding:10px 12px; border:1px solid rgba(200,191,175,.8); background:rgba(255,255,255,.55); border-radius:14px; cursor:pointer; font-weight:500; color:var(--ink); }
+    .choices input { width:auto; }
+    .feedback { margin-top:10px; font-size:.95rem; }
+    .num-input-wrap { display:flex; gap:10px; align-items:center; }
+    .num-input-wrap input { max-width:220px; }
+
+    .split { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; align-items:start; }
+    .mono { font-family:"JetBrains Mono",monospace; font-size:.93rem; }
+    .history { max-height:260px; overflow:auto; border-radius:18px; border:1px solid rgba(200,191,175,.8); background:rgba(255,255,255,.35); padding:8px; }
+    .history table { margin-top:0; }
+    .footer-note { color:var(--muted); font-size:.92rem; margin-top:8px; }
+
+    /* comparison badge */
+    .cmp-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:.85rem; font-weight:700; }
+    .cmp-badge.jacobi { background:rgba(21,101,192,.12); color:var(--k-color); border:1px solid var(--k-border); }
+    .cmp-badge.gs { background:rgba(183,28,28,.12); color:var(--k1-color); border:1px solid var(--k1-border); }
+
+    /* score bar */
+    .score-bar { height:8px; border-radius:99px; background:rgba(200,191,175,.4); margin:8px 0 0; overflow:hidden; }
+    .score-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--forest),var(--gold)); transition:width .6s ease; }
+
+    @media (max-width:960px) {
+      .grid-2,.split { grid-template-columns:1fr; }
+      .grid-3 { grid-template-columns:1fr; }
+      header { padding-right:18px; }
+      .author-tag { position:static; display:inline-block; margin-top:10px; }
+    }
+  </style>
+</head>
+<body>
+<nav class="site-topbar" aria-label="Navegación principal"><a class="site-back" href="../index.html">⬅ Volver al inicio</a></nav>
+<div class="wrap">
+
+  <header>
+    <div class="header-badge">Análisis Numérico · Métodos Iterativos</div>
+    <div class="author-tag">Profe W</div>
+    <h1>Métodos iterativos para sistemas lineales:<br><em>Jacobi</em> y <em>Gauss-Seidel</em></h1>
+    <p class="subtitle">
+      Una interfaz didáctica autocontenida para estudiar la teoría, verificar convergencia, ejecutar iteraciones,
+      comparar errores y resolver un quiz interactivo con soporte matemático completo.
+    </p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="active" data-target="intro">1. Introducción</button>
+    <button data-target="iterativo">2. Método iterativo</button>
+    <button data-target="herramientas">3. Herramientas teóricas</button>
+    <button data-target="jacobi">4. Jacobi</button>
+    <button data-target="gs">5. Gauss-Seidel</button>
+    <button data-target="teorema">6. Teorema</button>
+    <button data-target="simulacion">7. Simulación</button>
+    <button data-target="dominante">8. Diagonal dominante</button>
+    <button data-target="conclusion">9. Conclusión</button>
+    <button data-target="quiz">10. Evaluación</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       1. INTRODUCCIÓN
+  ════════════════════════════════════════════════════════ -->
+  <section class="section active" id="intro">
+    <div class="card">
+      <h2>1. Introducción</h2>
+      <p>
+        Tras la discretización de problemas en ciencias e ingeniería, aparecen sistemas lineales de la forma
+        \(Ax=b\), con \(A\in\mathbb{R}^{n\times n}\), \(x,b\in\mathbb{R}^n\).
+        Cuando la dimensión crece, los métodos directos pueden resultar costosos; por ello, los métodos iterativos
+        construyen una sucesión de aproximaciones que, bajo hipótesis adecuadas, converge a la solución exacta.
+      </p>
+      <div class="math-block gold-block">
+        \[ Ax=b,\qquad x^{(k+1)} = T\,x^{(k)} + c. \]
+      </div>
+      <p class="tip-profe">
+        💡 La idea central es reescribir el sistema como un problema de punto fijo. Todo el análisis posterior
+        gira alrededor de la <strong>matriz de iteración</strong> \(T\).
+      </p>
+    </div>
+
+    <div class="card example-card">
+      <h3>Lectura guiada del problema</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div><strong>Discretización.</strong> Un modelo continuo se transforma en un sistema algebraico \(Ax=b\).</div></div>
+        <div class="step"><div class="step-num">2</div><div><strong>Reescritura.</strong> El sistema se expresa como \(x = Tx+c\) (forma de punto fijo).</div></div>
+        <div class="step"><div class="step-num">3</div><div><strong>Iteración.</strong> Se generan aproximaciones sucesivas \(x^{(0)},x^{(1)},x^{(2)},\ldots\)</div></div>
+        <div class="step"><div class="step-num">4</div><div><strong>Convergencia.</strong> El comportamiento depende de \(T\), especialmente de \(\rho(T)\).</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card jacobi-card">
+        <h4>Método de Jacobi</h4>
+        <p>Cada componente nueva \(x_i^{(k+1)}\) se calcula usando <em>únicamente</em> valores de la iteración anterior \(x^{(k)}\).</p>
+        <div class="math-block">\[ T_J = D^{-1}(L+U) \]</div>
+      </div>
+      <div class="card gs-card">
+        <h4>Método de Gauss-Seidel</h4>
+        <p>Las componentes ya calculadas dentro del paso \(k+1\) se reutilizan <em>de inmediato</em> para las siguientes.</p>
+        <div class="math-block">\[ T_{GS} = (D-L)^{-1}U \]</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       2. MÉTODO ITERATIVO
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="iterativo">
+    <div class="card definition">
+      <h2>2. ¿Qué es un método iterativo?</h2>
+      <p>Un método iterativo transforma el sistema original en un esquema de punto fijo:</p>
+      <div class="math-block gold-block">
+        \[ x = Tx + c,\qquad x^{(k+1)} = T x^{(k)} + c. \]
+      </div>
+      <p>
+        La sucesión converge si \(\lim_{k\to\infty} x^{(k)} = x^*\), donde \(x^*\) es la solución del sistema.
+        Si el radio espectral satisface \(\rho(T) < 1\), la convergencia queda garantizada.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Interpretación del error</h3>
+        <p>Si \(e^{(k)} = x^{(k)} - x^*\) es el error en el paso \(k\):</p>
+        <div class="math-block">
+          \[ e^{(k+1)} = T\,e^{(k)},\qquad \text{y por inducción:}\quad e^{(k)} = T^k e^{(0)}. \]
+        </div>
+        <p class="tip-profe">El análisis de error se reduce al estudio de potencias de \(T\). Si \(\rho(T) < 1\), entonces \(T^k \to 0\) y el error tiende a cero.</p>
+      </div>
+      <div class="card theorem">
+        <h3>Criterio de convergencia</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num gold">✓</div><div><strong>Necesario y suficiente:</strong> \(\rho(T) < 1\).</div></div>
+          <div class="step"><div class="step-num gold">✓</div><div><strong>Condición suficiente:</strong> \(\|T\| < 1\) para alguna norma inducida.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       3. HERRAMIENTAS TEÓRICAS
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="herramientas">
+    <div class="card">
+      <h2>3. Herramientas teóricas previas</h2>
+      <p>Estas herramientas se usan para estimar y justificar la convergencia de los esquemas iterativos.</p>
+    </div>
+
+    <div class="grid-auto">
+      <div class="card definition">
+        <h3>3.1 Norma matricial \(1\)</h3>
+        <div class="math-block">\[ \|A\|_1 = \max_{1\le j\le n}\sum_{i=1}^n |a_{ij}|. \]</div>
+        <p>Es el máximo de las <strong>sumas por columna</strong>.</p>
+      </div>
+      <div class="card definition">
+        <h3>3.2 Norma matricial \(\infty\)</h3>
+        <div class="math-block">\[ \|A\|_\infty = \max_{1\le i\le n}\sum_{j=1}^n |a_{ij}|. \]</div>
+        <p>Es el máximo de las <strong>sumas por fila</strong>.</p>
+      </div>
+      <div class="card definition">
+        <h3>3.3 Radio espectral</h3>
+        <div class="math-block">\[ \rho(A)=\max_{\lambda\in\sigma(A)}|\lambda|,\qquad \sigma(A)=\{\lambda:\det(A-\lambda I)=0\}. \]</div>
+        <p>Es el módulo del autovalor de mayor magnitud.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Calculadora: normas matriciales</h3>
+      <div class="split">
+        <div>
+          <div class="controls">
+            <div style="min-width:120px"><label>Tamaño</label><select id="normSize"><option value="2">2 × 2</option><option value="3" selected>3 × 3</option></select></div>
+            <button class="btn primary" id="calcNormsBtn">Calcular normas</button>
+            <button class="btn" id="fillNormExampleBtn">Ejemplo</button>
+          </div>
+          <div id="normMatrix"></div>
+        </div>
+        <div><div class="result-box" id="normResult"><strong>Resultado:</strong><p class="muted">Aquí aparecerán las sumas por fila y columna.</p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Calculadora: espectro y radio espectral</h3>
+      <div class="split">
+        <div>
+          <div class="controls">
+            <div style="min-width:120px"><label>Tamaño</label><select id="specSize"><option value="2">2 × 2</option><option value="3" selected>3 × 3</option></select></div>
+            <button class="btn secondary" id="calcSpecBtn">Calcular espectro</button>
+            <button class="btn" id="fillSpecExampleBtn">Ejemplo</button>
+          </div>
+          <div id="specMatrix"></div>
+        </div>
+        <div><div class="result-box" id="specResult"><strong>Resultado:</strong><p class="muted">Se mostrarán los autovalores y el radio espectral.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       4. JACOBI
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="jacobi">
+    <div class="card jacobi-card">
+      <h2>4. Método de Jacobi</h2>
+      <p>
+        El método de Jacobi separa la parte diagonal de la matriz \(A\) y usa
+        <strong>únicamente valores de la iteración anterior</strong>. Es especialmente útil cuando \(A\) es
+        diagonal dominante o cuando \(\rho(T_J) < 1\).
+      </p>
+      <div class="math-block">
+        \[ A = D - L - U, \qquad T_J = D^{-1}(L+U), \qquad c_J=D^{-1}b. \]
+      </div>
+    </div>
+
+    <!-- Sistema editable -->
+    <div class="card">
+      <h3>Sistema 3×3 editable</h3>
+      <p class="muted">Este sistema alimenta ambos métodos y todas las calculadoras.</p>
+      <div class="grid-2">
+        <div><label>Matriz \(A\)</label><div id="systemMatrix"></div></div>
+        <div><label>Vector \(b\)</label><div id="systemVector"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>4.1 Derivación escalar paso a paso</h3>
+      <p>Dada la ecuación \(i\)-ésima del sistema \(\sum_j a_{ij}x_j = b_i\), se despeja \(x_i\):</p>
+      <div class="math-block">
+        \[ x_i = \frac{1}{a_{ii}}\left(b_i - \sum_{j\neq i} a_{ij} x_j\right) \]
+      </div>
+      <p>En Jacobi, el lado derecho <strong>usa exclusivamente valores de la iteración anterior</strong>. Identificamos con colores:</p>
+
+      <div class="iter-legend">
+        <span>Leyenda de iteraciones:</span>
+        <span class="pill-k">x<sub>j</sub><sup>(k)</sup> &nbsp;=&nbsp; iteración actual (entrada)</span>
+        <span class="pill-k1">x<sub>i</sub><sup>(k+1)</sup> &nbsp;=&nbsp; iteración siguiente (salida)</span>
+      </div>
+
+      <div id="jacobiScalar"></div>
+
+      <div class="tip-k">
+        <strong>🔵 Regla de Jacobi:</strong> Todos los términos del lado derecho llevan superíndice
+        <span class="pill-k">^(k)</span>. Ningún valor recién calculado se reutiliza dentro del mismo paso.
+      </div>
+    </div>
+
+    <div class="card bridge-card">
+      <h3>4.2 Del escalar a la forma matricial — construcción de \(T_J\) y \(c_J\)</h3>
+      <p>
+        Reescribiendo las ecuaciones escalares en forma compacta se puede identificar directamente
+        la <strong>matriz de iteración</strong> \(T_J\) y el <strong>vector constante</strong> \(c_J\):
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num blue">1</div>
+          <div>
+            <strong>Expandir los coeficientes.</strong>
+            Escribir cada ecuación como combinación lineal explícita de todas las variables \(x_j^{(k)}\):
+            \[ x_i^{(k+1)} = \underbrace{t_{i1}}_{\text{coef de }x_1^{(k)}} x_1^{(k)} + \cdots + \underbrace{0}_{\text{diagonal}} x_i^{(k)} + \cdots + t_{in} x_n^{(k)} + c_i \]
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num blue">2</div>
+          <div>
+            <strong>Identificar \(t_{ij}\) y \(c_i\).</strong>
+            De la fórmula de despeje: \(t_{ij} = -a_{ij}/a_{ii}\) para \(j\neq i\), \(t_{ii}=0\), y \(c_i = b_i/a_{ii}\).
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num blue">3</div>
+          <div>
+            <strong>Construir \(T_J\) fila por fila.</strong>
+            Los coeficientes de \(x_1^{(k)},\ldots,x_n^{(k)}\) en la ecuación \(i\) forman la fila \(i\) de \(T_J\).
+            Los términos independientes forman \(c_J\).
+          </div>
+        </div>
+      </div>
+
+      <div id="jacobiTableBridge"></div>
+
+      <p class="bridge-note">★ Cada fila coloreada en azul corresponde a una fila de \(T_J\). La columna morada es el vector \(c_J\).</p>
+
+      <div id="jacobiT"></div>
+    </div>
+
+    <div class="card example-card">
+      <h3>4.3 Descomposición matricial \(D\), \(L\), \(U\)</h3>
+      <div id="jacobiDLU"></div>
+    </div>
+
+    <div class="card">
+      <h3>Motor iterativo de Jacobi</h3>
+      <div class="controls">
+        <button class="btn blue-btn" id="runJacobiBtn">▶ Ejecutar Jacobi</button>
+        <button class="btn" id="resetJacobiBtn">⟳ Restablecer</button>
+        <div style="min-width:160px"><label>Tolerancia</label><input id="jacobiTol" value="1e-6" /></div>
+        <div style="min-width:160px"><label>Máx. iteraciones</label><input id="jacobiMax" value="12" /></div>
+      </div>
+      <div class="result-box" id="jacobiOut"><strong>Salida:</strong><p class="muted">La tabla de iteraciones aparecerá aquí.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Ejemplo guiado paso a paso</h3>
+      <p>Avanza iterativamente desde \(x^{(0)}=(0,0,0)\).</p>
+      <div class="controls">
+        <button class="btn secondary" id="guidedNextBtn">→ Siguiente paso</button>
+        <button class="btn" id="guidedResetBtn">⟳ Reiniciar</button>
+      </div>
+      <div class="grid-2">
+        <div class="result-box">
+          <strong>Paso actual</strong>
+          <div id="guidedState"></div>
+          <div class="footer-note" id="guidedExplain"></div>
+        </div>
+        <div class="history">
+          <table><thead><tr><th>\(k\)</th><th>\(x_1\)</th><th>\(x_2\)</th><th>\(x_3\)</th></tr></thead><tbody id="guidedTable"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       5. GAUSS-SEIDEL
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="gs">
+    <div class="card gs-card">
+      <h2>5. Método de Gauss-Seidel</h2>
+      <p>
+        Gauss-Seidel mejora a Jacobi al utilizar <strong>inmediatamente las componentes recién calculadas</strong>
+        dentro de la misma iteración. Por eso su convergencia suele ser más rápida.
+      </p>
+      <div class="math-block">
+        \[ T_{GS} = (D-L)^{-1}U,\qquad c_{GS}=(D-L)^{-1}b. \]
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>5.1 Derivación escalar — la clave de Gauss-Seidel</h3>
+      <p>La ecuación de despeje es idéntica a la de Jacobi, <strong>pero la elección de los valores es diferente</strong>:</p>
+
+      <div class="iter-legend">
+        <span>Leyenda:</span>
+        <span class="pill-k">x<sub>j</sub><sup>(k)</sup> &nbsp;→&nbsp; aún NO actualizado (j &gt; i)</span>
+        <span class="pill-k1">x<sub>j</sub><sup>(k+1)</sup> &nbsp;→&nbsp; YA actualizado en este paso (j &lt; i)</span>
+      </div>
+
+      <div id="gsScalar"></div>
+
+      <div class="grid-2">
+        <div class="tip-k1">
+          <strong>🔴 Valores ya calculados (k+1):</strong> Para la ecuación \(i\), los índices \(j < i\)
+          ya fueron calculados en este mismo paso. Gauss-Seidel los usa <em>de inmediato</em>.
+        </div>
+        <div class="tip-k">
+          <strong>🔵 Valores de la iteración anterior (k):</strong> Los índices \(j > i\) aún no han sido
+          actualizados, así que se usan los valores del paso anterior.
+        </div>
+      </div>
+    </div>
+
+    <div class="card bridge-card">
+      <h3>5.2 Construcción de \(T_{GS}\) y \(c_{GS}\)</h3>
+      <p>A diferencia de Jacobi, la derivación matricial de Gauss-Seidel involucra la parte triangular inferior:</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num red">1</div>
+          <div>
+            <strong>Reescribir el sistema.</strong>
+            La ecuación \(i\) de \(Ax=b\) es:
+            \[ \sum_{j<i} a_{ij}\underbrace{x_j^{(k+1)}}_{\text{ya calc.}} + a_{ii}\underbrace{x_i^{(k+1)}}_{\text{incógnita}} + \sum_{j>i} a_{ij}\underbrace{x_j^{(k)}}_{\text{iter. ant.}} = b_i \]
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num red">2</div>
+          <div>
+            <strong>En notación matricial.</strong>
+            Separando \(A = D - L - U\) (con \(L, U\) triangulares estrictas):
+            \[ (D-L)\,x^{(k+1)} = U\,x^{(k)} + b \]
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num red">3</div>
+          <div>
+            <strong>Despejar \(x^{(k+1)}\).</strong>
+            Como \(D-L\) es invertible (diagonal dominante):
+            \[ x^{(k+1)} = \underbrace{(D-L)^{-1}U}_{T_{GS}}\,x^{(k)} + \underbrace{(D-L)^{-1}b}_{c_{GS}} \]
+          </div>
+        </div>
+      </div>
+
+      <div id="gsT"></div>
+    </div>
+
+    <div class="card example-card">
+      <h3>5.3 Matrices \(D-L\) y \(U\) del ejemplo</h3>
+      <div id="gsDLU"></div>
+    </div>
+
+    <div class="card">
+      <h3>Motor iterativo de Gauss-Seidel</h3>
+      <div class="controls">
+        <button class="btn red-btn" id="runGSBtn">▶ Ejecutar Gauss-Seidel</button>
+        <button class="btn" id="resetGSBtn">⟳ Restablecer</button>
+        <div style="min-width:160px"><label>Tolerancia</label><input id="gsTol" value="1e-6" /></div>
+        <div style="min-width:160px"><label>Máx. iteraciones</label><input id="gsMax" value="12" /></div>
+      </div>
+      <div class="result-box" id="gsOut"><strong>Salida:</strong><p class="muted">La tabla de iteraciones aparecerá aquí.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       6. TEOREMA
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="teorema">
+    <div class="card theorem">
+      <h2>6. Teorema de convergencia</h2>
+      <p>El criterio fundamental establece que la iteración \(x^{(k+1)}=Tx^{(k)}+c\) converge
+      si y solo si:</p>
+      <div class="math-block gold-block">\[ \rho(T) < 1. \]</div>
+      <p>Además, toda norma inducida proporciona una condición suficiente:</p>
+      <div class="math-block">\[ \rho(T)\le \|T\|. \]</div>
+      <p>Por tanto, si \(\|T\|_1 < 1\) o \(\|T\|_\infty < 1\), la convergencia queda asegurada.</p>
+    </div>
+
+    <div class="card">
+      <h3>Cómo aplicar el teorema</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div>Construye \(T\) a partir de la descomposición del sistema (\(T_J\) o \(T_{GS}\)).</div></div>
+        <div class="step"><div class="step-num">2</div><div>Calcula \(\|T\|_1\) (máx. sumas por columna), \(\|T\|_\infty\) (máx. sumas por fila) y \(\rho(T)\).</div></div>
+        <div class="step"><div class="step-num">3</div><div>Si \(\rho(T) < 1\), la iteración converge. Si alguna norma es menor que 1, ya es suficiente.</div></div>
+        <div class="step"><div class="step-num">4</div><div>Cuanto más pequeño sea \(\rho(T)\), más rápida será la convergencia.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       7. SIMULACIÓN
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="simulacion">
+    <div class="card">
+      <h2>7. Simulación comparativa</h2>
+      <p>Se ejecutan ambos métodos sobre el mismo sistema y se comparan errores visualmente.</p>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <button class="btn primary" id="runCompareBtn">▶ Simular ambos métodos</button>
+        <div style="min-width:160px"><label>Tolerancia</label><input id="cmpTol" value="1e-6" /></div>
+        <div style="min-width:160px"><label>Máx. iteraciones</label><input id="cmpMax" value="15" /></div>
+      </div>
+      <div class="grid-2" style="margin-top:14px">
+        <div class="result-box">
+          <strong><span class="cmp-badge jacobi">● Jacobi</span></strong>
+          <div id="cmpJacobiTable"></div>
+        </div>
+        <div class="result-box">
+          <strong><span class="cmp-badge gs">● Gauss-Seidel</span></strong>
+          <div id="cmpGSTable"></div>
+        </div>
+      </div>
+      <div class="result-box" style="margin-top:14px">
+        <strong>Comparación de errores \(\|e^{(k)}\|_2\)</strong>
+        <div id="cmpPlot" style="height:420px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       8. DIAGONAL DOMINANTE
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="dominante">
+    <div class="card">
+      <h2>8. Matriz diagonal dominante</h2>
+      <p>Una matriz es <strong>estrictamente diagonal dominante por filas</strong> si
+      \(|a_{ii}| > \sum_{j\ne i}|a_{ij}|\) para toda fila \(i\).
+      Esta condición <em>implica</em> convergencia para Jacobi y Gauss-Seidel.</p>
+    </div>
+
+    <div class="card">
+      <h3>Verificador interactivo</h3>
+      <div class="split">
+        <div>
+          <div class="controls">
+            <div style="min-width:120px"><label>Tamaño</label><select id="domSize"><option value="2">2 × 2</option><option value="3" selected>3 × 3</option></select></div>
+            <button class="btn primary" id="checkDomBtn">Verificar</button>
+            <button class="btn" id="fillDomExampleBtn">Ejemplo</button>
+          </div>
+          <div id="domMatrix"></div>
+        </div>
+        <div><div class="result-box" id="domResult"><strong>Diagnóstico:</strong><p class="muted">Análisis fila por fila.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       9. CONCLUSIÓN
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="conclusion">
+    <div class="card theorem">
+      <h2>9. Conclusión</h2>
+      <div class="steps">
+        <div class="step"><div class="step-num gold">1</div><div>El criterio esencial de convergencia es \(\rho(T) < 1\).</div></div>
+        <div class="step"><div class="step-num gold">2</div><div>Las normas inducidas \(\|T\|_1 < 1\) o \(\|T\|_\infty < 1\) son condiciones suficientes fáciles de verificar.</div></div>
+        <div class="step"><div class="step-num gold">3</div><div>Gauss-Seidel suele converger más rápido que Jacobi (radio espectral menor).</div></div>
+        <div class="step"><div class="step-num gold">4</div><div>La dominancia diagonal estricta garantiza convergencia en ambos métodos.</div></div>
+      </div>
+      <div class="tip-profe" style="margin-top:18px">
+        En problemas grandes, la elección de la matriz de iteración y la inspección del espectro son tan importantes
+        como la formulación del sistema original.
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card jacobi-card">
+        <h4>Jacobi en resumen</h4>
+        <p>\(T_J = D^{-1}(L+U)\)</p>
+        <p>Todos los valores del RHS son <span class="pill-k">^(k)</span>.</p>
+        <p>Más simple de implementar, puede paralelizarse.</p>
+      </div>
+      <div class="card gs-card">
+        <h4>Gauss-Seidel en resumen</h4>
+        <p>\(T_{GS} = (D-L)^{-1}U\)</p>
+        <p>Mezcla <span class="pill-k">^(k)</span> y <span class="pill-k1">^(k+1)</span>.</p>
+        <p>Converge más rápido en la mayoría de los casos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       10. EVALUACIÓN
+  ════════════════════════════════════════════════════════ -->
+  <section class="section" id="quiz">
+    <div class="card">
+      <h2>10. Evaluación interactiva</h2>
+      <p>
+        Responde las <strong>10 preguntas</strong>. Hay dos tipos:
+        <span class="q-type-badge mcq">Selección múltiple</span> elige la opción correcta, y
+        <span class="q-type-badge num">Numérica</span> escribe el valor exacto (se acepta expresión como <code>7/4</code>).
+      </p>
+      <div class="controls">
+        <button class="btn primary" id="gradeQuizBtn">✔ Calificar</button>
+        <button class="btn" id="resetQuizBtn">⟳ Reiniciar</button>
+      </div>
+      <div id="quizArea" style="margin-top:16px"></div>
+      <div class="result-box" id="quizScore">
+        <strong>Puntaje:</strong>
+        <p class="muted">Aún no se ha calificado el cuestionario.</p>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /.wrap -->
+
+<script>
+  /* ─────────────────────────────────────────────
+     CONSTANTES Y ESTADO GLOBAL
+  ───────────────────────────────────────────── */
+  const DEFAULT_A = [[4,-1,1],[-2,5,1],[1,1,3]];
+  const DEFAULT_B = [7,-8,6];
+  const DEFAULT_X0 =[0,0,0];
+  const SAMPLE2 = [[2,-1],[3,4]];
+  const SAMPLE3 = [[1,2,3],[0,-1,4],[2,1,0]];
+
+  let guidedState = { k:0, x:DEFAULT_X0.slice(), history:[{k:0,x:DEFAULT_X0.slice()}] };
+  let quizData =[];
+
+  const el = id => document.getElementById(id);
+
+  /* ─────────────────────────────────────────────
+     UTILIDADES NUMÉRICAS Y DE FORMATO
+  ───────────────────────────────────────────── */
+  function fmtNumber(v, digits=6) {
+    if (!Number.isFinite(v)) return String(v);
+    const abs = Math.abs(v);
+    if (abs!==0 && (abs<1e-5 || abs>1e6)) return Number(v).toExponential(6);
+    return Number(v).toFixed(digits).replace(/\.?0+$/,'');
+  }
+  function fmtFrac(v, digits=4) { return fmtNumber(v, digits); }
+
+  function toTexNumber(v, digits=6) {
+    if (math.typeOf(v)==='Complex') {
+      const re=fmtNumber(v.re,digits), im=fmtNumber(Math.abs(v.im),digits);
+      if (Math.abs(v.im)<1e-12) return re;
+      return `${re}${v.im>=0?'+':'-'}${im}i`;
+    }
+    if (typeof v==='object'&&v!==null&&'re'in v&&'im'in v) {
+      const re=fmtNumber(v.re,digits), im=fmtNumber(Math.abs(v.im),digits);
+      if (Math.abs(v.im)<1e-12) return re;
+      return `${re}${v.im>=0?'+':'-'}${im}i`;
+    }
+    return fmtNumber(Number(v), digits);
+  }
+
+  function num(v) {
+    const x=typeof v==='number'?v:Number(v);
+    if (!Number.isFinite(x)) throw new Error('Entrada no numérica.');
+    return x;
+  }
+  function parseEntry(val) { const s=String(val).trim(); if(s==='')return 0; return math.evaluate(s); }
+
+  /* ─────────────────────────────────────────────
+     LECTURA DE EDITORES DE MATRIZ / VECTOR
+  ───────────────────────────────────────────── */
+  function readMatrix(containerId, n) {
+    const root=el(containerId);
+    const inputs=root.querySelectorAll('input[data-matrix-entry]');
+    const A=Array.from({length:n},()=>Array(n).fill(0));
+    let idx=0;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) A[i][j]=parseEntry(inputs[idx++].value);
+    return A;
+  }
+  function readVector(containerId, n) {
+    const root=el(containerId);
+    const inputs=root.querySelectorAll('input[data-vector-entry]');
+    return Array.from({length:n},(_,i)=>parseEntry(inputs[i].value));
+  }
+  function getSystem() { return {A:readMatrix('systemMatrix',3),b:readVector('systemVector',3)}; }
+
+  /* ─────────────────────────────────────────────
+     CONSTRUCTORES DE EDITORES HTML
+  ───────────────────────────────────────────── */
+  function buildMatrixEditor(containerId, n, values) {
+    const container=el(containerId);
+    const cls=n===2?'two':'three';
+    let html=`<div class="matrix-grid ${cls}">`;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) {
+      const val=values&&values[i]?values[i][j]:0;
+      html+=`<input data-matrix-entry type="text" value="${val}" aria-label="a_${i+1}${j+1}">`;
+    }
+    html+=`</div>`;
+    container.innerHTML=html;
+  }
+  function buildVectorEditor(containerId, n, values) {
+    const container=el(containerId);
+    let html=`<div class="matrix-grid ${n===2?'two':'three'}">`;
+    for(let i=0;i<n;i++) {
+      const val=values?values[i]:0;
+      html+=`<input data-vector-entry type="text" value="${val}" aria-label="b_${i+1}">`;
+    }
+    html+=`</div>`;
+    container.innerHTML=html;
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDERERS DE MATRICES (HTML y LaTeX)
+  ───────────────────────────────────────────── */
+  function matrixToHtml(A, digits=6) {
+    let html='<table><tbody>';
+    for(const row of A) {
+      html+='<tr>';
+      for(const v of row) html+=`<td>${toTexNumber(v,digits)}</td>`;
+      html+='</tr>';
+    }
+    return html+'</tbody></table>';
+  }
+  function matrixLatex(A, digits=4) {
+    return '\\begin{bmatrix}'+A.map(r=>r.map(v=>toTexNumber(v,digits)).join(' & ')).join(' \\\\ ')+'\\end{bmatrix}';
+  }
+  function vectorLatex(v, digits=4) {
+    return '\\begin{bmatrix}'+v.map(x=>toTexNumber(x,digits)).join(' \\\\ ')+'\\end{bmatrix}';
+  }
+
+  /* ─────────────────────────────────────────────
+     DATOS DE JACOBI Y GAUSS-SEIDEL
+  ───────────────────────────────────────────── */
+  function jacobiData(A, b) {
+    const D=A.map((r,i)=>r.map((v,j)=>i===j?v:0));
+    const L=A.map((r,i)=>r.map((v,j)=>i>j?-v:0));
+    const U=A.map((r,i)=>r.map((v,j)=>i<j?-v:0));
+    const Dinv=math.inv(D);
+    const T=math.multiply(Dinv,math.add(L,U));
+    const c=math.multiply(Dinv,b);
+    return {D,L,U,T,c};
+  }
+  function gsData(A, b) {
+    const D=A.map((r,i)=>r.map((v,j)=>i===j?v:0));
+    const L=A.map((r,i)=>r.map((v,j)=>i>j?-v:0));
+    const U=A.map((r,i)=>r.map((v,j)=>i<j?-v:0));
+    const DL=math.subtract(D,L);
+    const T=math.multiply(math.inv(DL),U);
+    const c=math.multiply(math.inv(DL),b);
+    return {D,L,U,DL,T,c};
+  }
+
+  /* ─────────────────────────────────────────────
+     DERIVACIÓN ESCALAR CON COLORES — JACOBI
+  ───────────────────────────────────────────── */
+  function renderScalarJacobi(A, b) {
+    const n=A.length;
+    const CK='#1565C0', CK1='#B71C1C';
+    const parts=A.map((row,i)=>{
+      const diag=row[i];
+      const termParts=[];
+      for(let j=0;j<n;j++){
+        if(j===i) continue;
+        const a=num(row[j]);
+        if(Math.abs(a)<1e-12) continue;
+        const sign=a>=0?'-':'+';
+        const absA=Math.abs(a);
+        const coeff=absA===1?'':fmtFrac(absA);
+        termParts.push(`${sign}\\,${coeff}{\\color{${CK}}{x_{${j+1}}^{(k)}}}`);
+      }
+      const bStr=fmtFrac(num(b[i]));
+      const dStr=fmtFrac(num(diag));
+      const numStr=termParts.length?`${bStr}\\;${termParts.join('\\;')}`:bStr;
+      return `{\\color{${CK1}}{x_{${i+1}}^{(k+1)}}} &= \\dfrac{${numStr}}{${dStr}}`;
+    });
+    return `<div class="math-block k-block">\\[\\begin{aligned}${parts.join('\\\\')}\\end{aligned}\\]</div>`;
+  }
+
+  /* ─────────────────────────────────────────────
+     DERIVACIÓN ESCALAR CON COLORES — GAUSS-SEIDEL
+  ───────────────────────────────────────────── */
+  function renderScalarGS(A, b) {
+    const n=A.length;
+    const CK='#1565C0', CK1='#B71C1C';
+    const parts=A.map((row,i)=>{
+      const diag=row[i];
+      const termParts=[];
+      for(let j=0;j<n;j++){
+        if(j===i) continue;
+        const a=num(row[j]);
+        if(Math.abs(a)<1e-12) continue;
+        const sign=a>=0?'-':'+';
+        const absA=Math.abs(a);
+        const coeff=absA===1?'':fmtFrac(absA);
+        const sup=j<i?`^{(k+1)}`:`^{(k)}`;
+        const col=j<i?CK1:CK;
+        termParts.push(`${sign}\\,${coeff}{\\color{${col}}{x_{${j+1}}${sup}}}`);
+      }
+      const bStr=fmtFrac(num(b[i]));
+      const dStr=fmtFrac(num(diag));
+      const numStr=termParts.length?`${bStr}\\;${termParts.join('\\;')}`:bStr;
+      return `{\\color{${CK1}}{x_{${i+1}}^{(k+1)}}} &= \\dfrac{${numStr}}{${dStr}}`;
+    });
+    return `<div class="math-block k1-block">\\[\\begin{aligned}${parts.join('\\\\')}\\end{aligned}\\]</div>`;
+  }
+
+  /* ─────────────────────────────────────────────
+     TABLA PUENTE: escalar → T y c
+  ───────────────────────────────────────────── */
+  function renderBridgeTable(A, b, method) {
+    const n=A.length;
+    const data=method==='jacobi'?jacobiData(A,b):gsData(A,b);
+    let T, c;
+    try { T=data.T.toArray?data.T.toArray():data.T; } catch(e){ T=data.T; }
+    try { c=data.c.toArray?data.c.toArray():data.c; } catch(e){ c=data.c; }
+
+    let html=`<div style="overflow-x:auto;margin-top:14px">
+      <p style="font-weight:700;color:var(--slate);margin-bottom:6px">
+        Tabla de coeficientes: cada fila de la ecuación escalar → fila de \\(T\\); término independiente → \\(c\\)
+      </p>
+      <table class="bridge-table">
+        <thead><tr>
+          <th>Ecuación</th>`;
+    for(let j=0;j<n;j++) html+=`<th style="color:var(--k-color)">Coef. de \\(x_{${j+1}}^{(k)}\\)</th>`;
+    html+=`<th style="color:var(--purple)">Término indep. \\(c_i\\)</th></tr></thead><tbody>`;
+
+    for(let i=0;i<n;i++){
+      html+=`<tr><td style="font-weight:700">\\(x_{${i+1}}^{(k+1)}\\)</td>`;
+      for(let j=0;j<n;j++){
+        const tij=num(T[i]?T[i][j]:0);
+        html+=`<td class="coef-k">${fmtFrac(tij)}</td>`;
+      }
+      const ci=num(c[i]?c[i]:0);
+      html+=`<td class="coef-c">${fmtFrac(ci)}</td></tr>`;
+    }
+    html+=`</tbody></table>
+      <div class="arrow-row">↓ cada fila coloreada → fila de T ↓</div>
+      <p>\\[T = ${matrixLatex(T,4)}, \\qquad c = ${vectorLatex(c,4)}\\]</p>
+    </div>`;
+    return html;
+  }
+
+  /* ─────────────────────────────────────────────
+     ITERACIÓN PRINCIPAL
+  ───────────────────────────────────────────── */
+  function iterMethod(A, b, x0, method='jacobi', maxIter=12, tol=1e-6) {
+    const n=A.length;
+    const exactRaw=math.lusolve(math.matrix(A),math.matrix(b.map(v=>[v])));
+    const exact=exactRaw.toArray().map(row=>row[0]);
+    const data=method==='jacobi'?jacobiData(A,b):gsData(A,b);
+    const T=data.T, c=data.c;
+    let x=x0.slice();
+    const hist=[];
+    for(let k=0;k<=maxIter;k++){
+      const err=math.norm(math.subtract(x,exact));
+      hist.push({k,x:x.slice(),err});
+      const xNext=math.add(math.multiply(T,x),c);
+      const diff=math.norm(math.subtract(xNext,x));
+      x=xNext;
+      if(diff<tol){ hist.push({k:k+1,x:x.slice(),err:math.norm(math.subtract(x,exact))}); break; }
+    }
+    return {hist,exact,T,c,data};
+  }
+
+  function renderIterationTable(hist) {
+    let html='<table><thead><tr><th>\\(k\\)</th><th>\\(x_1\\)</th><th>\\(x_2\\)</th><th>\\(x_3\\)</th><th>Error \\(\\|e\\|_2\\)</th></tr></thead><tbody>';
+    hist.forEach(h=>{
+      html+=`<tr><td>${h.k}</td><td>${fmtNumber(h.x[0])}</td><td>${fmtNumber(h.x[1])}</td><td>${fmtNumber(h.x[2])}</td><td>${fmtNumber(h.err)}</td></tr>`;
+    });
+    return html+'</tbody></table>';
+  }
+
+  /* ─────────────────────────────────────────────
+     NORMAS Y ESPECTRO
+  ───────────────────────────────────────────── */
+  function computeNorms(A) {
+    const colSums=A[0].map((_,j)=>A.reduce((s,row)=>s+Math.abs(num(row[j])),0));
+    const rowSums=A.map(row=>row.reduce((s,v)=>s+Math.abs(num(v)),0));
+    return {n1:Math.max(...colSums),ni:Math.max(...rowSums),colSums,rowSums};
+  }
+  function eigenvalues(A) {
+    const eig=math.eigs(A);
+    const vals=eig.values||eig.eigenvalues||[];
+    return vals.map(v=>math.complex(v));
+  }
+  function spectralRadius(vals) { return Math.max(...vals.map(v=>math.abs(v))); }
+  function prettyComplex(c,digits=6) {
+    c=math.complex(c);
+    const re=fmtNumber(c.re,digits),imAbs=fmtNumber(Math.abs(c.im),digits);
+    if(Math.abs(c.im)<1e-12) return re;
+    return `${re}${c.im>=0?'+':'-'}${imAbs}i`;
+  }
+
+  function renderNormResult(A) {
+    const {n1,ni,colSums,rowSums}=computeNorms(A);
+    return[
+      `<p><strong>Sumas por columna:</strong> ${colSums.map(v=>fmtNumber(v)).join(', ')}</p>`,
+      `<p><strong>Sumas por fila:</strong> ${rowSums.map(v=>fmtNumber(v)).join(', ')}</p>`,
+      `<p><strong>Norma 1:</strong> \\(\\|A\\|_1 = ${fmtNumber(n1)}\\)</p>`,
+      `<p><strong>Norma ∞:</strong> \\(\\|A\\|_\\infty = ${fmtNumber(ni)}\\)</p>`
+    ].join('');
+  }
+  function renderSpectralResult(A) {
+    const vals=eigenvalues(A), rho=spectralRadius(vals);
+    let rows=vals.map((v,i)=>`<tr><td>\\(\\lambda_${i+1}\\)</td><td>${prettyComplex(v)}</td><td>${fmtNumber(math.abs(v))}</td></tr>`).join('');
+    return `<p><strong>Autovalores:</strong> ${vals.map(v=>prettyComplex(v)).join(', ')}</p>
+      <p><strong>Radio espectral:</strong> \\(\\rho(A)=${fmtNumber(rho)}\\)</p>
+      <table><thead><tr><th>Autovalor</th><th>Valor</th><th>\\(|\\lambda|\\)</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  /* ─────────────────────────────────────────────
+     INICIALIZACIÓN DE EDITORES
+  ───────────────────────────────────────────── */
+  function initEditors() {
+    buildMatrixEditor('normMatrix',3,SAMPLE3);
+    buildMatrixEditor('specMatrix',3,SAMPLE3);
+    buildMatrixEditor('systemMatrix',3,DEFAULT_A);
+    buildVectorEditor('systemVector',3,DEFAULT_B);
+    buildMatrixEditor('domMatrix',3,DEFAULT_A);
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  }
+
+  function selectedSize(selectId) { return parseInt(el(selectId).value,10); }
+  function updateNormMatrix() { const n=selectedSize('normSize'); buildMatrixEditor('normMatrix',n,n===2?SAMPLE2:SAMPLE3); if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }
+  function updateSpecMatrix() { const n=selectedSize('specSize'); buildMatrixEditor('specMatrix',n,n===2?SAMPLE2:SAMPLE3); if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }
+  function updateDomMatrix() { const n=selectedSize('domSize'); buildMatrixEditor('domMatrix',n,n===2?[[4,1],[1,3]]:DEFAULT_A); if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }
+
+  /* ─────────────────────────────────────────────
+     LLENADO DE SECCIONES DERIVADAS DEL SISTEMA
+  ───────────────────────────────────────────── */
+  function fillDefaultSections() {
+    const {A,b}=getSystem();
+    const jd=jacobiData(A,b), gd=gsData(A,b);
+
+    // Jacobi scalar derivation
+    el('jacobiScalar').innerHTML=renderScalarJacobi(A,b);
+
+    // Jacobi bridge table
+    el('jacobiTableBridge').innerHTML=renderBridgeTable(A,b,'jacobi');
+
+    // Jacobi T matrix display (compact)
+    let jT=jd.T, jc=jd.c;
+    try{ jT=jd.T.toArray?jd.T.toArray():jd.T; }catch(e){}
+    try{ jc=jd.c.toArray?jd.c.toArray():jd.c; }catch(e){}
+    el('jacobiT').innerHTML=`
+      <div class="math-block" style="margin-top:12px">
+        <p><strong>Resultado final:</strong></p>
+        \\[T_J = ${matrixLatex(jT,4)}, \\qquad c_J = ${vectorLatex(jc,4)}\\]
+      </div>`;
+
+    // Jacobi DLU
+    el('jacobiDLU').innerHTML=`
+      <div class="grid-3">
+        <div class="result-box"><strong>D</strong>${matrixToHtml(jd.D,4)}</div>
+        <div class="result-box"><strong>L</strong>${matrixToHtml(jd.L,4)}</div>
+        <div class="result-box"><strong>U</strong>${matrixToHtml(jd.U,4)}</div>
+      </div>`;
+
+    // GS scalar derivation
+    el('gsScalar').innerHTML=renderScalarGS(A,b);
+
+    // GS T matrix display
+    let gT=gd.T, gc=gd.c;
+    try{ gT=gd.T.toArray?gd.T.toArray():gd.T; }catch(e){}
+    try{ gc=gd.c.toArray?gd.c.toArray():gd.c; }catch(e){}
+    el('gsT').innerHTML=`
+      <div class="math-block k1-block" style="margin-top:16px">
+        <p><strong>Resultado matricial de Gauss-Seidel:</strong></p>
+        \\[T_{GS} = ${matrixLatex(gT,4)}, \\qquad c_{GS} = ${vectorLatex(gc,4)}\\]
+      </div>`;
+
+    // GS DLU
+    el('gsDLU').innerHTML=`
+      <div class="grid-2">
+        <div class="result-box"><strong>D − L</strong>${matrixToHtml(gd.DL,4)}</div>
+        <div class="result-box"><strong>U</strong>${matrixToHtml(gd.U,4)}</div>
+      </div>`;
+
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  }
+
+  function refreshSystemDependentViews() { fillDefaultSections(); guidedReset(); }
+
+  /* ─────────────────────────────────────────────
+     MOTORES ITERATIVOS
+  ───────────────────────────────────────────── */
+  function runJacobi() {
+    try {
+      const {A,b}=getSystem();
+      const tol=math.evaluate(el('jacobiTol').value);
+      const maxIter=Math.floor(Number(el('jacobiMax').value));
+      const {hist,exact}=iterMethod(A,b,DEFAULT_X0,'jacobi',maxIter,tol);
+      el('jacobiOut').innerHTML=`
+        <p><strong>Solución exacta:</strong> \\(x^*=${vectorLatex(exact,4)}\\)</p>
+        <p><strong>Iteraciones:</strong> ${hist.length-1}</p>
+        ${renderIterationTable(hist)}`;
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    } catch(err) { el('jacobiOut').innerHTML=`<div class="inline-badge bad">Error</div> ${err.message}`; }
+  }
+
+  function runGS() {
+    try {
+      const {A,b}=getSystem();
+      const tol=math.evaluate(el('gsTol').value);
+      const maxIter=Math.floor(Number(el('gsMax').value));
+      const {hist,exact}=iterMethod(A,b,DEFAULT_X0,'gs',maxIter,tol);
+      el('gsOut').innerHTML=`
+        <p><strong>Solución exacta:</strong> \\(x^*=${vectorLatex(exact,4)}\\)</p>
+        <p><strong>Iteraciones:</strong> ${hist.length-1}</p>
+        ${renderIterationTable(hist)}`;
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    } catch(err) { el('gsOut').innerHTML=`<div class="inline-badge bad">Error</div> ${err.message}`; }
+  }
+
+  /* ─────────────────────────────────────────────
+     EJEMPLO GUIADO
+  ───────────────────────────────────────────── */
+  function updateGuided() {
+    const h=guidedState.history;
+    const last=h[h.length-1];
+    const prev=h.length>1?h[h.length-2]:null;
+    el('guidedState').innerHTML=`
+      <p><strong>Iteración actual:</strong> \\(k = ${last.k}\\)</p>
+      <p><strong>Aproximación:</strong> \\(x^{(${last.k})}=${vectorLatex(last.x,5)}\\)</p>`;
+    el('guidedExplain').innerHTML=prev
+      ?`Pasamos de \\(x^{(${prev.k})}\\) a \\(x^{(${last.k})}\\) aplicando la fórmula de Jacobi. Cambio: ${fmtNumber(math.norm(math.subtract(last.x,prev.x)),6)}.`
+      :'Comenzamos desde el vector inicial nulo \\(x^{(0)}=(0,0,0)\\).';
+    let table='';
+    for(const row of h) table+=`<tr><td>${row.k}</td><td>${fmtNumber(row.x[0])}</td><td>${fmtNumber(row.x[1])}</td><td>${fmtNumber(row.x[2])}</td></tr>`;
+    el('guidedTable').innerHTML=table;
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  }
+  function guidedNext() {
+    const {A,b}=getSystem();
+    const data=jacobiData(A,b), T=data.T, c=data.c;
+    const last=guidedState.history[guidedState.history.length-1].x;
+    const next=math.add(math.multiply(T,last),c);
+    const k=guidedState.history[guidedState.history.length-1].k+1;
+    guidedState.history.push({k,x:next});
+    guidedState.k=k;
+    updateGuided();
+  }
+  function guidedReset() {
+    guidedState={k:0,x:DEFAULT_X0.slice(),history:[{k:0,x:DEFAULT_X0.slice()}]};
+    updateGuided();
+  }
+
+  /* ─────────────────────────────────────────────
+     SIMULACIÓN COMPARATIVA
+  ───────────────────────────────────────────── */
+  function compareSim() {
+    try {
+      const {A,b}=getSystem();
+      const tol=math.evaluate(el('cmpTol').value);
+      const maxIter=Math.floor(Number(el('cmpMax').value));
+      const jac=iterMethod(A,b,DEFAULT_X0,'jacobi',maxIter,tol);
+      const gs=iterMethod(A,b,DEFAULT_X0,'gs',maxIter,tol);
+      function makeSmallTable(hist) {
+        let html='<table><thead><tr><th>\\(k\\)</th><th>\\(x_1\\)</th><th>\\(x_2\\)</th><th>\\(x_3\\)</th><th>\\(\\|e\\|_2\\)</th></tr></thead><tbody>';
+        hist.forEach(h=>{html+=`<tr><td>${h.k}</td><td>${fmtNumber(h.x[0])}</td><td>${fmtNumber(h.x[1])}</td><td>${fmtNumber(h.x[2])}</td><td>${fmtNumber(h.err)}</td></tr>`;});
+        return html+'</tbody></table>';
+      }
+      el('cmpJacobiTable').innerHTML=makeSmallTable(jac.hist);
+      el('cmpGSTable').innerHTML=makeSmallTable(gs.hist);
+      const xJ=jac.hist.map(h=>h.k), eJ=jac.hist.map(h=>h.err);
+      const xG=gs.hist.map(h=>h.k), eG=gs.hist.map(h=>h.err);
+      Plotly.newPlot('cmpPlot',[
+        {x:xJ,y:eJ,mode:'lines+markers',name:'Jacobi',line:{color:'#1565C0'},marker:{color:'#1565C0'}},
+        {x:xG,y:eG,mode:'lines+markers',name:'Gauss-Seidel',line:{color:'#B71C1C'},marker:{color:'#B71C1C'}}
+      ],{
+        margin:{t:30,l:60,r:20,b:50},
+        paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(255,255,255,.65)',
+        xaxis:{title:'Iteración k',gridcolor:'rgba(200,191,175,.45)'},
+        yaxis:{title:'Error ||e^(k)||₂',type:'log',gridcolor:'rgba(200,191,175,.45)'},
+        legend:{orientation:'h',y:1.12},
+        font:{family:'Source Serif 4, serif',color:'#1a1412'}
+      },{responsive:true});
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    } catch(err) { alert(err.message); }
+  }
+
+  /* ─────────────────────────────────────────────
+     CALCULADORAS INTERACTIVAS
+  ───────────────────────────────────────────── */
+  function calcNormsNow() {
+    try { const n=selectedSize('normSize'),A=readMatrix('normMatrix',n); el('normResult').innerHTML='<strong>Resultado:</strong>'+renderNormResult(A); if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }
+    catch(err){ el('normResult').innerHTML=`<div class="inline-badge bad">Error</div> ${err.message}`; }
+  }
+  function calcSpecNow() {
+    try { const n=selectedSize('specSize'),A=readMatrix('specMatrix',n); el('specResult').innerHTML='<strong>Resultado:</strong>'+renderSpectralResult(A); if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }
+    catch(err){ el('specResult').innerHTML=`<div class="inline-badge bad">Error</div> ${err.message}`; }
+  }
+  function checkDominance() {
+    try {
+      const n=selectedSize('domSize'),A=readMatrix('domMatrix',n);
+      let strict=true;
+      let rows=[];
+      A.forEach((row,i)=>{
+        const diag=Math.abs(num(row[i]));
+        const off=row.reduce((s,v,j)=>s+(j!==i?Math.abs(num(v)):0),0);
+        const ok=diag>off; strict=strict&&ok;
+        rows.push(`<tr class="${ok?'good':'bad'}"><td>${i+1}</td><td>${fmtNumber(diag)}</td><td>${fmtNumber(off)}</td><td>${ok?'Sí ✓':'No ✗'}</td></tr>`);
+      });
+      el('domResult').innerHTML=`
+        <strong>Diagnóstico:</strong>
+        <p><span class="inline-badge ${strict?'good':'bad'}">${strict?'Estrictamente diagonal dominante':'No es EDD'}</span></p>
+        <table><thead><tr><th>Fila</th><th>\\(|a_{ii}|\\)</th><th>\\(\\sum_{j\\ne i}|a_{ij}|\\)</th><th>Condición</th></tr></thead>
+        <tbody>${rows.join('')}</tbody></table>
+        <p class="muted">${strict?'La condición favorece la convergencia de Jacobi y Gauss-Seidel.':'No se garantiza convergencia por esta vía; pueden converger por otros criterios.'}</p>`;
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    } catch(err){ el('domResult').innerHTML=`<div class="inline-badge bad">Error</div> ${err.message}`; }
+  }
+
+  /* ─────────────────────────────────────────────
+     QUIZ
+  ───────────────────────────────────────────── */
+  function fillQuiz() {
+    const quiz =[
+      {
+        type:'mcq',
+        q:'<span class="q-type-badge mcq">Selección múltiple</span> 1. ¿Cuál es la forma general de la iteración de punto fijo?',
+        choices:[
+          '\\(x^{(k+1)} = T x^{(k)} + c\\)',
+          '\\(Ax = b\\)',
+          '\\(x^{(k+1)} = A^{-1}b\\)',
+          '\\(x^{(k+1)} = x^{(k)} + b\\)'
+        ],
+        answer:0,
+        exp:'La formulación de punto fijo es \\(x^{(k+1)} = T x^{(k)} + c\\), donde \\(T\\) es la matriz de iteración y \\(c\\) el vector constante.'
+      },
+      {
+        type:'mcq',
+        q:'<span class="q-type-badge mcq">Selección múltiple</span> 2. ¿Qué condición es <em>necesaria y suficiente</em> para la convergencia?',
+        choices:[
+          '\\(\\|T\\|_\\infty > 1\\)',
+          '\\(\\rho(T) < 1\\)',
+          '\\(\\det(T) = 0\\)',
+          '\\(\\operatorname{tr}(T) = 1\\)'
+        ],
+        answer:1,
+        exp:'El criterio fundamental es \\(\\rho(T) < 1\\): el radio espectral debe ser menor que 1 para que las potencias \\(T^k \\to 0\\).'
+      },
+      {
+        type:'mcq',
+        q:'<span class="q-type-badge mcq">Selección múltiple</span> 3. En el método de Jacobi, para calcular \\(x^{(k+1)}\\) se usan:',
+        choices:[
+          'Los valores ya calculados en el paso \\(k+1\\)',
+          'Solo los elementos diagonales de \\(A\\)',
+          'Exclusivamente los valores de la iteración anterior \\(x^{(k)}\\)',
+          'El vector exacto \\(x^*\\)'
+        ],
+        answer:2,
+        exp:'Jacobi usa exclusivamente los valores \\(x^{(k)}\\) de la iteración previa. Ningún componente recién calculado se reutiliza dentro del mismo paso.'
+      },
+      {
+        type:'mcq',
+        q:'<span class="q-type-badge mcq">Selección múltiple</span> 4. Gauss-Seidel suele converger más rápido que Jacobi porque:',
+        choices:[
+          'Ignora completamente la matriz diagonal',
+          'Reutiliza inmediatamente las componentes \\(x_j^{(k+1)}\\) ya calculadas (\\(j < i\\))',
+          'No requiere el vector \\(b\\) en cada iteración',
+          'Solo funciona en matrices singulares'
+        ],
+        answer:1,
+        exp:'La ventaja de Gauss-Seidel es incorporar de inmediato los nuevos valores \\(x_j^{(k+1)}\\) para \\(j < i\\), lo que reduce el radio espectral de la matriz de iteración.'
+      },
+      {
+        type:'num',
+        q:'<span class="q-type-badge num">Numérica</span> 5. Calcula \\(\\|A\\|_\\infty\\) para \\(A=\\begin{bmatrix}1&-2\\\\3&4\\end{bmatrix}\\).',
+        answer:7,
+        exp:'Las sumas por fila son \\(|1|+|-2|=3\\) y \\(|3|+|4|=7\\), luego \\(\\|A\\|_\\infty = \\max(3,7) = 7\\).'
+      },
+      {
+        type:'num',
+        q:'<span class="q-type-badge num">Numérica</span> 6. Calcula \\(\\|A\\|_1\\) para \\(A=\\begin{bmatrix}1&-2\\\\3&4\\end{bmatrix}\\).',
+        answer:6,
+        exp:'Las sumas por columna son \\(|1|+|3|=4\\) y \\(|-2|+|4|=6\\), por tanto \\(\\|A\\|_1 = \\max(4,6) = 6\\).'
+      },
+      {
+        type:'num',
+        q:'<span class="q-type-badge num">Numérica</span> 7. Para \\(B=\\begin{bmatrix}0&2\\\\-1&0\\end{bmatrix}\\), ¿cuál es \\(\\rho(B)\\)? (Ingresa \\(\\sqrt{2}\\approx 1.4142\\))',
+        answer:Math.sqrt(2),
+        exp:'Los autovalores son \\(\\pm i\\sqrt{2}\\) (soluciones de \\(\\lambda^2+2=0\\)), así que \\(\\rho(B)=|{\\pm i\\sqrt{2}}|=\\sqrt{2}\\approx 1.4142\\).'
+      },
+      {
+        type:'num',
+        q:'<span class="q-type-badge num">Numérica</span> 8. Para el sistema de referencia \\(4x_1-x_2+x_3=7,\\;-2x_1+5x_2+x_3=-8,\\;x_1+x_2+3x_3=6\\) con \\(x^{(0)}=(0,0,0)\\), ¿cuánto vale \\(x_1^{(1)}\\) usando <strong>Jacobi</strong>? (Puedes escribir 7/4)',
+        answer:1.75,
+        exp:'Con Jacobi: \\(x_1^{(1)}=\\dfrac{7 - (-1)\\cdot 0 - 1\\cdot 0}{4}=\\dfrac{7}{4}=1.75\\). El RHS solo usa valores \\(x^{(0)}=(0,0,0)\\).'
+      },
+      {
+        type:'mcq',
+        q:'<span class="q-type-badge mcq">Selección múltiple</span> 9. Dado que \\(A = D - L - U\\), ¿cuál es la fórmula correcta para la matriz de iteración de Jacobi \\(T_J\\)?',
+        choices:[
+          '\\(T_J = D^{-1}(L+U)\\)',
+          '\\(T_J = (D-L)^{-1}U\\)',
+          '\\(T_J = D^{-1}A\\)',
+          '\\(T_J = (D+L)^{-1}U\\)'
+        ],
+        answer:0,
+        exp:'En Jacobi se despeja usando solo la diagonal: \\(Dx^{(k+1)}=(L+U)x^{(k)}+b\\), es decir \\(T_J=D^{-1}(L+U)\\). La opción \\((D-L)^{-1}U\\) corresponde a Gauss-Seidel.'
+      },
+      {
+        type:'num',
+        q:'<span class="q-type-badge num">Numérica</span> 10. Para el mismo sistema de referencia y \\(x^{(0)}=(0,0,0)\\), ¿cuánto vale \\(x_2^{(1)}\\) usando <strong>Gauss-Seidel</strong>? (Usa \\(x_1^{(1)}=1.75\\) ya calculado)',
+        answer:-0.9,
+        exp:'Con Gauss-Seidel: \\(x_2^{(1)}=\\dfrac{-8-(-2)\\cdot x_1^{(1)}-1\\cdot x_3^{(0)}}{5}=\\dfrac{-8+2(1.75)-0}{5}=\\dfrac{-4.5}{5}=-0.9\\). Nota que usamos el \\(x_1^{(k+1)}=1.75\\) ya calculado.'
+      }
+    ];
+
+    const html=quiz.map((item,idx)=>{
+      let body=`<div class="quiz-item" id="q${idx}"><div class="q-title">${item.q}</div>`;
+      if(item.type==='mcq'){
+        body+=`<div class="choices">`+item.choices.map((c,j)=>`
+          <label><input type="radio" name="quiz${idx}" value="${j}"><span>${c}</span></label>
+        `).join('')+`</div>`;
+      } else {
+        body+=`<div class="num-input-wrap"><input type="text" id="ans${idx}" placeholder="Escribe el valor numérico..." style="max-width:260px"/></div>`;
+      }
+      body+=`<div class="feedback" id="fb${idx}"></div></div>`;
+      return body;
+    }).join('');
+
+    el('quizArea').innerHTML=html;
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+    return quiz;
+  }
+
+  function gradeQuiz() {
+    let score=0;
+    quizData.forEach((item,idx)=>{
+      const box=el(`q${idx}`), fb=el(`fb${idx}`);
+      box.classList.remove('correct','wrong');
+      let ok=false;
+      if(item.type==='mcq'){
+        const sel=document.querySelector(`input[name="quiz${idx}"]:checked`);
+        if(sel) ok=Number(sel.value)===item.answer;
+      } else {
+        const rawVal=el(`ans${idx}`).value||'NaN';
+        try {
+          const v=math.evaluate(rawVal);
+          ok=Number.isFinite(Number(v))&&Math.abs(Number(v)-item.answer)<1e-3;
+        } catch(e){ ok=false; }
+      }
+      if(ok){
+        score++;
+        box.classList.add('correct');
+        fb.innerHTML=`<span class="inline-badge good">✓ Correcta</span> ${item.exp}`;
+      } else {
+        box.classList.add('wrong');
+        fb.innerHTML=`<span class="inline-badge bad">✗ Revisa</span> ${item.exp}`;
+      }
+    });
+    const pct=Math.round(score/10*100);
+    const cat=score>=8?'good':score>=5?'info':'bad';
+    const label=score>=8?'Excelente':score>=5?'Aceptable':'Refuerza la teoría';
+    el('quizScore').innerHTML=`
+      <strong>Puntaje final:</strong> ${score}/10 <span class="inline-badge ${cat}">${label}</span>
+      <div class="score-bar"><div class="score-fill" style="width:${pct}%"></div></div>`;
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  }
+
+  function resetQuiz() {
+    quizData.forEach((item,idx)=>{
+      const box=el(`q${idx}`);
+      box.classList.remove('correct','wrong');
+      el(`fb${idx}`).innerHTML='';
+      if(item.type==='mcq'){
+        document.querySelectorAll(`input[name="quiz${idx}"]`).forEach(r=>r.checked=false);
+      } else {
+        el(`ans${idx}`).value='';
+      }
+    });
+    el('quizScore').innerHTML='<strong>Puntaje:</strong> <p class="muted">Aún no se ha calificado el cuestionario.</p>';
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+  }
+
+  /* ─────────────────────────────────────────────
+     NAVEGACIÓN POR TABS
+  ───────────────────────────────────────────── */
+  function switchTab(target) {
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    el(target).classList.add('active');
+    document.querySelector(`.tabs button[data-target="${target}"]`).classList.add('active');
+    
+    if(window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise().then(()=>{
+        if(window.Plotly&&target==='simulacion') Plotly.Plots.resize('cmpPlot');
+      }).catch(e => console.warn(e));
+    } else {
+      if(window.Plotly&&target==='simulacion') Plotly.Plots.resize('cmpPlot');
+    }
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  /* ─────────────────────────────────────────────
+     ARRANQUE
+  ───────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    document.querySelectorAll('.tabs button').forEach(btn=>{
+      btn.addEventListener('click',()=>switchTab(btn.dataset.target));
+    });
+
+    try {
+      initEditors();
+      fillDefaultSections();
+      quizData=fillQuiz();
+      updateGuided();
+
+      el('normSize').addEventListener('change',updateNormMatrix);
+      el('specSize').addEventListener('change',updateSpecMatrix);
+      el('domSize').addEventListener('change',updateDomMatrix);
+
+      el('calcNormsBtn').addEventListener('click',calcNormsNow);
+      el('calcSpecBtn').addEventListener('click',calcSpecNow);
+      el('checkDomBtn').addEventListener('click',checkDominance);
+      el('runJacobiBtn').addEventListener('click',runJacobi);
+      el('runGSBtn').addEventListener('click',runGS);
+      el('runCompareBtn').addEventListener('click',compareSim);
+      el('guidedNextBtn').addEventListener('click',guidedNext);
+      el('guidedResetBtn').addEventListener('click',guidedReset);
+      el('resetJacobiBtn').addEventListener('click',()=>{ el('jacobiOut').innerHTML='<strong>Salida:</strong><p class="muted">La tabla de iteraciones aparecerá aquí.</p>'; });
+      el('resetGSBtn').addEventListener('click',()=>{ el('gsOut').innerHTML='<strong>Salida:</strong><p class="muted">La tabla de iteraciones aparecerá aquí.</p>'; });
+      el('gradeQuizBtn').addEventListener('click',gradeQuiz);
+      el('resetQuizBtn').addEventListener('click',resetQuiz);
+
+      el('fillNormExampleBtn').addEventListener('click',()=>{ el('normSize').value='3'; updateNormMatrix(); });
+      el('fillSpecExampleBtn').addEventListener('click',()=>{ el('specSize').value='3'; updateSpecMatrix(); });
+      el('fillDomExampleBtn').addEventListener('click',()=>{ el('domSize').value='3'; updateDomMatrix(); });
+
+      ['systemMatrix','systemVector'].forEach(id=>{
+        el(id).addEventListener('input',()=>refreshSystemDependentViews());
+      });
+
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+      compareSim();
+      calcNormsNow();
+      calcSpecNow();
+      checkDominance();
+      runJacobi();
+      runGS();
+    } catch (err) {
+      console.error("Error durante la inicialización de los componentes visuales o MathJax:", err);
+    }
+  });
+</script>
+</body>
+</html>

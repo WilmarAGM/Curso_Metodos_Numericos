@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Método de Bisección — Profe W</title>
+<link rel="stylesheet" href="../css/global.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<!-- Plotly.js para visualización -->
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<!-- Math.js para evaluación de funciones -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  header p.subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.75;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    padding: 13px 22px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active {
+    color: var(--paper);
+    font-weight: 600;
+  }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 0.97em;
+  }
+
+  /* ─── Details / reveal ─── */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  summary {
+    background: var(--cream);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--slate);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--rust);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px;
+    background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Profe W tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Classification grid ─── */
+  .omega-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .omega-card { border-radius: 4px; padding: 18px 16px; text-align: center; border: 1px solid var(--rule); }
+  .omega-card .name { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  .omega-card .desc { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+  .omega-card.exact { background: #edf7ef; border-color: #89c49a; }
+  .omega-card.over { background: #fef3ec; border-color: #e8a878; }
+
+  /* ─── Step-by-step ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Controles y Botones ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+  input[type="text"], input[type="number"] {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem; border-radius: 3px; color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  input:focus { outline: none; border-color: var(--rust); }
+
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover:not(:disabled) { background: #9d3d15; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover:not(:disabled) { background: #2a3441; }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ─── Interactive Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong .opt-label { background: #c0392b; color: white; }
+  
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .feedback .icon { font-size: 1rem; margin-right: 6px; }
+
+  /* ─── Progress ─── */
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Tablas y Visualización ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+  
+  .plot-container { width: 100%; height: 450px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px; }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .omega-grid { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 14px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-topbar" aria-label="Navegación principal"><a class="site-back" href="../index.html">⬅ Volver al inicio</a></nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Raíces de Ecuaciones</div>
+  <h1>Método de <em>Bisección</em></h1>
+  <p class="subtitle">Búsqueda de raíces mediante el principio de acorralamiento iterativo</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Teoría</button>
+  <button onclick="showSection('algoritmo',this)">② Algoritmo</button>
+  <button onclick="showSection('ejemplo',this)">③ Ejemplo Guiado</button>
+  <button onclick="showSection('simulador',this)">④ Simulador Libre</button>
+  <button onclick="showSection('quiz',this)">⑤ Actividades</button>
+  <button onclick="showSection('conclusion',this)">⑥ Conclusión</button>
+</nav>
+
+<!-- ══════════════ SECCIÓN 1: TEORÍA ══════════════ -->
+<main>
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>Introducción Teórica</h2>
+
+  <p>El problema de encontrar raíces (valores \(x\) tales que \(f(x) = 0\)) es uno de los desafíos más recurrentes en ingeniería y ciencias. Las ecuaciones no lineales muchas veces no admiten una expresión analítica cerrada, por lo que recurrimos a la fuerza bruta matemática.</p>
+
+  <div class="card">
+    <div class="card-label">El Problema Real</div>
+    <p>Por ejemplo, en hidráulica, calcular el factor de fricción \(f\) requiere resolver la ecuación implícita de Colebrook-White:</p>
+    <div class="math-block">
+      $$ \frac{1}{\sqrt{f}} = -2 \log_{10} \left( \frac{\varepsilon/D}{3.7} + \frac{2.51}{Re\sqrt{f}} \right) $$
+    </div>
+    <p>La incógnita está a ambos lados. Definimos una función igualada a cero y usamos métodos numéricos para aproximar su solución.</p>
+  </div>
+
+  <h3>Fundamento Matemático</h3>
+  <div class="card theorem">
+    <div class="card-label">Teorema del Valor Intermedio (T.V.I.)</div>
+    <p>Sea \(f\) una función continua en el intervalo cerrado \([a, b]\).</p>
+    <p>Si \(f(a) \cdot f(b) < 0\) (tienen signos opuestos), entonces existe al menos un punto \(c \in (a, b)\) tal que \(f(c) = 0\).</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Consejo del Profe W</div>
+      <p>Imagina que estás caminando por la montaña. Si en un punto tu altitud es positiva (estás por encima del nivel del mar) y más adelante tu altitud es negativa (estás bajo el agua), y caminaste sin teletransportarte (continuidad)... ¡Obligatoriamente tuviste que cruzar la costa (altitud cero)!</p>
+    </div>
+  </div>
+
+  <h3>Medición del Error</h3>
+  <p>Al generar una sucesión de aproximaciones \(\{p_n\}\) que converge a la raíz exacta \(p\), medimos nuestra precisión de dos formas:</p>
+  <div class="omega-grid">
+    <div class="omega-card exact">
+      <div class="name">Error Absoluto (\(E_a\))</div>
+      <div class="math-block" style="padding: 10px; margin: 8px 0; background: transparent; border: none;">$$E_a = |p_n - p|$$</div>
+      <div class="desc">Diferencia exacta en magnitud.</div>
+    </div>
+    <div class="omega-card over">
+      <div class="name">Error Relativo (\(E_r\))</div>
+      <div class="math-block" style="padding: 10px; margin: 8px 0; background: transparent; border: none;">$$E_r = \frac{|p_n - p|}{|p|}$$</div>
+      <div class="desc">Proporción del error frente al valor real.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: ALGORITMO ══════════════ -->
+<div class="section" id="algoritmo">
+  <h2><span class="section-num">Sección 02</span>Algoritmo y Convergencia</h2>
+
+  <p>El método de bisección es un clásico algoritmo de "divide y vencerás". En cada paso, partimos el intervalo a la mitad y desechamos la mitad que no contiene el cambio de signo.</p>
+
+  <div class="card definition">
+    <div class="card-label">Pasos del Algoritmo</div>
+    <ul class="steps">
+      <li><span class="step-num">1</span><span><strong>Fijar condiciones:</strong> Elegir \([a,b]\) tal que \(f(a) \cdot f(b) < 0\) y establecer una tolerancia de error \(\epsilon > 0\).</span></li>
+      <li><span class="step-num">2</span><span><strong>Calcular el punto medio:</strong> \(p_n = \frac{a + b}{2}\).</span></li>
+      <li><span class="step-num">3</span><span><strong>Evaluar y Decidir:</strong><br>
+        - Si \(f(a) \cdot f(p_n) < 0\): La raíz está a la izquierda. Se define \(b = p_n\).<br>
+        - Si \(f(a) \cdot f(p_n) > 0\): La raíz está a la derecha. Se define \(a = p_n\).<br>
+        - Si \(f(p_n) = 0\): Se ha encontrado la raíz exacta.
+      </span></li>
+      <li><span class="step-num">4</span><span><strong>Iterar:</strong> Repetir hasta que \(|p_n - p| < \epsilon\), o \(|f(p_n)| < \epsilon\).</span></li>
+    </ul>
+  </div>
+
+  <h3>Convergencia y Estimación A Priori</h3>
+  <div class="card theorem">
+    <div class="card-label">Teorema de Convergencia</div>
+    <p>El método de bisección genera una sucesión que converge a la raíz \(p\). El error absoluto en la iteración \(n\) está estrictamente acotado por la mitad de la longitud del intervalo en ese paso:</p>
+    <div class="math-block">
+      $$|p_n - p| \le \frac{b - a}{2^n}, \quad \forall n \ge 1$$
+    </div>
+    <p>Por lo tanto, el número de iteraciones necesarias para asegurar una tolerancia \(\epsilon\) se puede pre-calcular resolviendo la desigualdad:</p>
+    <div class="math-block">
+      $$n \ge \frac{\log\left(\frac{b-a}{\epsilon}\right)}{\log(2)}$$
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: EJEMPLO GUIADO ══════════════ -->
+<div class="section" id="ejemplo">
+  <h2><span class="section-num">Sección 03</span>Ejemplo Guiado Paso a Paso</h2>
+
+  <p>Resolvamos la ecuación \(f(x) = x^3 - x - 2 = 0\) en el intervalo inicial \([1, 2]\).</p>
+
+  <div class="card example-card">
+    <div class="card-label">Control de Simulación Manual</div>
+    <div class="action-grid">
+      <button class="btn-primary" id="btn-next-step" onclick="ejemploGuiado.siguientePaso()">Ejecutar Siguiente Paso</button>
+      <button class="btn-secondary" id="btn-reset-step" style="display:none;" onclick="ejemploGuiado.reiniciar()">Reiniciar Ejemplo</button>
+    </div>
+
+    <div class="tip-profe" style="margin-top: 20px;">
+      <div class="icon">🔍</div>
+      <div class="tip-body">
+        <div class="tip-label">Explicación en tiempo real</div>
+        <p id="guiado-explicacion">Haz clic en "Ejecutar Siguiente Paso" para comenzar el análisis inicial en los extremos.</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="table-guiado">
+        <thead>
+          <tr>
+            <th>\(n\)</th>
+            <th>\(a_n\)</th>
+            <th>\(b_n\)</th>
+            <th>\(p_n\) (Medio)</th>
+            <th>\(f(p_n)\)</th>
+            <th>Cota \(\frac{b-a}{2^n}\)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rellenado por JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: SIMULADOR LIBRE ══════════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Sección 04</span>Simulador Libre</h2>
+
+  <p>Experimenta con cualquier función matemática continua. Ingresa los parámetros y observa cómo el intervalo "acorrala" gráficamente a la raíz.</p>
+
+  <div class="card">
+    <div class="card-label">Panel de Parámetros</div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Función \(f(x)\)</label>
+        <input type="text" id="sim-fx" value="x^2 - 3">
+      </div>
+      <div class="input-group">
+        <label>Extremo \(a\)</label>
+        <input type="number" id="sim-a" value="1" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Extremo \(b\)</label>
+        <input type="number" id="sim-b" value="2" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Tolerancia \(\epsilon\)</label>
+        <input type="number" id="sim-tol" value="0.01" step="0.001">
+      </div>
+    </div>
+    
+    <div class="action-grid">
+      <button class="btn-primary" onclick="simuladorGeneral.iniciar()">1. Iniciar / Graficar</button>
+      <button class="btn-secondary" id="btn-sim-step" onclick="simuladorGeneral.iterar()" disabled>2. Iterar Paso a Paso</button>
+      <button class="btn-secondary" id="btn-sim-all" onclick="simuladorGeneral.resolverTodo()" disabled>3. Completar</button>
+    </div>
+
+    <div id="sim-msg" class="feedback" style="margin-top: 16px;"></div>
+  </div>
+
+  <div id="plot-simulador" class="plot-container"></div>
+
+  <div class="table-wrapper" style="margin-top: 24px;">
+    <table id="table-simulador">
+      <thead>
+        <tr>
+          <th>Iter</th>
+          <th>\(a_n\)</th>
+          <th>\(b_n\)</th>
+          <th>\(p_n\)</th>
+          <th>\(f(p_n)\)</th>
+          <th>Decisión</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rellenado por JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: QUIZ / ACTIVIDADES ══════════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 05</span>Actividades de Evaluación</h2>
+  <p>Ponte a prueba. Selecciona la respuesta correcta para las siguientes 6 preguntas basadas en la teoría de este método.</p>
+
+  <!-- Q1 -->
+  <div class="quiz-question" id="q1">
+    <p class="q">1. Deseas hallar una raíz en el intervalo inicial \([1, 3]\) con tolerancia \(\epsilon = 10^{-4}\) (\(0.0001\)). ¿Cuál es el número <strong>mínimo entero</strong> de iteraciones requeridas para garantizar la convergencia a priori?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(1,'a','c')"><span class="opt-label">A</span>10 iteraciones</button>
+      <button class="opt-btn" onclick="checkQ(1,'b','c')"><span class="opt-label">B</span>14 iteraciones</button>
+      <button class="opt-btn" onclick="checkQ(1,'c','c')"><span class="opt-label">C</span>15 iteraciones</button>
+      <button class="opt-btn" onclick="checkQ(1,'d','c')"><span class="opt-label">D</span>20 iteraciones</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-question" id="q2">
+    <p class="q">2. Te entregan la función \(f(x) = x^2 - 4x + 5\) y te piden hallar una raíz en \([0, 4]\). ¿Qué ocurre si intentas iniciar el algoritmo?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(2,'a','b')"><span class="opt-label">A</span>Convergerá rápido al ser un polinomio de grado 2.</button>
+      <button class="opt-btn" onclick="checkQ(2,'b','b')"><span class="opt-label">B</span>Falla al iniciar porque \(f(0) \cdot f(4) > 0\).</button>
+      <button class="opt-btn" onclick="checkQ(2,'c','b')"><span class="opt-label">C</span>Convergerá al vértice de la parábola (x=2).</button>
+      <button class="opt-btn" onclick="checkQ(2,'d','b')"><span class="opt-label">D</span>El intervalo es demasiado grande para bisección.</button>
+    </div>
+    <div class="feedback" id="fb2"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-question" id="q3">
+    <p class="q">3. (Rastreo Manual) Deseamos calcular \(\sqrt{2}\) hallando la raíz de \(f(x) = x^2 - 2\) en el intervalo \([1, 2]\). ¿Cuál será el valor del punto medio en la <strong>segunda iteración</strong> (\(p_2\))?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(3,'a','b')"><span class="opt-label">A</span>1.50</button>
+      <button class="opt-btn" onclick="checkQ(3,'b','b')"><span class="opt-label">B</span>1.25</button>
+      <button class="opt-btn" onclick="checkQ(3,'c','b')"><span class="opt-label">C</span>1.75</button>
+      <button class="opt-btn" onclick="checkQ(3,'d','b')"><span class="opt-label">D</span>1.41</button>
+    </div>
+    <div class="feedback" id="fb3"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="quiz-question" id="q4">
+    <p class="q">4. Supón que la raíz exacta es \(p = 0.5\). En una iteración dada, tu aproximación es \(p_n = 0.52\). ¿Cuál es el <strong>error relativo</strong> expresado en porcentaje?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(4,'a','a')"><span class="opt-label">A</span>4 %</button>
+      <button class="opt-btn" onclick="checkQ(4,'b','a')"><span class="opt-label">B</span>2 %</button>
+      <button class="opt-btn" onclick="checkQ(4,'c','a')"><span class="opt-label">C</span>0.04 %</button>
+      <button class="opt-btn" onclick="checkQ(4,'d','a')"><span class="opt-label">D</span>0.02 %</button>
+    </div>
+    <div class="feedback" id="fb4"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="quiz-question" id="q5">
+    <p class="q">5. ¿Cómo se clasifica la velocidad de convergencia del Método de Bisección?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(5,'a','c')"><span class="opt-label">A</span>Velocidad Cuadrática</button>
+      <button class="opt-btn" onclick="checkQ(5,'b','c')"><span class="opt-label">B</span>Velocidad Exponencial</button>
+      <button class="opt-btn" onclick="checkQ(5,'c','c')"><span class="opt-label">C</span>Velocidad Lineal</button>
+      <button class="opt-btn" onclick="checkQ(5,'d','c')"><span class="opt-label">D</span>No tiene convergencia garantizada</button>
+    </div>
+    <div class="feedback" id="fb5"></div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="quiz-question" id="q6">
+    <p class="q">6. Según el algoritmo matemático de Bisección, ¿cuál de los siguientes <strong>NO</strong> es un criterio válido de parada?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkQ(6,'a','d')"><span class="opt-label">A</span>Que la distancia \(|p_n - p| < \epsilon\)</button>
+      <button class="opt-btn" onclick="checkQ(6,'b','d')"><span class="opt-label">B</span>Que la imagen \(|f(p_n)| < \epsilon\)</button>
+      <button class="opt-btn" onclick="checkQ(6,'c','d')"><span class="opt-label">C</span>Alcanzar un número máximo de iteraciones (\(n_{max}\))</button>
+      <button class="opt-btn" onclick="checkQ(6,'d','d')"><span class="opt-label">D</span>Que la derivada \(f'(p_n) = 0\)</button>
+    </div>
+    <div class="feedback" id="fb6"></div>
+  </div>
+
+  <!-- Score Board -->
+  <div class="quiz-score" id="quizScore" style="display:none">
+    <div>
+      <div class="score-label">Puntaje Final de Evaluación</div>
+      <div style="font-size:0.85rem; opacity:0.7; margin-top:4px; font-family:'JetBrains Mono',monospace">Preguntas respondidas correctamente</div>
+    </div>
+    <div class="score-val" id="scoreVal">—</div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 6: CONCLUSIÓN ══════════════ -->
+<div class="section" id="conclusion">
+  <h2><span class="section-num">Sección 06</span>Conclusión</h2>
+
+  <p>El método de Bisección es el equivalente matemático de un "todo terreno": no es el más rápido, pero rara vez te dejará varado. Si existe un cambio de signo en una función continua, la raíz está acorralada.</p>
+
+  <div class="card">
+    <div class="card-label">Resumen de propiedades</div>
+    <ul class="steps">
+      <li><span class="step-num">1</span><span><strong>Robustez:</strong> Siempre converge si se cumple la condición inicial del T.V.I. (\(f(a)f(b) < 0\)).</span></li>
+      <li><span class="step-num">2</span><span><strong>Velocidad:</strong> Su principal debilidad es su velocidad de convergencia <em>lineal</em>. El error se reduce exactamente a la mitad en cada paso.</span></li>
+      <li><span class="step-num">3</span><span><strong>Requisito de Derivadas:</strong> Ninguno. Solo requiere poder evaluar la función, ideal para sistemas complejos o cajas negras.</span></li>
+      <li><span class="step-num">4</span><span><strong>Uso moderno:</strong> En la práctica profesional, se utiliza Bisección un par de veces para encontrar un intervalo estrecho y seguro, y luego se cambia a un método más rápido (como Newton-Raphson) para pulir los decimales en tiempo récord.</span></li>
+    </ul>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Mensaje final del Profe W</div>
+      <p>Entender la Bisección es entender el corazón del análisis numérico: acotar el error paso a paso. Memoriza la fórmula del cálculo de iteraciones <em>a priori</em>; es una de las pocas veces en ingeniería donde puedes predecir exactamente el futuro (computacional) antes de presionar "Enter".</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>Material elaborado por Profe W · Análisis Numérico · Método de Bisección</footer>
+
+<script>
+// ─── Lógica General Matemática ───
+const M = {
+  evaluate: function(expr, val) {
+    try {
+      let pExpr = expr.replace(/ln/g, 'log');
+      return math.evaluate(pExpr, {x: val});
+    } catch (e) {
+      return NaN;
+    }
+  }
+};
+
+// ─── Navegación de Tabs ───
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  
+  if (window.MathJax) MathJax.typesetPromise();
+  
+  // Si cambiamos al simulador y ya está inicializado, redimensionar plotly
+  if (id === 'simulador') {
+    window.dispatchEvent(new Event('resize'));
+  }
+}
+
+// ─── Ejemplo Guiado Paso a Paso ───
+const ejemploGuiado = {
+  pasoActual: 0, a: 1, b: 2, f: (x) => Math.pow(x, 3) - x - 2,
+
+  siguientePaso: function() {
+    const cajaTexto = document.getElementById('guiado-explicacion');
+    const tbody = document.querySelector('#table-guiado tbody');
+
+    if(this.pasoActual === 0) {
+      let fa = this.f(this.a), fb = this.f(this.b);
+      cajaTexto.innerHTML = `<strong>Paso 0: Inicialización</strong><br>Calculamos extremos: \\(f(1) = ${fa}\\) (Negativo) y \\(f(2) = ${fb}\\) (Positivo).<br>T.V.I cumplido. ¡Iniciamos iteraciones!`;
+      if (window.MathJax) MathJax.typesetPromise();
+      this.pasoActual++; return;
+    }
+
+    let n = this.pasoActual;
+    let pn = (this.a + this.b) / 2;
+    let fpn = this.f(pn), fa = this.f(this.a);
+    let err_cota = (2 - 1) / Math.pow(2, n);
+    let decision = "", new_a = this.a, new_b = this.b;
+
+    if (fa * fpn < 0) { 
+      decision = `\\(f(a) \\cdot f(p_n) < 0\\). Raíz a la izquierda. \\(b = ${pn.toFixed(4)}\\)`; 
+      new_b = pn; 
+    } else { 
+      decision = `\\(f(a) \\cdot f(p_n) > 0\\). Raíz a la derecha. \\(a = ${pn.toFixed(4)}\\)`; 
+      new_a = pn; 
+    }
+
+    cajaTexto.innerHTML = `<strong>Iteración ${n}:</strong><br>Punto medio \\(p_${n} = ${pn.toFixed(4)}\\). Evaluamos \\(f(p_n) = ${fpn.toFixed(4)}\\).<br>${decision}`;
+    if (window.MathJax) MathJax.typesetPromise();
+
+    let tr = document.createElement('tr');
+    tr.innerHTML = `<td>${n}</td><td>${this.a.toFixed(4)}</td><td>${this.b.toFixed(4)}</td>
+                    <td style="color:var(--rust); font-weight:bold;">${pn.toFixed(4)}</td>
+                    <td>${fpn.toFixed(4)}</td><td>${err_cota.toFixed(4)}</td>`;
+    tbody.appendChild(tr);
+
+    this.a = new_a; this.b = new_b; this.pasoActual++;
+
+    if (n >= 6) {
+      document.getElementById('btn-next-step').style.display = 'none';
+      document.getElementById('btn-reset-step').style.display = 'inline-block';
+      cajaTexto.innerHTML += `<br><br><span style="color:var(--forest); font-weight:bold;">Convergencia ilustrada completada.</span>`;
+    }
+  },
+  
+  reiniciar: function() {
+    this.pasoActual = 0; this.a = 1; this.b = 2;
+    document.querySelector('#table-guiado tbody').innerHTML = "";
+    document.getElementById('guiado-explicacion').innerHTML = `Haz clic en "Ejecutar Siguiente Paso" para comenzar el análisis inicial en los extremos.`;
+    document.getElementById('btn-next-step').style.display = 'inline-block';
+    document.getElementById('btn-reset-step').style.display = 'none';
+  }
+};
+
+// ─── Simulador Libre (Plotly) ───
+const simuladorGeneral = {
+  f_str: "", a: 0, b: 0, tol: 0, n_iter: 0, activo: false,
+  
+  mostrarMsg: function(msg, isError=false) {
+    let box = document.getElementById('sim-msg');
+    box.innerHTML = `<span class="icon">${isError ? '⚠️' : '✅'}</span> ${msg}`; 
+    box.classList.add('show');
+    box.className = 'feedback show ' + (isError ? 'err' : 'ok');
+    if (window.MathJax) MathJax.typesetPromise();
+  },
+
+  iniciar: function() {
+    this.f_str = document.getElementById('sim-fx').value;
+    this.a = parseFloat(document.getElementById('sim-a').value);
+    this.b = parseFloat(document.getElementById('sim-b').value);
+    this.tol = parseFloat(document.getElementById('sim-tol').value);
+    
+    let fa = M.evaluate(this.f_str, this.a), fb = M.evaluate(this.f_str, this.b);
+
+    if (isNaN(fa) || isNaN(fb)) return this.mostrarMsg("Error en función. Revisa la sintaxis.", true);
+    if (fa * fb >= 0) return this.mostrarMsg(`Falla T.V.I: \\(f(a)=${fa.toFixed(2)}\\) y \\(f(b)=${fb.toFixed(2)}\\) tienen mismo signo.`, true);
+
+    this.n_iter = 0; this.activo = true;
+    document.getElementById('btn-sim-step').disabled = false; 
+    document.getElementById('btn-sim-all').disabled = false;
+    document.querySelector('#table-simulador tbody').innerHTML = "";
+    
+    this.mostrarMsg(`Entorno preparado. Raíz acorralada en[${this.a}, ${this.b}].`);
+    this.graficarBase();
+  },
+
+  iterar: function() {
+    if(!this.activo) return;
+    this.n_iter++;
+    let pn = (this.a + this.b) / 2;
+    let fa = M.evaluate(this.f_str, this.a), fpn = M.evaluate(this.f_str, pn);
+    let err_abs = (this.b - this.a)/2;
+
+    let decision = "";
+    if (Math.abs(fpn) < 1e-12 || err_abs < this.tol) {
+      this.activo = false;
+      document.getElementById('btn-sim-step').disabled = true; 
+      document.getElementById('btn-sim-all').disabled = true;
+      decision = "¡Convergencia!";
+      this.mostrarMsg(`Convergencia lograda en ${this.n_iter} iteraciones. \\(p \\approx ${pn.toFixed(5)}\\)`);
+    } else {
+      if (fa * fpn < 0) { decision = "b = p"; this.b = pn; } else { decision = "a = p"; this.a = pn; }
+    }
+
+    let tbody = document.querySelector('#table-simulador tbody');
+    let tr = document.createElement('tr');
+    tr.innerHTML = `<td>${this.n_iter}</td><td>${this.a.toFixed(5)}</td><td>${this.b.toFixed(5)}</td>
+                    <td style="color:var(--rust); font-weight:bold;">${pn.toFixed(5)}</td>
+                    <td>${fpn.toFixed(5)}</td><td>${decision}</td>`;
+    tbody.appendChild(tr);
+    this.actualizarGrafico(pn);
+  },
+  
+  resolverTodo: function() { 
+    while(this.activo && this.n_iter < 50) this.iterar(); 
+  },
+  
+  graficarBase: function() {
+    let x_vals =[], y_vals =[];
+    let step = (this.b - this.a) / 100, margin = (this.b - this.a) * 0.2;
+    let x_min = this.a - margin, x_max = this.b + margin;
+    
+    for (let x = x_min; x <= x_max; x += step) { 
+      x_vals.push(x); y_vals.push(M.evaluate(this.f_str, x)); 
+    }
+    
+    let layout = { 
+      paper_bgcolor: '#f5f0e8', plot_bgcolor: '#f5f0e8', 
+      margin: {t: 20, l: 40, r: 20, b: 40}, 
+      xaxis: { gridcolor: '#c8bfaf' }, yaxis: { gridcolor: '#c8bfaf' },
+      font: { family: 'Source Serif 4, serif', color: '#1a1412' }
+    };
+
+    Plotly.newPlot('plot-simulador',[
+      { x: x_vals, y: y_vals, mode: 'lines', name: 'f(x)', line: {color: '#3d4a5c', width: 2.5} },
+      { x:[x_min, x_max], y: [0,0], mode: 'lines', line: {color: '#b84c1e', width: 1.5, dash: 'dash'}, showlegend: false }
+    ], layout, {responsive: true});
+    
+    this.actualizarGrafico(null);
+  },
+  
+  actualizarGrafico: function(pn) {
+    let shapes =[{ type: 'rect', xref: 'x', yref: 'paper', x0: this.a, x1: this.b, y0: 0, y1: 1, fillcolor: 'rgba(45, 92, 62, 0.15)', line: {width: 0} }];
+    if(pn !== null) shapes.push({ type: 'line', x0: pn, x1: pn, y0: 0, y1: 1, yref: 'paper', line: {color: '#c9973a', dash: 'dot', width: 2} });
+    Plotly.relayout('plot-simulador', { shapes: shapes });
+  }
+};
+
+// ─── Sistema de Actividades Evaluativas (Quiz) ───
+const quizState = { answered: {}, correct: 0 };
+const messages = {
+  correct:[
+    "¡Correcto! Excelente deducción.",
+    "¡Exacto! Tienes dominada la teoría.",
+    "¡Perfecto! Así es como se aplica el cálculo numérico.",
+    "¡Muy bien! El Profe W estaría orgulloso."
+  ],
+  wrong:[
+    "No es correcto. Revisa el planteamiento de la fórmula.",
+    "Casi, pero no. Relee la sección del Algoritmo.",
+    "Incorrecto. Recuerda los teoremas vistos al inicio."
+  ]
+};
+
+// Respuestas hardcodeadas para la validación:
+// Q1: C (15), Q2: B (falla TVI), Q3: B (1.25), Q4: A (4%), Q5: C (Lineal), Q6: D (f'(p)=0)
+function checkQ(qNum, chosen, correct) {
+  if (quizState.answered[qNum]) return;
+  quizState.answered[qNum] = true;
+
+  const container = document.getElementById('q' + qNum);
+  const btns = container.querySelectorAll('.opt-btn');
+  const letters = ['a','b','c','d'];
+  
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (letters[i] === correct) btn.classList.add('correct');
+    else if (letters[i] === chosen && chosen !== correct) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('fb' + qNum);
+  fb.classList.add('show');
+  const isCorrect = chosen === correct;
+  fb.classList.add(isCorrect ? 'ok' : 'err');
+  const pool = messages[isCorrect ? 'correct' : 'wrong'];
+  
+  // Custom feedback explication
+  let extraFB = "";
+  if(qNum === 1 && isCorrect) extraFB = " \\(\\frac{\\log(2/0.0001)}{\\log(2)} = 14.28\\), por lo que redondeamos al entero mayor: 15 iteraciones.";
+  if(qNum === 2 && isCorrect) extraFB = " \\(f(0)=5\\) y \\(f(4)=5\\). Al tener el mismo signo, el Teorema del Valor Intermedio no garantiza raíz.";
+  if(qNum === 3 && isCorrect) extraFB = " \\(p_1 = 1.5\\). Como \\(f(1.5) = +0.25\\), reemplazamos el extremo positivo \\(b=1.5\\). El nuevo medio es \\(\\frac{1+1.5}{2} = 1.25\\).";
+  if(qNum === 4 && isCorrect) extraFB = " \\(E_r = \\frac{|0.52 - 0.5|}{0.5} = \\frac{0.02}{0.5} = 0.04\\), que equivale al 4%.";
+
+  fb.innerHTML = `<span class="icon">${isCorrect ? '✅' : '❌'}</span> ${pool[Math.floor(Math.random()*pool.length)]} ${extraFB}`;
+  
+  if (isCorrect) quizState.correct++;
+  if (Object.keys(quizState.answered).length === 6) showFinalScore();
+  
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+function showFinalScore() {
+  const sc = document.getElementById('quizScore');
+  sc.style.display = 'flex';
+  document.getElementById('scoreVal').textContent = quizState.correct + '/6';
+}
+</script>
+</body>
+</html>
