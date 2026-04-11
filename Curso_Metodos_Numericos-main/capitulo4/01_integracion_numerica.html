@@ -1,0 +1,1269 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integración Numérica — Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --ink:    #1c2433;
+    --paper:  #f5f0e8;
+    --cream:  #ede8da;
+    --rule:   #d4ccbc;
+    --muted:  #8a8070;
+    --shadow: rgba(28,36,51,0.08);
+    --gold:   #c9a84c;
+    --rust:   #b94a1e;
+    --forest: #2e6b45;
+    --slate:  #3d4f63;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.75;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .author-tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.9;
+    position: relative;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    padding: 13px 18px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active { color: var(--paper); font-weight: 600; }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 840px; margin: 0 auto; padding: 40px 24px 80px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem    { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card.warning-card { border-left: 4px solid var(--gold); background: #fffbf0; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label    { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.warning-card .card-label { color: #a07820; }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 0.97em;
+    text-align: center;
+  }
+
+  /* ─── Details / reveal ─── */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  summary {
+    background: var(--cream);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--slate);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--rust);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px;
+    background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Tip Profe ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Comparison grid ─── */
+  .compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .compare-card { border-radius: 4px; padding: 18px 16px; border: 1px solid var(--rule); background: white; }
+  .compare-card h4 {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .compare-card.trap h4 { color: var(--rust); }
+  .compare-card.simp h4 { color: var(--forest); }
+  .compare-card.nc h4 { color: var(--slate); }
+
+  /* ─── Error badge ─── */
+  .error-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: var(--ink); color: var(--gold);
+    padding: 3px 10px; border-radius: 2px; margin-left: 8px;
+  }
+
+  /* ─── Controles Simulador ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  }
+  input[type="text"], input[type="number"], select {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem; border-radius: 3px; color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--rust); }
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #9d3d15; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+  .plot-container { width: 100%; height: 420px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px; }
+
+  /* ─── Result box ─── */
+  .result-box {
+    background: var(--ink); color: var(--paper);
+    border-radius: 4px; padding: 18px 24px;
+    margin-top: 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem; line-height: 1.8;
+  }
+  .result-box .rl { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+  .result-box .rv { font-size: 1.3rem; color: white; }
+
+  /* ─── Table ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: left;
+       font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+  td.highlight { color: var(--rust); font-weight: 600; }
+
+  /* ─── Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .q-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--rust); letter-spacing: 2px; text-transform: uppercase;
+    display: block; margin-bottom: 6px;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong   { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val   { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .compare-grid { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 14px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 4 · Integración numérica</div>
+  <h1>Integración <em>Numérica</em></h1>
+  <p class="subtitle">Cuadratura numérica: Trapecio, Simpson y Newton-Cotes</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Panorama</button>
+  <button onclick="showSection('trapecio',this)">② Trapecio</button>
+  <button onclick="showSection('simpson',this)">③ Simpson 1/3</button>
+  <button onclick="showSection('newtoncotes',this)">④ Newton-Cotes</button>
+  <button onclick="showSection('simulador',this)">⑤ Simulador</button>
+  <button onclick="showSection('quiz',this)">⑥ Actividades</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ SECCIÓN 1: PANORAMA ══════════════ -->
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>Panorama General</h2>
+
+  <p>Calcular una integral definida es, en teoría, sencillo: aplicamos el Teorema Fundamental del Cálculo. El problema real surge cuando <strong>no conocemos la antiderivada de \(f\)</strong>, o cuando \(f\) solo se conoce en puntos discretos (datos experimentales, sensores, simulaciones).</p>
+
+  <div class="card">
+    <div class="card-label">El Problema Central</div>
+    <p>Queremos aproximar</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx$$</div>
+    <p>sin conocer una primitiva de \(f\). Para ello construimos una <strong>cuadratura numérica</strong>: reemplazamos \(f\) por un polinomio interpolante \(p_n\) y lo integramos exactamente.</p>
+  </div>
+
+  <h3>¿Qué es una Cuadratura Numérica?</h3>
+  <div class="card definition">
+    <div class="card-label">Definición — Cuadratura Numérica</div>
+    <p>Una fórmula de cuadratura numérica aproxima la integral mediante una combinación lineal de valores de \(f\) en puntos \(x_i\) (nodos) con coeficientes \(w_i\) (pesos):</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx \sum_{i=0}^{n} w_i\, f(x_i)$$</div>
+    <p>Los nodos \(x_i \in [a,b]\) y los pesos \(w_i\) se eligen para maximizar el <em>grado de exactitud</em>.</p>
+  </div>
+
+  <h3>La Idea Detrás: Interpolación Polinomial</h3>
+  <p>Si aproximamos \(f\) por el polinomio interpolante \(p_n\) que pasa por los nodos \(\{x_i\}_{i=0}^n\) (usando los polinomios de Lagrange \(L_i\)), entonces:</p>
+  <div class="math-block">$$\int_a^b f(x)\,dx \approx \int_a^b p_n(x)\,dx = \sum_{i=0}^{n} f(x_i)\underbrace{\int_a^b L_i(x)\,dx}_{w_i}$$</div>
+  <p>Esto significa que los pesos son las integrales de los polinomios de Lagrange, cantidades que se pueden calcular <em>una sola vez</em>.</p>
+
+  <h3>Error de Integración</h3>
+  <div class="card theorem">
+    <div class="card-label">Teorema — Error en Cuadratura</div>
+    <p>Dado que el error en la interpolación polinomial es conocido, el error en la cuadratura resultante es:</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx - \int_a^b p_n(x)\,dx = \int_a^b \frac{f^{(n+1)}(\alpha(x))}{(n+1)!}\prod_{i=0}^n(x-x_i)\,dx, \quad \alpha(x)\in[a,b]$$</div>
+    <p>Conocer el error nos permite entender cuándo la aproximación es confiable y cómo mejora al aumentar los nodos.</p>
+  </div>
+
+  <div class="card definition">
+    <div class="card-label">Definición — Grado de Precisión o Exactitud</div>
+    <p>El <strong>grado de precisión o exactitud</strong> de una fórmula de cuadratura es el entero positivo más grande \(m\) tal que la fórmula es exacta para \(x^k\), para \(k = 0, 1, \ldots, m\).</p>
+    <p>Equivalentemente: es el grado máximo del polinomio para el cual la regla integra sin error.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">💡</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición clave</div>
+      <p>Si una regla es exacta para todos los polinomios de grado \(\leq m\), entonces su error involucra la derivada \(f^{(m+1)}\). Cuando \(f\) es un polinomio de grado \(\leq m\), esa derivada es cero: la regla da el resultado <em>exacto</em>.</p>
+    </div>
+  </div>
+
+  <h3>Mapa del Tema</h3>
+  <div class="compare-grid">
+    <div class="compare-card trap">
+      <h4>🔹 Regla del Trapecio</h4>
+      <p style="font-size:0.88rem;">Dos nodos (extremos del intervalo). Grado de exactitud: <strong>1</strong>. Error: \(O(h^3)\) simple, \(O(h^2)\) compuesta.</p>
+    </div>
+    <div class="compare-card simp">
+      <h4>🔸 Regla de Simpson 1/3</h4>
+      <p style="font-size:0.88rem;">Tres nodos igualmente espaciados. Grado de exactitud: <strong>3</strong>. Error: \(O(h^5)\) simple, \(O(h^4)\) compuesta.</p>
+    </div>
+    <div class="compare-card nc" style="grid-column: 1 / -1;">
+      <h4>🔶 Newton-Cotes (general)</h4>
+      <p style="font-size:0.88rem;">Familia de fórmulas con \(M+1\) nodos igualmente espaciados. Incluye Trapecio (\(M=1\)), Simpson 1/3 (\(M=2\)), Simpson 3/8 (\(M=3\)), Boole (\(M=4\)) y variantes <em>abiertas</em> (sin extremos).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: TRAPECIO ══════════════ -->
+<div class="section" id="trapecio">
+  <h2><span class="section-num">Sección 02</span>Regla del Trapecio</h2>
+
+  <p>La idea más simple: aproximar \(f\) por la recta que pasa por los dos extremos del intervalo \([a,b]\). El área bajo esa recta es exactamente el área de un trapecio.</p>
+
+  <h3>Regla Simple</h3>
+  <div class="card theorem">
+    <div class="card-label">Fórmula — Trapecio Simple</div>
+    <p>Con \(x_0 = a\), \(x_1 = b\) y \(h = b - a\):</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx \frac{h}{2}\bigl[f(a) + f(b)\bigr]$$</div>
+    <p><strong>Error:</strong></p>
+    <div class="math-block">$$\int_a^b f(x)\,dx = \frac{b-a}{2}\bigl[f(a)+f(b)\bigr] - \frac{h^3}{12}f''(\beta), \quad \beta\in(a,b)$$</div>
+    <p>Grado de exactitud: <strong>1</strong> (exacta para polinomios de grado ≤ 1).</p>
+  </div>
+
+  <h3>Derivación del Error</h3>
+  <div class="card theorem">
+    <div class="card-label">Teorema — Valor Medio Ponderado para Integrales</div>
+    <p>Si \(f \in C[a,b]\) y \(g\) no cambia de signo en \((a,b)\), existe \(\beta \in (a,b)\) tal que:</p>
+    <div class="math-block">$$\int_a^b f(x)g(x)\,dx = f(\beta)\int_a^b g(x)\,dx$$</div>
+    <p>Este resultado es fundamental para simplificar la expresión del error: tomando \(g(x) = (x-a)(x-b)\), que es negativa en \((a,b)\), se obtiene la fórmula exacta del error de la regla del trapecio.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">⚠️</div>
+    <div class="tip-body">
+      <div class="tip-label">Problema con h &gt; 1</div>
+      <p>Cuando \(h > 1\), la cantidad \(h^3\) puede ser grande y el error no es pequeño. La solución: dividir el intervalo en muchos subintervalos y aplicar la regla en cada uno (regla compuesta).</p>
+    </div>
+  </div>
+
+  <h3>Regla del Trapecio Compuesta</h3>
+  <p>Dividimos \([a,b]\) en \(n\) subintervalos de longitud \(h = (b-a)/n\) con nodos \(x_i = a + ih\). Aplicamos el trapecio en cada subintervalo y sumamos:</p>
+
+  <div class="card theorem">
+    <div class="card-label">Fórmula — Trapecio Compuesto</div>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx \frac{h}{2}\left[f(x_0) + 2\sum_{i=1}^{n-1}f(x_i) + f(x_n)\right], \quad h = \frac{b-a}{n}$$</div>
+    <p><strong>Error:</strong></p>
+    <div class="math-block">$$\int_a^b f(x)\,dx = \frac{h}{2}\left[f(x_0)+2\sum_{i=1}^{n-1}f(x_i)+f(x_n)\right] - \frac{h^2}{12}(b-a)f''(\xi), \quad \xi\in(a,b)$$</div>
+    <p>El error es ahora <span class="error-badge">O(h²)</span>: al duplicar \(n\) (y dividir \(h\) por 2), el error se reduce 4 veces.</p>
+  </div>
+
+  <h3>Ejemplo Guiado</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Trapecio simple y compuesto</div>
+    <p>Aproximar \(\displaystyle\int_0^2 e^x\ln(x^2+1)\tan^{-1}(x^2+10\pi)\,dx\)</p>
+
+    <details>
+      <summary>Ver solución paso a paso</summary>
+      <div>
+        <p>Sea \(f(x) = e^x\ln(x^2+1)\tan^{-1}(x^2+10\pi)\). Se verifica que \(f\in C^2[0,2]\).</p>
+        <ul style="list-style: disc; padding-left: 22px; margin-bottom: 12px;">
+          <li><strong>Trapecio simple</strong> (\(h = 2\)): \(\frac{2}{2}[f(0)+f(2)] \approx 18.34457\) — error \(O(2^3)\), muy grande.</li>
+          <li><strong>Compuesto \(n=2\)</strong> (\(h=1\)): \(\frac{1}{2}[f(0)+2f(1)+f(2)] \approx 12.0738\) — error \(O(1)\).</li>
+          <li><strong>Compuesto \(n=3\)</strong> (\(h=2/3\)): \(\approx 10.8308\) — error \(O(4/9)\).</li>
+          <li><strong>Compuesto \(n=4\)</strong> (\(h=1/2\)): \(\approx 10.3904\) — error \(O(1/4)\).</li>
+        </ul>
+        <p>La convergencia es clara: al aumentar los subintervalos, la aproximación mejora significativamente.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="card warning-card">
+    <div class="card-label">Observación importante</div>
+    <p>Si \(f''(x) = 0\) en \([a,b]\) (es decir, \(f\) es un polinomio lineal), el error del trapecio es exactamente cero. Esto confirma que el grado de exactitud es <strong>1</strong>.</p>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: SIMPSON 1/3 ══════════════ -->
+<div class="section" id="simpson">
+  <h2><span class="section-num">Sección 03</span>Regla de Simpson 1/3</h2>
+
+  <p>En lugar de una recta, aproximamos \(f\) por la parábola (polinomio de grado 2) que pasa por tres nodos igualmente espaciados: \(a\), \(\tfrac{a+b}{2}\) y \(b\). El resultado es sorprendente: ¡la regla termina siendo exacta para polinomios de grado <strong>3</strong>, no solo 2!</p>
+
+  <h3>Derivación de los Pesos</h3>
+  <p>Para encontrar los pesos, buscamos \(A\), \(B\) y \(C\) tales que la fórmula \(\int_0^2 g(z)\,dz \approx Ag(0) + Bg(1) + Cg(2)\) sea exacta para \(g(z) = 1, z, z^2\). El sistema resultante es:</p>
+  <div class="math-block">
+    $$A + B + C = 2, \quad B + 2C = 2, \quad B + 4C = \frac{8}{3}$$
+  </div>
+  <p>Cuya solución es \(A = \frac{1}{3}\), \(B = \frac{4}{3}\), \(C = \frac{1}{3}\). Vía cambio de variable \(x = a + \frac{b-a}{2}z\) se obtiene la fórmula en \([a,b]\).</p>
+
+  <div class="card theorem">
+    <div class="card-label">Fórmula — Simpson 1/3 Simple</div>
+    <p>Con \(h = (b-a)/2\), \(x_0=a\), \(x_1=(a+b)/2\), \(x_2=b\):</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx \frac{h}{3}\bigl[f(x_0) + 4f(x_1) + f(x_2)\bigr] = \frac{b-a}{6}\left[f(a) + 4f\!\left(\frac{a+b}{2}\right) + f(b)\right]$$</div>
+    <p><strong>Error:</strong></p>
+    <div class="math-block">$$\int_a^b f(x)\,dx = \frac{b-a}{6}\left[f(a)+4f\!\left(\tfrac{a+b}{2}\right)+f(b)\right] - \frac{h^5}{90}f^{(4)}(\beta), \quad \beta\in(a,b)$$</div>
+    <p>Grado de exactitud: <strong>3</strong> (exacta para polinomios de grado ≤ 3). <span class="error-badge">O(h⁵)</span> simple.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎯</div>
+    <div class="tip-body">
+      <div class="tip-label">¿Por qué grado 3 si usamos grado 2?</div>
+      <p>Cuando \(M\) (el número de subintervalos) es <em>par</em>, el Teorema General de Newton-Cotes garantiza que el grado de exactitud es \(M+1\) (un grado extra). Para \(M=2\): exactitud grado \(3\). ¡Un regalo matemático!</p>
+    </div>
+  </div>
+
+  <h3>Regla de Simpson 1/3 Compuesta</h3>
+  <p>Se requiere un número <strong>par</strong> de subintervalos \(n\). Aplicamos Simpson a cada par de subintervalos consecutivos:</p>
+
+  <div class="card theorem">
+    <div class="card-label">Fórmula — Simpson 1/3 Compuesto</div>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx \frac{h}{3}\left[f(x_0) + 4\sum_{i=1}^{n/2}f(x_{2i-1}) + 2\sum_{i=1}^{n/2-1}f(x_{2i}) + f(x_n)\right]$$</div>
+    <p>El patrón de coeficientes es: <strong>1, 4, 2, 4, 2, …, 4, 2, 4, 1</strong></p>
+    <p><strong>Error:</strong></p>
+    <div class="math-block">$$-\frac{h^4}{180}(b-a)f^{(4)}(\xi), \quad \xi\in(a,b), \quad h=\frac{b-a}{n}$$</div>
+    <p>El error es <span class="error-badge">O(h⁴)</span>: duplicar \(n\) reduce el error 16 veces.</p>
+  </div>
+
+  <h3>Ejemplo Guiado</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Simpson simple y compuesto</div>
+    <p>Aproximar \(\displaystyle\int_1^3 \frac{5e^{2x}\tan^{-1}(3x)}{\ln(x^2+1)+2}\,dx\)</p>
+    <details>
+      <summary>Ver solución</summary>
+      <div>
+        <p><strong>Simpson simple</strong> (\(h=1\)): \(\frac{1}{3}[f(1)+4f(2)+f(3)] \approx 375.6432\) — error \(O(1^5)=O(1)\), grande.</p>
+        <p><strong>Compuesto \(n=4\)</strong> (\(h=1/2\)): \(\approx 359.5914\) — error \(O(1/2^4)=O(1/16)\).</p>
+        <p><strong>Compuesto \(n=6\)</strong> (\(h=1/3\)): \(\approx 358.4517\) — error \(O(1/3^4)=O(1/81)\), mucho más preciso.</p>
+        <p>La convergencia con Simpson es notablemente más rápida que con Trapecio para el mismo número de subintervalos.</p>
+      </div>
+    </details>
+  </div>
+
+  <h3>Comparación: Trapecio vs Simpson</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Regla</th><th>Nodos</th><th>Exactitud</th><th>Error Simple</th><th>Error Compuesto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Trapecio</td><td>2</td><td class="highlight">1</td><td>\(O(h^3)\)</td><td>\(O(h^2)\)</td></tr>
+        <tr><td>Simpson 1/3</td><td>3</td><td class="highlight">3</td><td>\(O(h^5)\)</td><td>\(O(h^4)\)</td></tr>
+        <tr><td>Simpson 3/8</td><td>4</td><td class="highlight">3</td><td>\(O(h^5)\)</td><td>\(O(h^4)\)</td></tr>
+        <tr><td>Boole</td><td>5</td><td class="highlight">5</td><td>\(O(h^7)\)</td><td>\(O(h^6)\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: NEWTON-COTES ══════════════ -->
+<div class="section" id="newtoncotes">
+  <h2><span class="section-num">Sección 04</span>Fórmulas de Newton-Cotes</h2>
+
+  <p>El Trapecio y Simpson son casos particulares de una familia más amplia: las <strong>fórmulas de Newton-Cotes</strong>, que se obtienen interpolando con nodos igualmente espaciados.</p>
+
+  <div class="card definition">
+    <div class="card-label">Definición — Newton-Cotes Cerradas</div>
+    <p>Las <strong>fórmulas cerradas de Newton-Cotes</strong> de \(M+1\) puntos usan los nodos</p>
+    <div class="math-block">$$x_i = a + i\cdot h, \quad i=0,\ldots,M, \quad h = \frac{b-a}{M}$$</div>
+    <p>incluyendo <em>ambos extremos</em> del intervalo.</p>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema General de Newton-Cotes</div>
+    <p>Sea \(\sum_{i=0}^M w_i f(x_i)\) la fórmula cerrada de Newton-Cotes de \(M+1\) puntos.</p>
+    <ul style="margin-top: 8px; list-style: disc; padding-left: 20px; font-size: 0.95rem;">
+      <li>Si \(M\) es <strong>par</strong> y \(f \in C^{M+2}[a,b]\): error \(O(h^{M+3})\), exactitud \(M+1\)</li>
+      <li>Si \(M\) es <strong>impar</strong> y \(f \in C^{M+1}[a,b]\): error \(O(h^{M+2})\), exactitud \(M\)</li>
+    </ul>
+    <div class="tip-profe" style="margin-top: 14px;">
+      <div class="icon">🔑</div>
+      <div class="tip-body">
+        <div class="tip-label">Clave</div>
+        <p>Cuando \(M\) es par, obtenemos un grado de exactitud <em>extra</em> (exactitud \(M+1\) en lugar de \(M\)). Esto explica por qué Simpson 1/3 (\(M=2\)) tiene exactitud 3.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Otras Fórmulas Cerradas</h3>
+  <div class="compare-grid">
+    <div class="compare-card" style="border-left: 4px solid var(--rust);">
+      <h4 style="color: var(--rust);">Simpson 3/8 (M=3)</h4>
+      <div class="math-block" style="font-size: 0.8em;">$$\frac{3h}{8}\bigl[f_0+3f_1+3f_2+f_3\bigr] - \frac{3h^5}{80}f^{(4)}(\xi)$$</div>
+      <p style="font-size:0.85rem;">Exactitud: <strong>3</strong> (M impar, sin bonus)</p>
+    </div>
+    <div class="compare-card" style="border-left: 4px solid var(--forest);">
+      <h4 style="color: var(--forest);">Regla de Boole (M=4)</h4>
+      <div class="math-block" style="font-size: 0.8em;">$$\frac{2h}{45}\bigl[7f_0+32f_1+12f_2+32f_3+7f_4\bigr] - \frac{8h^7}{495}f^{(6)}(\xi)$$</div>
+      <p style="font-size:0.85rem;">Exactitud: <strong>5</strong> (M par, bonus de grado extra)</p>
+    </div>
+  </div>
+
+  <h3>Fórmulas Abiertas de Newton-Cotes</h3>
+  <div class="card definition">
+    <div class="card-label">Definición — Newton-Cotes Abiertas</div>
+    <p>Las <strong>fórmulas abiertas</strong> de \(M+1\) puntos usan nodos <em>interiores al intervalo</em>, sin incluir los extremos:</p>
+    <div class="math-block">$$x_i = a + (i+1)h, \quad i=0,\ldots,M, \quad h = \frac{b-a}{M+2}$$</div>
+    <p>Los extremos reales del intervalo son \(x_{-1} = a\) y \(x_{M+1} = b\).</p>
+  </div>
+
+  <h3>Principales Fórmulas Abiertas</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Nombre</th><th>M</th><th>h</th><th>Fórmula</th><th>Error</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Punto Medio</td><td>0</td><td>\(\frac{b-a}{2}\)</td>
+          <td>\(2h\,f(x_0)\)</td><td>\(\frac{h^3}{3}f''(\xi)\)</td>
+        </tr>
+        <tr>
+          <td>Abierta M=1</td><td>1</td><td>\(\frac{b-a}{3}\)</td>
+          <td>\(\frac{3h}{2}[f(x_0)+f(x_1)]\)</td><td>\(\frac{3h^3}{4}f''(\xi)\)</td>
+        </tr>
+        <tr>
+          <td>Abierta M=2</td><td>2</td><td>\(\frac{b-a}{4}\)</td>
+          <td>\(\frac{4h}{3}[2f_0-f_1+2f_2]\)</td><td>\(\frac{14h^5}{45}f^{(4)}(\xi)\)</td>
+        </tr>
+        <tr>
+          <td>Abierta M=3</td><td>3</td><td>\(\frac{b-a}{5}\)</td>
+          <td>\(\frac{5h}{24}[11f_0+f_1+f_2+11f_3]\)</td><td>\(\frac{95h^5}{144}f^{(4)}(\xi)\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card warning-card">
+    <div class="card-label">¿Cuándo usar fórmulas abiertas?</div>
+    <p>Son útiles cuando \(f\) tiene singularidades en los extremos del intervalo, o cuando los extremos no pertenecen al dominio de \(f\). La <strong>Regla del Punto Medio Compuesta</strong> es la más práctica:</p>
+    <div class="math-block">$$\int_a^b f(x)\,dx \approx 2h\sum_{i=0}^{n/2}f(x_{2i}) + \frac{h^2}{6}(b-a)f''(\mu), \quad \mu\in(a,b)$$</div>
+  </div>
+
+  <h3>Fórmulas de Cuadratura Generales</h3>
+  <p>No todas las fórmulas útiles pertenecen a Newton-Cotes. A veces se puede obtener mayor precisión eligiendo nodos de forma no uniforme. El proceso para hallar los coeficientes es siempre el mismo: resolver el sistema que garantiza exactitud para \(f(x) = x^k\), \(k = 0, 1, 2, \ldots\)</p>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Cuadratura fuera de Newton-Cotes</div>
+    <p>La fórmula \(\displaystyle\int_a^b f(x)\,dx \approx \frac{9}{4}h\,f\!\left(a+h\right) + \frac{3}{4}h\,f(b)\) con \(h = (b-a)/3\) tiene grado de exactitud <strong>2</strong>.</p>
+    <p>Para determinar el grado, verificamos sistemáticamente con \(f(x)=1, x, x^2, x^3\ldots\) hasta encontrar la primera función para la que la fórmula falla.</p>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: SIMULADOR ══════════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Sección 05</span>Simulador de Integración Numérica</h2>
+  <p>Introduce una función, un intervalo y el número de subintervalos para calcular la integral aproximada con los diferentes métodos y comparar su precisión.</p>
+
+  <div class="card" style="background:#f8f9fb;">
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Función f(x)</label>
+        <input type="text" id="simFn" value="exp(x)*log(x^2+1)*atan(x)" placeholder="ej. x^2 + sin(x)">
+      </div>
+      <div class="input-group">
+        <label>Límite inferior a</label>
+        <input type="number" id="simA" value="0" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Límite superior b</label>
+        <input type="number" id="simB" value="2" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Subintervalos n</label>
+        <input type="number" id="simN" value="6" min="2" max="200" step="2">
+      </div>
+    </div>
+    <div class="input-group" style="margin-bottom:12px;">
+      <label>Método</label>
+      <select id="simMethod">
+        <option value="all">Comparar todos</option>
+        <option value="trap">Trapecio compuesto</option>
+        <option value="simp">Simpson 1/3 compuesto</option>
+        <option value="mid">Punto Medio compuesto</option>
+      </select>
+    </div>
+    <div class="action-grid">
+      <button class="btn-primary" onclick="runSimulator()">▶ Calcular</button>
+      <button class="btn-secondary" onclick="resetSimulator()">↺ Ejemplo</button>
+    </div>
+    <div id="simError" style="color:var(--rust);margin-top:10px;font-size:0.9rem;font-family:'JetBrains Mono',monospace;display:none;"></div>
+  </div>
+
+  <div id="simResults" style="display:none;">
+    <div id="simResultBox" class="result-box"></div>
+    <div id="simPlot" class="plot-container"></div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-label">Interpretación Pedagógica</div>
+      <div id="simInterpretation" style="font-size:0.93rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 6: QUIZ ══════════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 06</span>Actividades de Evaluación</h2>
+  <p>Pon a prueba tu comprensión de la integración numérica. Las preguntas van de nivel básico a avanzado.</p>
+
+  <div class="quiz-score" id="scoreBoard">
+    <div>
+      <div class="score-label">Puntaje</div>
+      <span class="score-val" id="scoreVal">0 / 15</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);text-align:right;">
+      Responde todas las preguntas<br>para ver tu resultado final
+    </div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="quiz-question" id="q1">
+    <span class="q-num">Pregunta 01 — Nivel Básico</span>
+    <p class="q">¿Cuál es la idea fundamental de la cuadratura numérica?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q1',false)"><span class="opt-label">A</span>Resolver la ecuación diferencial asociada a f</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q1',true)"><span class="opt-label">B</span>Reemplazar f por un polinomio interpolante e integrar ese polinomio</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q1',false)"><span class="opt-label">C</span>Usar la regla de L'Hôpital sobre el integrando</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q1',false)"><span class="opt-label">D</span>Calcular la derivada de f en el punto medio del intervalo</button>
+    </div>
+    <div class="feedback" id="fb-q1"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-question" id="q2">
+    <span class="q-num">Pregunta 02 — Nivel Básico</span>
+    <p class="q">En la regla del trapecio simple, ¿qué función se usa para aproximar el integrando?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q2',false)"><span class="opt-label">A</span>Una parábola (polinomio de grado 2)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q2',true)"><span class="opt-label">B</span>Una recta (polinomio de grado 1) que une f(a) y f(b)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q2',false)"><span class="opt-label">C</span>Una función constante igual al valor medio de f</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q2',false)"><span class="opt-label">D</span>Un polinomio cúbico con 4 puntos de control</button>
+    </div>
+    <div class="feedback" id="fb-q2"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-question" id="q3">
+    <span class="q-num">Pregunta 03 — Nivel Básico</span>
+    <p class="q">¿Cuál es el grado de exactitud de la regla del trapecio?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q3',false)"><span class="opt-label">A</span>0 (exacta solo para constantes)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q3',true)"><span class="opt-label">B</span>1 (exacta para polinomios de grado ≤ 1)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q3',false)"><span class="opt-label">C</span>2 (exacta para polinomios de grado ≤ 2)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q3',false)"><span class="opt-label">D</span>3 (exacta para polinomios de grado ≤ 3)</button>
+    </div>
+    <div class="feedback" id="fb-q3"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="quiz-question" id="q4">
+    <span class="q-num">Pregunta 04 — Nivel Básico</span>
+    <p class="q">La regla del trapecio compuesta divide \([a,b]\) en \(n\) subintervalos de longitud \(h=(b-a)/n\). ¿Cuál es la expresión correcta de la suma de los coeficientes internos?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q4',false)"><span class="opt-label">A</span>Los valores internos se suman con coeficiente 4</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q4',true)"><span class="opt-label">B</span>Los valores internos \(f(x_i)\), \(i=1,\ldots,n-1\), se suman con coeficiente 2</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q4',false)"><span class="opt-label">C</span>Los valores internos se suman con coeficiente 3</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q4',false)"><span class="opt-label">D</span>Todos los valores tienen el mismo coeficiente 1</button>
+    </div>
+    <div class="feedback" id="fb-q4"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="quiz-question" id="q5">
+    <span class="q-num">Pregunta 05 — Nivel Medio</span>
+    <p class="q">El error de la regla del trapecio compuesta es \(O(h^2)\). Si duplicamos el número de subintervalos (y \(h\) se divide a la mitad), ¿por cuánto se reduce aproximadamente el error?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q5',false)"><span class="opt-label">A</span>Se reduce a la mitad (factor 2)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q5',true)"><span class="opt-label">B</span>Se reduce a un cuarto (factor 4)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q5',false)"><span class="opt-label">C</span>Se reduce a un octavo (factor 8)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q5',false)"><span class="opt-label">D</span>Se reduce a un dieciseisavo (factor 16)</button>
+    </div>
+    <div class="feedback" id="fb-q5"></div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="quiz-question" id="q6">
+    <span class="q-num">Pregunta 06 — Nivel Medio</span>
+    <p class="q">¿Cuántos nodos usa la regla de Simpson 1/3 en su versión simple?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q6',false)"><span class="opt-label">A</span>2 nodos (extremos del intervalo)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q6',true)"><span class="opt-label">B</span>3 nodos: extremos y punto medio</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q6',false)"><span class="opt-label">C</span>4 nodos igualmente espaciados</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q6',false)"><span class="opt-label">D</span>5 nodos con los extremos doble peso</button>
+    </div>
+    <div class="feedback" id="fb-q6"></div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="quiz-question" id="q7">
+    <span class="q-num">Pregunta 07 — Nivel Medio</span>
+    <p class="q">¿Por qué la regla de Simpson 1/3 tiene grado de exactitud 3 si se construye interpolando con un polinomio de grado 2?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q7',false)"><span class="opt-label">A</span>Porque Simpson usó una corrección empírica en su fórmula original</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q7',false)"><span class="opt-label">B</span>Porque la integral de un polinomio de grado 2 siempre aumenta el grado en 1</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q7',true)"><span class="opt-label">C</span>Porque cuando \(M\) es par en Newton-Cotes, el grado de exactitud es \(M+1\) debido a simetría en los coeficientes</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q7',false)"><span class="opt-label">D</span>Porque el punto medio siempre añade exactamente un grado de precisión</button>
+    </div>
+    <div class="feedback" id="fb-q7"></div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="quiz-question" id="q8">
+    <span class="q-num">Pregunta 08 — Nivel Medio</span>
+    <p class="q">En la regla de Simpson 1/3 compuesta, ¿qué restricción debe cumplir \(n\) (número de subintervalos)?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q8',false)"><span class="opt-label">A</span>Debe ser múltiplo de 3</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q8',true)"><span class="opt-label">B</span>Debe ser par (múltiplo de 2)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q8',false)"><span class="opt-label">C</span>Debe ser múltiplo de 4</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q8',false)"><span class="opt-label">D</span>Puede ser cualquier entero positivo</button>
+    </div>
+    <div class="feedback" id="fb-q8"></div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="quiz-question" id="q9">
+    <span class="q-num">Pregunta 09 — Nivel Medio</span>
+    <p class="q">El error del trapecio compuesto es \(-\frac{h^2}{12}(b-a)f''(\xi)\). Si \(f''(x)=0\) para todo \(x\in[a,b]\), ¿qué podemos concluir?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q9',false)"><span class="opt-label">A</span>El error es máximo y la regla no sirve</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q9',true)"><span class="opt-label">B</span>La regla es exacta (error cero), pues f es un polinomio de grado ≤ 1</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q9',false)"><span class="opt-label">C</span>El error depende solo de \((b-a)\) y no de \(h\)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q9',false)"><span class="opt-label">D</span>La regla diverge cuando la segunda derivada es nula</button>
+    </div>
+    <div class="feedback" id="fb-q9"></div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="quiz-question" id="q10">
+    <span class="q-num">Pregunta 10 — Nivel Medio</span>
+    <p class="q">¿Cuál es la diferencia fundamental entre las fórmulas <em>cerradas</em> y <em>abiertas</em> de Newton-Cotes?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q10',false)"><span class="opt-label">A</span>Las cerradas son más costosas computacionalmente que las abiertas</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q10',true)"><span class="opt-label">B</span>Las cerradas incluyen los extremos del intervalo como nodos; las abiertas solo usan puntos interiores</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q10',false)"><span class="opt-label">C</span>Las abiertas son siempre más precisas que las cerradas</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q10',false)"><span class="opt-label">D</span>Las cerradas requieren derivadas de f, mientras que las abiertas no</button>
+    </div>
+    <div class="feedback" id="fb-q10"></div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="quiz-question" id="q11">
+    <span class="q-num">Pregunta 11 — Nivel Avanzado</span>
+    <p class="q">Para la Regla de Boole (\(M=4\)), ¿cuál es el grado de exactitud y el orden del error?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q11',false)"><span class="opt-label">A</span>Exactitud 4, error \(O(h^5)\)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q11',true)"><span class="opt-label">B</span>Exactitud 5, error \(O(h^7)\) (M par → exactitud M+1)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q11',false)"><span class="opt-label">C</span>Exactitud 3, error \(O(h^5)\)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q11',false)"><span class="opt-label">D</span>Exactitud 4, error \(O(h^6)\)</button>
+    </div>
+    <div class="feedback" id="fb-q11"></div>
+  </div>
+
+  <!-- Q12 -->
+  <div class="quiz-question" id="q12">
+    <span class="q-num">Pregunta 12 — Nivel Avanzado</span>
+    <p class="q">Al duplicar \(n\) en la regla de Simpson 1/3 compuesta (error \(O(h^4)\)), ¿por cuánto se reduce el error?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q12',false)"><span class="opt-label">A</span>Factor 4 (igual que el trapecio compuesto)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q12',false)"><span class="opt-label">B</span>Factor 8</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q12',true)"><span class="opt-label">C</span>Factor 16 (ya que \((h/2)^4 = h^4/16\))</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q12',false)"><span class="opt-label">D</span>Factor 32</button>
+    </div>
+    <div class="feedback" id="fb-q12"></div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="quiz-question" id="q13">
+    <span class="q-num">Pregunta 13 — Nivel Avanzado</span>
+    <p class="q">Para hallar los coeficientes de una fórmula de cuadratura \(\int_a^b f(x)dx \approx A_0 f(x_0) + A_1 f(x_1) + \ldots\) con grado de exactitud \(m\), ¿qué sistema de ecuaciones se resuelve?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q13',false)"><span class="opt-label">A</span>Se iguala la fórmula con \(f(x) = e^x\) y sus derivadas</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q13',true)"><span class="opt-label">B</span>Se requiere exactitud para \(f(x) = x^k\), \(k=0,1,\ldots,m\): la integral exacta debe coincidir con la aproximada</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q13',false)"><span class="opt-label">C</span>Se minimiza el error cuadrático medio con respecto a los coeficientes</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q13',false)"><span class="opt-label">D</span>Se impone que los residuos en los nodos sean cero</button>
+    </div>
+    <div class="feedback" id="fb-q13"></div>
+  </div>
+
+  <!-- Q14 -->
+  <div class="quiz-question" id="q14">
+    <span class="q-num">Pregunta 14 — Nivel Avanzado</span>
+    <p class="q">La regla del punto medio compuesta usa nodos <em>interiores</em>. ¿Cuál es su orden de error comparado con el trapecio compuesto?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q14',false)"><span class="opt-label">A</span>El punto medio es menos preciso: error \(O(h)\)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q14',true)"><span class="opt-label">B</span>Tiene el mismo orden: error \(O(h^2)\), pero con constante diferente</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q14',false)"><span class="opt-label">C</span>Es más preciso que Simpson: error \(O(h^4)\)</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q14',false)"><span class="opt-label">D</span>El punto medio compuesto tiene error \(O(h^3)\)</button>
+    </div>
+    <div class="feedback" id="fb-q14"></div>
+  </div>
+
+  <!-- Q15 -->
+  <div class="quiz-question" id="q15">
+    <span class="q-num">Pregunta 15 — Nivel Avanzado</span>
+    <p class="q">En Python, se aproxima \(\int_0^{12} \frac{t}{e^{\cos(t/5)}}\,dt\) con Trapecio y Simpson 1/3 (140 subintervalos cada uno). Los resultados son 84.1009 y 84.0978 respectivamente. ¿Qué conclusión es correcta?</p>
+    <div class="options">
+      <button class="opt-btn" onclick="checkAnswer(this,'q15',false)"><span class="opt-label">A</span>El trapecio siempre supera a Simpson en precisión para funciones suaves</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q15',true)"><span class="opt-label">B</span>Ambos métodos convergen a un valor similar; Simpson es ligeramente más preciso por su mayor orden de error</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q15',false)"><span class="opt-label">C</span>Con 140 subintervalos el error es exactamente cero en ambos métodos</button>
+      <button class="opt-btn" onclick="checkAnswer(this,'q15',false)"><span class="opt-label">D</span>Simpson diverge para funciones que involucran exponenciales</button>
+    </div>
+    <div class="feedback" id="fb-q15"></div>
+  </div>
+
+  <div class="quiz-score" style="margin-top: 30px;">
+    <div>
+      <div class="score-label">Resultado Final</div>
+      <span class="score-val" id="scoreValFinal">— / 15</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);text-align:right;" id="scoreMessage">
+      Completa las 15 preguntas
+    </div>
+  </div>
+</div>
+
+</main>
+
+
+<script>
+// ─── Tab Navigation ───
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Quiz Logic ───
+let score = 0;
+let answered = {};
+
+function checkAnswer(btn, qid, isCorrect) {
+  if (answered[qid]) return;
+  answered[qid] = true;
+
+  const allBtns = btn.closest('.options').querySelectorAll('.opt-btn');
+  allBtns.forEach(b => b.disabled = true);
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById('fb-' + qid);
+  fb.classList.add('show');
+
+  if (isCorrect) {
+    score++;
+    fb.classList.add('ok');
+    fb.innerHTML = '✓ &nbsp;' + getFeedbackText(qid, true);
+  } else {
+    fb.classList.add('err');
+    fb.innerHTML = '✗ &nbsp;' + getFeedbackText(qid, false);
+    // Highlight correct
+    allBtns.forEach(b => {
+      if (b.getAttribute('onclick').includes('true')) b.classList.add('correct');
+    });
+  }
+
+  document.getElementById('scoreVal').textContent = score + ' / 15';
+  document.getElementById('scoreValFinal').textContent = score + ' / 15';
+
+  const total = Object.keys(answered).length;
+  if (total === 15) {
+    const pct = Math.round((score/15)*100);
+    document.getElementById('scoreMessage').textContent =
+      pct >= 80 ? '¡Excelente dominio del tema!' :
+      pct >= 60 ? 'Buen trabajo, refuerza los puntos débiles.' :
+      'Revisa los conceptos clave y vuelve a intentarlo.';
+  }
+}
+
+function getFeedbackText(qid, correct) {
+  const texts = {
+    'q1': {
+      true:  'Correcto. Se aproxima f por un polinomio interpolante y se integra ese polinomio de forma exacta. Los pesos resultan ser las integrales de los polinomios de Lagrange.',
+      false: 'Incorrecto. La cuadratura numérica reemplaza f por un polinomio interpolante que sí admite antiderivada analítica.'
+    },
+    'q2': {
+      true:  'Correcto. El polinomio interpolante de grado 1 (recta) entre f(a) y f(b) genera el "trapecio" que da nombre a la regla.',
+      false: 'Incorrecto. La regla del trapecio usa la recta (grado 1) que conecta los valores en los extremos.'
+    },
+    'q3': {
+      true:  'Correcto. El trapecio integra exactamente cualquier polinomio de grado ≤ 1. Para grado 2 en adelante comete error, porque f″ ≠ 0.',
+      false: 'Incorrecto. El grado de exactitud es 1: exacta para constantes y rectas, pero no para parábolas.'
+    },
+    'q4': {
+      true:  'Correcto. El patrón es 1, 2, 2, …, 2, 1. Los extremos tienen coeficiente 1 y todos los puntos internos tienen coeficiente 2.',
+      false: 'Incorrecto. Los coeficientes internos son 2 (no 4, que es el de Simpson). El patrón del trapecio es: 1, 2, 2, …, 2, 1.'
+    },
+    'q5': {
+      true:  'Correcto. Error ∝ h². Si h → h/2, entonces h² → h²/4. El error se reduce por un factor de 4 al duplicar n.',
+      false: 'Incorrecto. El error es O(h²). Al dividir h por 2 (duplicar n), h² se divide por 4.'
+    },
+    'q6': {
+      true:  'Correcto. Tres nodos: a, (a+b)/2 y b. El polinomio que los interpola es de grado 2 (parábola).',
+      false: 'Incorrecto. Simpson 1/3 simple usa exactamente 3 nodos: los dos extremos y el punto medio del intervalo.'
+    },
+    'q7': {
+      true:  'Correcto. Por el Teorema General de Newton-Cotes: cuando M es par, se obtiene exactitud M+1. Hay una cancelación algebraica que mejora un grado adicional.',
+      false: 'Incorrecto. Es un resultado del Teorema de Newton-Cotes: con M par, el grado de exactitud "sube" a M+1 por la simetría de los coeficientes.'
+    },
+    'q8': {
+      true:  'Correcto. Simpson compuesto aplica la regla a pares de subintervalos consecutivos, por lo que n debe ser par.',
+      false: 'Incorrecto. n debe ser par. Para Simpson 3/8 compuesto sería múltiplo de 3; para Boole compuesto, múltiplo de 4.'
+    },
+    'q9': {
+      true:  'Correcto. Si f″ = 0 en todo [a,b], entonces f es afín (grado ≤ 1) y el trapecio es exacto para ese tipo de función.',
+      false: 'Incorrecto. El error involucra f″; si f″ = 0 el error es cero. El trapecio es exacto para polinomios lineales.'
+    },
+    'q10': {
+      true:  'Correcto. Las cerradas incluyen a y b como nodos; las abiertas usan solo puntos del interior (a, b) del intervalo.',
+      false: 'Incorrecto. La distinción es estructural: cerradas incluyen los extremos; abiertas no.'
+    },
+    'q11': {
+      true:  'Correcto. M=4 es par, por lo tanto el grado de exactitud es M+1 = 5, y el error es O(h^{M+3}) = O(h^7).',
+      false: 'Incorrecto. Boole tiene M=4 (par): exactitud 5 y error O(h^7). La fórmula exacta del error incluye f^(6)(ξ).'
+    },
+    'q12': {
+      true:  'Correcto. Error ∝ h⁴. Si h → h/2, entonces h⁴ → h⁴/2⁴ = h⁴/16. El error se reduce 16 veces al duplicar n.',
+      false: 'Incorrecto. El error es O(h⁴). Al dividir h por 2, h⁴ se divide por 16.'
+    },
+    'q13': {
+      true:  'Correcto. Se impone que la fórmula sea exacta para cada monomial x^k. Esto genera un sistema lineal en los coeficientes A_i.',
+      false: 'Incorrecto. El procedimiento estándar es verificar exactitud para los monomios x^k, k = 0, 1, …, m y resolver el sistema resultante.'
+    },
+    'q14': {
+      true:  'Correcto. Tanto el punto medio como el trapecio compuesto tienen error O(h²), pero las constantes difieren. El punto medio tiene constante f″(μ)/6, el trapecio −f″(ξ)/12.',
+      false: 'Incorrecto. La regla del punto medio compuesta también tiene error O(h²), igual que el trapecio, aunque su constante es diferente.'
+    },
+    'q15': {
+      true:  'Correcto. Ambos métodos dan resultados cercanos. Simpson tiene menor error por su mayor orden (O(h⁴) vs O(h²)), lo cual se refleja en la cuarta cifra decimal.',
+      false: 'Incorrecto. Ambos métodos son confiables. La pequeña diferencia refleja el mayor orden de precisión de Simpson.'
+    }
+  };
+  return texts[qid] ? texts[qid][correct ? 'true' : 'false'] : '';
+}
+
+// ─── Simulator ───
+function evalFn(fnStr, x) {
+  try {
+    return math.evaluate(fnStr, { x });
+  } catch(e) {
+    return NaN;
+  }
+}
+
+function trapecioComp(fn, a, b, n) {
+  const h = (b - a) / n;
+  let sum = evalFn(fn, a) + evalFn(fn, b);
+  for (let i = 1; i < n; i++) {
+    sum += 2 * evalFn(fn, a + i * h);
+  }
+  return (h / 2) * sum;
+}
+
+function simpsonComp(fn, a, b, n) {
+  if (n % 2 !== 0) n++;
+  const h = (b - a) / n;
+  let sum = evalFn(fn, a) + evalFn(fn, b);
+  for (let i = 1; i < n; i++) {
+    sum += (i % 2 === 0 ? 2 : 4) * evalFn(fn, a + i * h);
+  }
+  return (h / 3) * sum;
+}
+
+function midpointComp(fn, a, b, n) {
+  if (n % 2 !== 0) n++;
+  const h = (b - a) / (n + 2);
+  let sum = 0;
+  for (let i = 0; i <= n / 2; i++) {
+    sum += evalFn(fn, a + (2 * i + 1) * h);
+  }
+  return 2 * h * sum;
+}
+
+function runSimulator() {
+  const fn = document.getElementById('simFn').value.trim();
+  const a  = parseFloat(document.getElementById('simA').value);
+  const b  = parseFloat(document.getElementById('simB').value);
+  let n    = parseInt(document.getElementById('simN').value);
+  const method = document.getElementById('simMethod').value;
+  const errDiv = document.getElementById('simError');
+
+  errDiv.style.display = 'none';
+
+  if (isNaN(a) || isNaN(b) || a >= b) {
+    errDiv.textContent = '⚠ El intervalo [a,b] no es válido. Verifica que a < b.';
+    errDiv.style.display = 'block';
+    return;
+  }
+  if (n < 2) n = 2;
+  if (n % 2 !== 0) n++;
+
+  // Test evaluation
+  const testVal = evalFn(fn, (a + b) / 2);
+  if (isNaN(testVal)) {
+    errDiv.textContent = '⚠ No se pudo evaluar la función. Verifica la sintaxis (usa *, ^, log, sin, cos, exp, atan, etc.).';
+    errDiv.style.display = 'block';
+    return;
+  }
+
+  const rT = trapecioComp(fn, a, b, n);
+  const rS = simpsonComp(fn, a, b, n);
+  const rM = midpointComp(fn, a, b, n);
+  const h  = (b - a) / n;
+
+  // Result box
+  let html = `<div class="rl">RESULTADOS CON n = ${n} SUBINTERVALOS (h = ${h.toFixed(6)})</div>`;
+  html += `<br>`;
+  if (method === 'all' || method === 'trap')
+    html += `<span style="color:var(--gold)">Trapecio compuesto:</span>  ${isNaN(rT) ? 'error' : rT.toFixed(10)}<br>`;
+  if (method === 'all' || method === 'simp')
+    html += `<span style="color:#7fc9a0">Simpson 1/3 compuesto:</span> ${isNaN(rS) ? 'error' : rS.toFixed(10)}<br>`;
+  if (method === 'all' || method === 'mid')
+    html += `<span style="color:#a0c4ff">Punto Medio compuesto:</span> ${isNaN(rM) ? 'error' : rM.toFixed(10)}<br>`;
+
+  document.getElementById('simResultBox').innerHTML = html;
+
+  // Interpretation
+  let interp = '';
+  if (method === 'all') {
+    const diff = Math.abs(rT - rS);
+    interp = `Con \${n} subintervalos, la diferencia entre Trapecio y Simpson es <strong>${diff.toExponential(3)}</strong>.
+    Esto refleja el mayor orden de Simpson (\$O(h^4)\$ vs \$O(h^2)\$).
+    Para esta función, el valor de referencia más confiable es el de Simpson,
+    ya que su error disminuye 16 veces más rápido al duplicar n.`;
+  } else {
+    interp = `Resultado calculado con ${n} subintervalos. Aumenta n para ver la convergencia mejorar.`;
+  }
+  document.getElementById('simInterpretation').innerHTML = interp;
+
+  // Plot
+  const xs = [], ys = [];
+  const N_plot = 500;
+  for (let i = 0; i <= N_plot; i++) {
+    const xi = a + (b - a) * i / N_plot;
+    xs.push(xi);
+    ys.push(evalFn(fn, xi));
+  }
+
+  // Trapecio areas
+  const trapX = [], trapY = [];
+  const nh = (b - a) / n;
+  for (let i = 0; i <= n; i++) {
+    const xi = a + i * nh;
+    trapX.push(xi);
+    trapY.push(evalFn(fn, xi));
+  }
+  const fillX = [a], fillY = [0];
+  for (let i = 0; i <= n; i++) {
+    fillX.push(a + i * nh);
+    fillY.push(evalFn(fn, a + i * nh));
+  }
+  fillX.push(b); fillY.push(0);
+
+  const traces = [
+    {
+      x: xs, y: ys, type: 'scatter', mode: 'lines',
+      name: 'f(x)', line: { color: '#1c2433', width: 2.5 }
+    },
+    {
+      x: fillX, y: fillY, type: 'scatter', fill: 'tozeroy',
+      fillcolor: 'rgba(185,74,30,0.15)', line: { color: 'rgba(185,74,30,0.5)', width: 1 },
+      name: 'Área (Trapecio)', mode: 'lines'
+    },
+    {
+      x: trapX, y: trapY, type: 'scatter', mode: 'markers',
+      marker: { size: 7, color: '#b94a1e' },
+      name: `Nodos (n=${n})`
+    }
+  ];
+
+  Plotly.newPlot('simPlot', traces, {
+    margin: { t: 20, r: 20, b: 40, l: 50 },
+    xaxis: { title: 'x', zeroline: true, zerolinecolor: '#ccc' },
+    yaxis: { title: 'f(x)', zeroline: true, zerolinecolor: '#ccc' },
+    legend: { orientation: 'h', y: -0.15 },
+    paper_bgcolor: 'white', plot_bgcolor: 'white',
+    font: { family: 'Source Serif 4, serif', size: 13 }
+  }, { responsive: true });
+
+  document.getElementById('simResults').style.display = 'block';
+
+  if (window.MathJax) {
+    MathJax.typesetPromise([document.getElementById('simInterpretation')]);
+  }
+}
+
+function resetSimulator() {
+  document.getElementById('simFn').value = 'exp(x)*log(x^2+1)*atan(x)';
+  document.getElementById('simA').value = '0';
+  document.getElementById('simB').value = '2';
+  document.getElementById('simN').value = '6';
+  document.getElementById('simMethod').value = 'all';
+  document.getElementById('simResults').style.display = 'none';
+  document.getElementById('simError').style.display = 'none';
+}
+</script>
+</body>
+</html>

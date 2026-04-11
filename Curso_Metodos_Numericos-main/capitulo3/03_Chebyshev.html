@@ -1,0 +1,1374 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpolación de Chebyshev — Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.24.1/plotly.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --paper:  #f5f0e8;
+    --ink:    #1a2332;
+    --gold:   #c9963a;
+    --rust:   #b94c1f;
+    --forest: #2d6a4f;
+    --slate:  #3d4f6b;
+    --cream:  #ece8de;
+    --rule:   #d5cfc3;
+    --shadow: rgba(0,0,0,0.08);
+    --muted:  #7a7068;
+    --purple: #4a148c;
+    --blue:   #0d47a1;
+    --orange: #e65100;
+    --red:    #b71c1c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold); border: 1px solid var(--gold);
+    padding: 4px 14px; margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900; line-height: 1.1;
+    letter-spacing: -1px; margin-bottom: 12px;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem; font-weight: 300;
+    opacity: 0.75; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block; margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--gold); opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent; border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; padding: 13px 22px;
+    cursor: pointer; letter-spacing: 0.4px;
+    transition: all 0.2s; position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active { color: var(--paper); font-weight: 600; }
+  nav.tabs button.active::after {
+    content: ''; position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px; background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--ink); margin: 0 0 8px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--rust);
+    letter-spacing: 2px; text-transform: uppercase;
+    display: block; margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; color: var(--slate); margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 24px 28px;
+    margin: 20px 0; box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem    { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card.alert-card { border-left: 4px solid var(--red); background: #fff8f8; }
+  .card.curiosity  { border-left: 4px solid var(--gold); background: #fffbf0; }
+  .card.phase-card { border-left: 4px solid var(--purple); background: #faf8fd; }
+  .card.summary-card { border-left: 4px solid var(--blue); background: #f8faff; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px; font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label    { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.alert-card .card-label { color: var(--red); }
+  .card.curiosity .card-label  { color: var(--gold); }
+  .card.phase-card .card-label { color: var(--purple); }
+  .card.summary-card .card-label { color: var(--blue); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 18px 22px;
+    margin: 16px 0; overflow-x: auto; font-size: 0.97em;
+    text-align: center;
+  }
+
+  /* ─── Details / reveal ─── */
+  details { border: 1px solid var(--rule); border-radius: 4px; margin: 16px 0; overflow: hidden; }
+  summary {
+    background: var(--cream); padding: 12px 18px;
+    cursor: pointer; font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem; font-weight: 600; color: var(--slate);
+    list-style: none; display: flex; align-items: center;
+    gap: 10px; user-select: none; transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶'; font-size: 11px; color: var(--rust);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px; background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Profe W tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg,#fffbf0 0%,#fff8e6 100%);
+    border: 1px solid var(--gold); border-radius: 4px;
+    padding: 16px 20px; margin: 18px 0;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Grid ─── */
+  .two-col { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin: 20px 0; }
+
+  /* ─── Controls ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  }
+  input[type="text"], input[type="number"], select {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem; border-radius: 3px; color: var(--ink); transition: border-color 0.2s;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--rust); }
+  input:focus, select:focus { outline: none; border-color: var(--rust); }
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #9d3d15; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+  .btn-ghost {
+    background: transparent; color: var(--slate); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .btn-ghost:hover { background: var(--cream); }
+
+  /* ─── Plot ─── */
+  .plot-container { width: 100%; height: 420px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin: 16px 0; }
+
+  /* ─── Tables ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+  .td-cheb { color: var(--forest); font-weight: 600; }
+  .td-equi { color: var(--rust); }
+
+  /* ─── Quiz ─── */
+  .quiz-question {
+    background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 22px 26px; margin: 18px 0;
+  }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .q-level {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px; margin-left: 8px; font-weight: 700;
+  }
+  .lvl-basic { background: #e8f5e9; color: var(--forest); }
+  .lvl-inter { background: #fff3e0; color: var(--orange); }
+  .lvl-adv   { background: #fce4ec; color: var(--red); }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong   { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val   { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Chebyshev calculator ─── */
+  .cheby-calc { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 20px 24px; margin: 16px 0; }
+  #cheby-output { font-family: 'JetBrains Mono', monospace; font-size: 0.92rem; color: var(--slate); margin-top: 12px; min-height: 28px; }
+  #cheby-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 10px; margin-top: 16px; }
+  .tk-card {
+    border: 1px solid var(--rule); border-radius: 3px; padding: 10px 12px;
+    text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+  }
+  .tk-card .tk-label { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+
+  /* ─── Example accordion ─── */
+  .ex-step { background: var(--cream); border: 1px solid var(--rule); border-radius: 3px; margin: 8px 0; }
+  .ex-step-header {
+    padding: 10px 16px; cursor: pointer; font-weight: 600;
+    font-size: 0.93rem; color: var(--slate); display: flex; align-items: center; gap: 8px;
+  }
+  .ex-step-header:hover { background: #e5dfcf; }
+  .ex-step-body { display: none; padding: 14px 18px; background: white; border-top: 1px solid var(--rule); }
+  .ex-step.open .ex-step-body { display: block; }
+  .ex-step.open .ex-step-header { background: #e5dfcf; }
+
+  /* ─── Flowchart ─── */
+  .flow { text-align: center; padding: 20px; }
+  .flow-step {
+    display: inline-block; background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 12px 24px; margin: 4px;
+    font-size: 0.9rem; box-shadow: 0 2px 4px var(--shadow);
+  }
+  .flow-arrow { display: block; color: var(--rust); font-size: 1.2rem; margin: 2px 0; }
+  .flow-step.highlight { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .flow-step.sim-step  { background: #e8f5e9; border-color: var(--forest); }
+
+  /* ─── Reference table ─── */
+  .ref-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  .ref-table th { background: var(--blue); color: white; padding: 9px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; }
+  .ref-table td { padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+  .ref-table tr:nth-child(even) td { background: var(--cream); }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 14px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Polys gallery colors ─── */
+  .tk-card:nth-child(1) { border-color:#0d47a1; } .tk-card:nth-child(1) .tk-label { color:#0d47a1; }
+  .tk-card:nth-child(2) { border-color:#1565c0; } .tk-card:nth-child(2) .tk-label { color:#1565c0; }
+  .tk-card:nth-child(3) { border-color:#2e7d32; } .tk-card:nth-child(3) .tk-label { color:#2e7d32; }
+  .tk-card:nth-child(4) { border-color:#e65100; } .tk-card:nth-child(4) .tk-label { color:#e65100; }
+  .tk-card:nth-child(5) { border-color:#6a1b9a; } .tk-card:nth-child(5) .tk-label { color:#6a1b9a; }
+  .tk-card:nth-child(6) { border-color:#b71c1c; } .tk-card:nth-child(6) .tk-label { color:#b71c1c; }
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 3 · Interpolación</div>
+  <h1>Interpolación de <em>Chebyshev</em></h1>
+  <p class="subtitle">Minimización del error de interpolación mediante nodos óptimos</p>
+  <p class="subtitle" style="opacity:0.55;font-size:0.9rem;">Universidad Nacional de Colombia — Sede Medellín</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<!-- ══════ NAV ══════ -->
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('fase1',this)">① El Gancho</button>
+  <button onclick="showSection('fase2',this)">② Exploración</button>
+  <button onclick="showSection('fase3',this)">③ Teoría</button>
+  <button onclick="showSection('simulador',this)">④ Simulador</button>
+  <button onclick="showSection('fase4',this)">⑤ Ejemplos</button>
+  <button onclick="showSection('evaluacion',this)">⑥ Evaluación</button>
+</nav>
+
+<main>
+
+<!-- ════════════════════════════════════════════
+     FASE 1 — EL GANCHO
+════════════════════════════════════════════ -->
+<div class="section active" id="fase1">
+  <h2><span class="section-num">Fase 01 · 20 min</span>El Gancho: ¿Por qué fallan los nodos equiespaciados?</h2>
+
+  <div class="card phase-card">
+    <div class="card-label">Narrativa de apertura</div>
+    <p>Imagina que eres un ingeniero y necesitas modelar la temperatura de un motor a lo largo del tiempo. Tienes mediciones en unos pocos instantes y necesitas <em>predecir</em> el comportamiento entre esos puntos. Tu primera idea es natural y razonable: <strong>«¡Uso más puntos de medición y un polinomio de mayor grado!»</strong></p>
+    <p>Parece lógico. Más información debería dar mejor resultado, ¿verdad?</p>
+    <p style="font-weight:700;color:var(--rust);">Sorpresa: a veces, exactamente lo contrario es verdad.</p>
+  </div>
+
+  <h3>El Fenómeno de Runge: cuando más es menos</h3>
+  <p>En 1901, el matemático alemán Carl David Tolmé Runge descubrió algo desconcertante. Al intentar aproximar la función</p>
+  <div class="math-block">$$f(x) = \dfrac{1}{1 + 25x^2}, \quad x \in [-1, 1]$$</div>
+  <p>con polinomios interpolantes de grado cada vez mayor usando nodos <strong>equiespaciados</strong>, el error no disminuía cerca de los extremos del intervalo. ¡Aumentaba sin límite!</p>
+
+  <div class="card definition">
+    <div class="card-label">El Fenómeno de Runge</div>
+    <p>Sea \(f(x) = \tfrac{1}{1+25x^2}\) y \(p_n\) el polinomio que interpola a \(f\) en \(n+1\) nodos equiespaciados en \([-1,1]\). Entonces</p>
+    <div class="math-block">$$\lim_{n \to \infty} \max_{-1 \leq x \leq 1}|f(x) - p_n(x)| = +\infty.$$</div>
+    <p>El error <strong>diverge</strong> en los extremos del intervalo, sin importar cuántos nodos se agreguen.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Consejo del Profe W</div>
+      <p>Mueve el deslizador de grado en la animación de abajo y observa: a medida que aumentas \(n\), el ajuste mejora en el centro, pero las oscilaciones en los extremos se vuelven cada vez más violentas. ¡Esto es el fenómeno de Runge en acción!</p>
+    </div>
+  </div>
+
+  <!-- Animación Runge -->
+  <div class="card">
+    <div class="card-label">Animación interactiva — Fenómeno de Runge</div>
+    <div class="controls-grid" style="grid-template-columns:1fr auto;align-items:end;max-width:420px;">
+      <div class="input-group">
+        <label>Grado del polinomio n = <span id="runge-n-val">5</span></label>
+        <input type="range" id="runge-n" min="1" max="15" value="5" oninput="document.getElementById('runge-n-val').textContent=this.value;plotRunge();">
+      </div>
+      <button class="btn-ghost" onclick="plotRunge()">Actualizar</button>
+    </div>
+    <div class="plot-container" id="plot-runge"></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-top:8px;">🔵 Función real &nbsp;|&nbsp; 🔴 Polinomio con nodos equiespaciados &nbsp;|&nbsp; ⬜ Error absoluto</p>
+  </div>
+
+  <h3>¿Por qué el error depende de los nodos?</h3>
+  <p>Si \(f \in \mathcal{C}^{n+1}[a,b]\) y \(p_n\) interpola a \(f\) en los nodos \(x_0 < x_1 < \cdots < x_n\), la fórmula exacta del error es:</p>
+  <div class="math-block">$$f(x) - p_n(x) = \frac{f^{(n+1)}(\tilde{x})}{(n+1)!} \prod_{i=0}^{n}(x - x_i)$$</div>
+  <p>La cota del error queda:</p>
+  <div class="math-block">$$|f(x) - p_n(x)| \leq \frac{1}{(n+1)!} \max_{a \leq t \leq b}|f^{(n+1)}(t)| \cdot \underbrace{\max_{a \leq t \leq b}\left|\prod_{i=0}^{n}(t-x_i)\right|}_{Q(t): \text{ ¡la clave!}}$$</div>
+
+  <div class="card alert-card">
+    <div class="card-label">⚠ Atención</div>
+    <p>El factor \(\frac{1}{(n+1)!}\max|f^{(n+1)}(t)|\) <em>no podemos controlarlo</em>: depende de la función \(f\).</p>
+    <p>Pero el factor \(\max|Q(t)| = \max\left|\prod_{i=0}^{n}(t-x_i)\right|\) <strong>sí podemos controlarlo</strong>: depende de nuestra <em>elección</em> de los nodos.</p>
+  </div>
+
+  <div class="card summary-card" style="text-align:center;">
+    <div class="card-label">Pregunta guía de toda la unidad</div>
+    <p style="font-size:1.15rem;font-weight:700;color:var(--blue);font-family:'Playfair Display',serif;font-style:italic;">«¿Existe alguna elección óptima de nodos que garantice un error mínimo?»</p>
+    <p style="margin-bottom:0;">El camino pasa por encontrar los \(n+1\) nodos que minimicen \(\max|Q(t)|\). Esos nodos están relacionados con los <strong>ceros de los polinomios de Chebyshev</strong>.</p>
+  </div>
+
+  <div style="margin-top:28px;padding:16px 20px;background:var(--ink);border-radius:4px;color:var(--paper);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);">INDICADORES DE LOGRO FASE 1</span>
+    <span style="font-size:0.88rem;opacity:0.8;">Reconoces que el error depende de la posición de los nodos · Formulas la pregunta guía</span>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     FASE 2 — EXPLORACIÓN
+════════════════════════════════════════════ -->
+<div class="section" id="fase2">
+  <h2><span class="section-num">Fase 02 · 40 min</span>Exploración: Los Polinomios de Chebyshev</h2>
+
+  <div class="card phase-card">
+    <div class="card-label">Narrativa de transición</div>
+    <p>Antes de revelar cuáles son los nodos óptimos, necesitamos conocer a los protagonistas de esta historia: los <strong>polinomios de Chebyshev</strong>, bautizados en honor al matemático ruso Pafnuty Chebyshev (1821–1894). Son polinomios con una propiedad extraordinaria: oscilan de manera perfectamente controlada dentro del intervalo \([-1,1]\), nunca saliéndose de los límites \(-1\) y \(+1\).</p>
+  </div>
+
+  <h3>Definición por Recurrencia</h3>
+  <p>Los polinomios de Chebyshev se construyen de manera elegante mediante una relación de recurrencia:</p>
+
+  <div class="card definition">
+    <div class="card-label">Definición recursiva</div>
+    <div class="math-block">$$T_0(t) = 1 \qquad T_1(t) = t$$</div>
+    <div class="math-block">$$T_k(t) = 2t\,T_{k-1}(t) - T_{k-2}(t), \qquad k = 2, 3, 4, \ldots$$</div>
+  </div>
+
+  <details>
+    <summary>📐 Construcción paso a paso: \(T_2\), \(T_3\), \(T_4\)</summary>
+    <div>
+      <div class="math-block" style="text-align:left;">
+        \(T_2(t) = 2t \cdot T_1(t) - T_0(t) = 2t(t) - 1 = \mathbf{2t^2 - 1}\)<br><br>
+        \(T_3(t) = 2t \cdot T_2(t) - T_1(t) = 2t(2t^2-1) - t = 4t^3 - 2t - t = \mathbf{4t^3 - 3t}\)<br><br>
+        \(T_4(t) = 2t \cdot T_3(t) - T_2(t) = 2t(4t^3-3t) - (2t^2-1) = \mathbf{8t^4 - 8t^2 + 1}\)
+      </div>
+    </div>
+  </details>
+
+  <!-- Calculadora recursiva -->
+  <div class="cheby-calc">
+    <div class="card-label" style="color:var(--forest);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px;">Calculadora Recursiva de \(T_k\)</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="input-group">
+        <label>Ingresa k (0–12)</label>
+        <input type="number" id="calc-k" value="3" min="0" max="12" style="width:100px;">
+      </div>
+      <button class="btn-primary" onclick="calcChebyshev()">Calcular T<sub>k</sub></button>
+    </div>
+    <div id="cheby-output"></div>
+  </div>
+
+  <!-- Galería T0 a T5 -->
+  <h3>Galería: \(T_0\) a \(T_5\)</h3>
+  <div id="cheby-gallery"></div>
+  <div class="plot-container" id="plot-cheby-gallery" style="height:340px;"></div>
+
+  <h3>Propiedades Fundamentales</h3>
+  <div class="card definition">
+    <div class="card-label">Propiedades de los Polinomios de Chebyshev \(T_n\)</div>
+    <ul class="steps">
+      <li>
+        <span class="step-num">P1</span>
+        <span><strong>Coeficiente líder:</strong> El coeficiente del término \(t^n\) en \(T_n(t)\) es \(2^{n-1}\) para \(n \geq 1\). (\(T_0 = 1\) tiene coeficiente 1.)</span>
+      </li>
+      <li>
+        <span class="step-num">P2</span>
+        <span><strong>Paridad:</strong> Si \(n\) es par, \(T_n\) es función <em>par</em>: \(T_n(-t) = T_n(t)\). Si \(n\) es impar, es función <em>impar</em>: \(T_n(-t) = -T_n(t)\).</span>
+      </li>
+      <li>
+        <span class="step-num">P3</span>
+        <span><strong>Representación trigonométrica:</strong>
+          <div class="math-block">$$T_n(t) = \cos(n \arccos t), \qquad -1 \leq t \leq 1.$$</div>
+          Para \(t = \cos\theta\): \(T_n(\cos\theta) = \cos(n\theta)\). ¡Polinomio y coseno a la vez!
+        </span>
+      </li>
+      <li>
+        <span class="step-num" style="background:var(--forest);">P4</span>
+        <span><strong>Acotamiento:</strong> Directamente de la representación trigonométrica,
+          <div class="math-block">$$|T_n(t)| = |\cos(n \arccos t)| \leq 1, \qquad \forall\, t \in [-1, 1].$$</div>
+          Esta propiedad es la clave de todo: ningún otro polinomio mónico de grado \(n\) oscila tan poco.
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card curiosity">
+    <div class="card-label">¿Sabías que...?</div>
+    <p>Los polinomios de Chebyshev aparecen de manera natural en teoría de aproximación, filtros digitales en ingeniería eléctrica, métodos espectrales para ecuaciones diferenciales, y hasta en la construcción de calendarios astronómicos. Son una herramienta omnipresente en la matemática aplicada.</p>
+  </div>
+
+  <h3>Los Ceros de \(T_n\): El Origen de los Nodos Óptimos</h3>
+
+  <div class="card definition">
+    <div class="card-label">Ceros de \(T_n\) en \([-1,1]\)</div>
+    <p>El polinomio \(T_n(t)\) tiene exactamente \(n\) ceros distintos en \([-1,1]\), dados por:</p>
+    <div class="math-block">$$\boxed{t_k = \cos\!\left(\frac{2k+1}{2n}\,\pi\right), \qquad k = 0, 1, \ldots, n-1.}$$</div>
+    <p><strong>Verificación:</strong> \(T_n(t_k) = \cos\!\left(n\arccos\!\left(\cos\!\left(\frac{2k+1}{2n}\pi\right)\right)\right) = \cos\!\left(\frac{2k+1}{2}\pi\right) = 0\). ✓</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎯</div>
+    <div class="tip-body">
+      <div class="tip-label">Dato clave</div>
+      <p>A diferencia de los nodos equiespaciados, los ceros de \(T_n\) se <em>concentran más cerca de los extremos</em> \(-1\) y \(+1\). Esto contrarresta precisamente el efecto de Runge, que provoca oscilaciones grandes en los bordes del intervalo.</p>
+    </div>
+  </div>
+
+  <!-- Mini evaluación formativa -->
+  <h3>Mini-evaluación formativa (no calificada)</h3>
+  <div id="mini-quiz"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     FASE 3 — TEORÍA
+════════════════════════════════════════════ -->
+<div class="section" id="fase3">
+  <h2><span class="section-num">Fase 03 · 50 min</span>Teoría: Nodos Óptimos y Cotas de Error</h2>
+
+  <div class="card phase-card">
+    <div class="card-label">Narrativa de construcción</div>
+    <p>Ahora que conocemos los polinomios de Chebyshev y sus ceros, estamos listos para responder la gran pregunta: <strong>¿por qué los ceros de \(T_{n+1}\) son los nodos óptimos?</strong> La respuesta viene de un elegante teorema que Chebyshev demostró en el siglo XIX.</p>
+  </div>
+
+  <!-- Pestañas de contenido -->
+  <div style="display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap;">
+    <button class="btn-ghost" id="tt1" onclick="showTheoryTab(1)" style="border-color:var(--slate);background:var(--slate);color:white;">Minimización</button>
+    <button class="btn-ghost" id="tt2" onclick="showTheoryTab(2)">Teorema Principal</button>
+    <button class="btn-ghost" id="tt3" onclick="showTheoryTab(3)">Cotas de Error</button>
+  </div>
+
+  <div id="ttab1" style="margin-top:16px;">
+    <h3>El Problema de Minimización</h3>
+    <p>Recordemos la cota del error de interpolación:</p>
+    <div class="math-block">$$|f(x) - p_n(x)| \leq \frac{\max|f^{(n+1)}|}{(n+1)!} \cdot \underbrace{\max_{-1 \leq t \leq 1}\left|\prod_{i=0}^{n}(t - t_i)\right|}_{=\;\max|Q(t)|}$$</div>
+    <p>Queremos encontrar \(n+1\) nodos \(t_0, t_1, \ldots, t_n \in [-1,1]\) distintos que <strong>minimicen</strong> \(\max_{-1 \leq t \leq 1}|Q(t)|\).</p>
+    <p>La clave está en observar que \(Q(t) = \prod_{i=0}^{n}(t-t_i)\) es un polinomio de grado \(n+1\) con coeficiente líder igual a 1 (<em>mónico</em>). Chebyshev descubrió que la solución óptima es precisamente \(Q(t) = \frac{1}{2^n}T_{n+1}(t)\).</p>
+    <div class="card definition">
+      <div class="card-label">Objetivo de minimización</div>
+      <div class="math-block">$$\min_{t_0,\ldots,t_n \in [-1,1]} \max_{-1 \leq t \leq 1}\left|\prod_{i=0}^{n}(t-t_i)\right| = \frac{1}{2^n}$$</div>
+      <p>El mínimo se alcanza cuando los \(t_i\) son los ceros de \(T_{n+1}\).</p>
+    </div>
+  </div>
+
+  <div id="ttab2" style="display:none;margin-top:16px;">
+    <h3>Teorema de Optimalidad de Chebyshev</h3>
+    <div class="card theorem">
+      <div class="card-label">Teorema Principal</div>
+      <p>Entre todas las posibles elecciones de \(n+1\) nodos distintos \(\{t_i\}_{i=0}^{n}\) en \([-1,1]\), el polinomio</p>
+      <div class="math-block">$$T(t) = \dfrac{1}{2^n}T_{n+1}(t)$$</div>
+      <p>es la <strong>única</strong> elección que satisface</p>
+      <div class="math-block">$$\max_{-1 \leq t \leq 1}|T(t)| \leq \max_{-1 \leq t \leq 1}|Q(t)|$$</div>
+      <p>y además \(\max_{-1 \leq t \leq 1}|T(t)| = \dfrac{1}{2^n}\).</p>
+      <p><strong>Conclusión:</strong> Los nodos óptimos son los ceros de \(T_{n+1}\):</p>
+      <div class="math-block">$$\boxed{t_k = \cos\!\left(\frac{2k+1}{2(n+1)}\pi\right), \quad k = 0, \ldots, n}$$</div>
+    </div>
+
+    <div class="tip-profe">
+      <div class="icon">💡</div>
+      <div class="tip-body">
+        <div class="tip-label">Intuición geométrica</div>
+        <p>El polinomio \(\frac{1}{2^n}T_{n+1}(t)\) oscila de \(-\frac{1}{2^n}\) a \(+\frac{1}{2^n}\) de manera <em>equirriple</em> (todos los picos tienen el mismo valor absoluto). Ningún otro polinomio mónico de grado \(n+1\) puede permanecer más cerca del eje horizontal en todo \([-1,1]\).</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="ttab3" style="display:none;margin-top:16px;">
+    <h3>Cota de Error en \([-1,1]\)</h3>
+    <div class="card theorem">
+      <div class="card-label">Teorema — Cota en \([-1,1]\)</div>
+      <p>Sea \(p_n\) el polinomio que interpola a \(f\) en los ceros de \(T_{n+1}\). Si \(f \in \mathcal{C}^{n+1}[-1,1]\):</p>
+      <div class="math-block">$$\max_{-1 \leq t \leq 1}|f(t) - p_n(t)| \leq \dfrac{1}{2^n (n+1)!} \max_{-1 \leq t \leq 1}|f^{(n+1)}(t)|$$</div>
+    </div>
+
+    <h3>Traslado al Intervalo General \([a,b]\)</h3>
+    <div class="card definition">
+      <div class="card-label">Cambio de variable</div>
+      <p>Si los nodos de Chebyshev en \([-1,1]\) son \(t_k = \cos\!\left(\frac{2k+1}{2(n+1)}\pi\right)\), los nodos trasladados al intervalo \([a,b]\) son:</p>
+      <div class="math-block">$$\boxed{x_k = \frac{b-a}{2}\,t_k + \frac{a+b}{2}, \qquad k = 0, 1, \ldots, n.}$$</div>
+    </div>
+    <div class="card theorem">
+      <div class="card-label">Teorema — Cota en \([a,b]\)</div>
+      <p>Sea \(p_n\) el polinomio que interpola a \(f\) en los nodos de Chebyshev trasladados a \([a,b]\). Si \(f \in \mathcal{C}^{n+1}[a,b]\):</p>
+      <div class="math-block">$$\max_{a \leq x \leq b}|f(x) - p_n(x)| \leq \dfrac{2(b-a)^{n+1}}{4^{n+1}(n+1)!}\, \max_{a \leq x \leq b}|f^{(n+1)}(x)|$$</div>
+    </div>
+    <div class="card alert-card">
+      <div class="card-label">Importante: convergencia garantizada</div>
+      <p>A medida que \(n\) crece, el factor \(\frac{2(b-a)^{n+1}}{4^{n+1}(n+1)!}\) <em>decrece muy rápidamente</em> (el factorial domina). Esto garantiza que la interpolación de Chebyshev converge para funciones suficientemente suaves, a diferencia de la interpolación con nodos equiespaciados.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:36px;">Tabla de Referencia Rápida</h3>
+  <div class="table-wrapper">
+    <table class="ref-table">
+      <thead><tr><th>Concepto</th><th>Fórmula</th><th>Observación</th></tr></thead>
+      <tbody>
+        <tr><td>Recurrencia de Chebyshev</td><td>\(T_k = 2t\,T_{k-1} - T_{k-2}\)</td><td>\(T_0=1,\; T_1=t\)</td></tr>
+        <tr><td>Repr. trigonométrica</td><td>\(T_n(t) = \cos(n\arccos t)\)</td><td>Válida en \([-1,1]\)</td></tr>
+        <tr><td>Ceros de \(T_n\) en \([-1,1]\)</td><td>\(t_k = \cos\!\left(\frac{2k+1}{2n}\pi\right)\)</td><td>\(k=0,\ldots,n-1\)</td></tr>
+        <tr><td>Nodos para interpolar de grado \(n\)</td><td>\(t_k = \cos\!\left(\frac{2k+1}{2(n+1)}\pi\right)\)</td><td>Ceros de \(T_{n+1}\); \(k=0,\ldots,n\)</td></tr>
+        <tr><td>Traslado a \([a,b]\)</td><td>\(x_k = \frac{b-a}{2}t_k + \frac{a+b}{2}\)</td><td>\(k=0,\ldots,n\)</td></tr>
+        <tr><td>Mínimo de \(\max|Q(t)|\)</td><td>\(\dfrac{1}{2^n}\)</td><td>Garantizado por el Teorema</td></tr>
+        <tr><td>Cota de error en \([-1,1]\)</td><td>\(\dfrac{\max|f^{(n+1)}|}{2^n(n+1)!}\)</td><td>\(f \in \mathcal{C}^{n+1}[-1,1]\)</td></tr>
+        <tr><td>Cota de error en \([a,b]\)</td><td>\(\dfrac{2(b-a)^{n+1}}{4^{n+1}(n+1)!}\max|f^{(n+1)}|\)</td><td>\(f \in \mathcal{C}^{n+1}[a,b]\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     SIMULADOR
+════════════════════════════════════════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Fase 04 · Herramienta</span>Simulador: Chebyshev vs. Equiespaciados</h2>
+
+  <p>Configura la función, el intervalo y el grado, y observa en tiempo real cómo los nodos de Chebyshev superan a los equiespaciados.</p>
+
+  <div class="card" style="background:white;">
+    <div class="card-label" style="color:var(--forest);">Configuración del Simulador</div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Función f(x)</label>
+        <select id="sim-func">
+          <option value="runge">4 / (4x²+1)</option>
+          <option value="runge2">1 / (1+25x²)</option>
+          <option value="exp">e^x</option>
+          <option value="sin">sin(x)</option>
+          <option value="atan">arctan(x)</option>
+          <option value="cos">cos(x)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Extremo izquierdo a</label>
+        <input type="number" id="sim-a" value="-1" step="0.5">
+      </div>
+      <div class="input-group">
+        <label>Extremo derecho b</label>
+        <input type="number" id="sim-b" value="1" step="0.5">
+      </div>
+      <div class="input-group">
+        <label>Grado n = <span id="sim-n-val">4</span></label>
+        <input type="range" id="sim-n" min="1" max="10" value="4" oninput="document.getElementById('sim-n-val').textContent=this.value;">
+      </div>
+    </div>
+    <div class="action-grid">
+      <button class="btn-primary" onclick="runSimulator()">▶ Calcular y Graficar</button>
+      <button class="btn-secondary" onclick="resetSimulator()">↺ Reiniciar</button>
+    </div>
+    <div class="tip-profe" style="margin-top:14px;">
+      <div class="icon">❓</div>
+      <div class="tip-body">
+        <div class="tip-label">¿Por qué Chebyshev gana?</div>
+        <p>Los nodos de Chebyshev minimizan el factor \(\max|Q(t)|\) de la cota de error. Al concentrarse en los extremos, contrarrestan el efecto de Runge y garantizan la convergencia.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="plot-container" id="plot-sim" style="height:460px;"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+    <div class="plot-container" id="plot-err-equi" style="height:220px;"></div>
+    <div class="plot-container" id="plot-err-cheb" style="height:220px;"></div>
+  </div>
+
+  <h3>Tabla Comparativa en Tiempo Real</h3>
+  <div class="table-wrapper" id="sim-table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th>Nodos Equiespaciados</th>
+          <th>Nodos Chebyshev</th>
+        </tr>
+      </thead>
+      <tbody id="sim-table-body">
+        <tr><td colspan="3" style="text-align:center;color:var(--muted);font-style:italic;">Ejecuta el simulador para ver resultados.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Nodos de Chebyshev Calculados</h3>
+  <div id="sim-nodes-panel">
+    <p style="color:var(--muted);font-style:italic;">Ejecuta el simulador para ver los nodos.</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     FASE 4 — EJEMPLOS
+════════════════════════════════════════════ -->
+<div class="section" id="fase4">
+  <h2><span class="section-num">Fase 05 · 60 min</span>Aplicación: Ejemplos Resueltos</h2>
+
+  <div class="card phase-card">
+    <div class="card-label">Narrativa de aplicación</div>
+    <p>La teoría cobra vida cuando la aplicamos. En los siguientes tres ejemplos verás cómo los nodos de Chebyshev reducen el error de interpolación de manera concreta y medible.</p>
+  </div>
+
+  <!-- Ejemplo 1 -->
+  <div class="card example-card" style="margin-top:28px;">
+    <div class="card-label">Ejemplo A · Básico</div>
+    <p><strong>Función:</strong> \(f(x) = \dfrac{4}{4x^2+1}\) en \([-1,1]\), \(n=4\)</p>
+    <p>Comparación nodos equiespaciados vs. Chebyshev.</p>
+  </div>
+
+  <div class="ex-step" id="ex1s1">
+    <div class="ex-step-header" onclick="toggleStep('ex1s1')">
+      <span style="background:var(--rust);color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:'JetBrains Mono',monospace;flex-shrink:0;">A</span>
+      Parte A: Nodos equiespaciados
+    </div>
+    <div class="ex-step-body">
+      <p>Tomamos 5 nodos igualmente distribuidos: \(x_0=-1,\; x_1=-\tfrac{1}{2},\; x_2=0,\; x_3=\tfrac{1}{2},\; x_4=1\).</p>
+      <p>Valores de \(f\): \(f(\pm 1)=\tfrac{4}{5}\), \(f(\pm\tfrac{1}{2})=2\), \(f(0)=4\).</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>\(x_i\)</th><th>D.D.\(^0\)</th><th>D.D.\(^1\)</th><th>D.D.\(^2\)</th><th>D.D.\(^3\)</th><th>D.D.\(^4\)</th></tr></thead>
+          <tbody>
+            <tr><td>\(-1\)</td><td>\(4/5\)</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>\(-1/2\)</td><td>\(2\)</td><td>\(12/5\)</td><td></td><td></td><td></td></tr>
+            <tr><td>\(0\)</td><td>\(4\)</td><td>\(4\)</td><td>\(8/5\)</td><td></td><td></td></tr>
+            <tr><td>\(1/2\)</td><td>\(2\)</td><td>\(-4\)</td><td>\(-8\)</td><td>\(-32/5\)</td><td></td></tr>
+            <tr><td>\(1\)</td><td>\(4/5\)</td><td>\(-12/5\)</td><td>\(8/5\)</td><td>\(32/5\)</td><td>\(32/5\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Error máximo:</strong> \(\|f - p_4\|_\infty \approx 0.6472\)</p>
+    </div>
+  </div>
+
+  <div class="ex-step" id="ex1s2">
+    <div class="ex-step-header" onclick="toggleStep('ex1s2')">
+      <span style="background:var(--forest);color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:'JetBrains Mono',monospace;flex-shrink:0;">B</span>
+      Parte B: Nodos de Chebyshev
+    </div>
+    <div class="ex-step-body">
+      <p>Los ceros de \(T_5\) en \([-1,1]\) son \(t_k = \cos\!\left(\frac{2k+1}{10}\pi\right)\), \(k = 0,1,2,3,4\):</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>\(k\)</th><th>\(t_k\)</th><th>\(f(t_k)\)</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>\(\approx 0.9511\)</td><td>\(\approx 0.8662\)</td></tr>
+            <tr><td>1</td><td>\(\approx 0.5878\)</td><td>\(\approx 1.6793\)</td></tr>
+            <tr><td>2</td><td>\(\approx 0\)</td><td>\(\approx 4\)</td></tr>
+            <tr><td>3</td><td>\(\approx -0.5878\)</td><td>\(\approx 1.6793\)</td></tr>
+            <tr><td>4</td><td>\(\approx -0.9511\)</td><td>\(\approx 0.8662\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Error máximo:</strong> \(\|\tilde{p}_4 - f\|_\infty \approx 0.3338\)</p>
+    </div>
+  </div>
+
+  <div class="ex-step" id="ex1s3">
+    <div class="ex-step-header" onclick="toggleStep('ex1s3')">
+      <span style="background:var(--slate);color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:'JetBrains Mono',monospace;flex-shrink:0;">C</span>
+      Conclusión Ejemplo A
+    </div>
+    <div class="ex-step-body">
+      <div class="card summary-card" style="margin:0;">
+        <div class="card-label">Resultado</div>
+        <p>Los nodos de Chebyshev reducen el error en <strong>\(\approx 48\%\)</strong> frente a los equiespaciados.</p>
+        <div class="math-block">$$\frac{0.6472 - 0.3338}{0.6472} \times 100\% \approx 48.4\%$$</div>
+        <p>La mejora es especialmente notable en los extremos del intervalo, donde el fenómeno de Runge actuaba.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ejemplo 2 -->
+  <div class="card example-card" style="margin-top:32px;">
+    <div class="card-label">Ejemplo B · Intermedio</div>
+    <p><strong>Función:</strong> \(f(x) = \arctan(x) + \ln(x+\pi)\) en \(\left[-\dfrac{\pi}{4},\, \dfrac{\pi}{3}\right]\), \(n=4\)</p>
+    <p>Uso del cambio de variable para trasladar nodos de Chebyshev al intervalo \([a,b]\).</p>
+  </div>
+
+  <div class="ex-step" id="ex2s1">
+    <div class="ex-step-header" onclick="toggleStep('ex2s1')">Paso 1: Fórmula de los nodos trasladados</div>
+    <div class="ex-step-body">
+      <p>Con \(a = -\pi/4\) y \(b = \pi/3\):</p>
+      <div class="math-block">$$x_k = \frac{b-a}{2}t_k + \frac{a+b}{2} = \frac{7\pi}{24}\,t_k + \frac{\pi}{24}$$</div>
+    </div>
+  </div>
+  <div class="ex-step" id="ex2s2">
+    <div class="ex-step-header" onclick="toggleStep('ex2s2')">Paso 2: Nodos \(t_k\) y \(x_k\) trasladados</div>
+    <div class="ex-step-body">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>\(k\)</th><th>\(t_k\)</th><th>\(x_k = \frac{7\pi}{24}t_k + \frac{\pi}{24}\)</th><th>\(f(x_k)\)</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>\(\approx 0.9511\)</td><td>\(\approx 1.0024\)</td><td>\(\approx -0.0081\)</td></tr>
+            <tr><td>1</td><td>\(\approx 0.5878\)</td><td>\(\approx 0.6695\)</td><td>\(\approx 0.9625\)</td></tr>
+            <tr><td>2</td><td>\(= 0\)</td><td>\(\approx 0.1309\)</td><td>\(\approx 1.8449\)</td></tr>
+            <tr><td>3</td><td>\(\approx -0.5878\)</td><td>\(\approx -0.4077\)</td><td>\(\approx 1.5186\)</td></tr>
+            <tr><td>4</td><td>\(\approx -0.9511\)</td><td>\(\approx -0.7406\)</td><td>\(\approx 0.7796\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ex-step" id="ex2s3">
+    <div class="ex-step-header" onclick="toggleStep('ex2s3')">Paso 3: Tabla de diferencias divididas</div>
+    <div class="ex-step-body">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>\(x_i\)</th><th>D.D.\(^0\)</th><th>D.D.\(^1\)</th><th>D.D.\(^2\)</th><th>D.D.\(^3\)</th><th>D.D.\(^4\)</th></tr></thead>
+          <tbody>
+            <tr><td>\(1.0024\)</td><td>\(-0.0081\)</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>\(0.6695\)</td><td>\(0.9625\)</td><td>\(-2.9159\)</td><td></td><td></td><td></td></tr>
+            <tr><td>\(0.1309\)</td><td>\(1.8449\)</td><td>\(-1.6384\)</td><td>\(-1.4661\)</td><td></td><td></td></tr>
+            <tr><td>\(-0.4077\)</td><td>\(1.5186\)</td><td>\(0.6059\)</td><td>\(-2.0834\)</td><td>\(0.4378\)</td><td></td></tr>
+            <tr><td>\(-0.7406\)</td><td>\(0.7796\)</td><td>\(2.2203\)</td><td>\(-1.8525\)</td><td>\(-0.1638\)</td><td>\(0.3452\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ex-step" id="ex2s4">
+    <div class="ex-step-header" onclick="toggleStep('ex2s4')">Paso 4: Polinomio de Newton resultante</div>
+    <div class="ex-step-body">
+      <div class="math-block" style="text-align:left;">
+        $$p_4(x) \approx -0.0081 - 2.9159(x - 1.0024) - 1.4661(x-1.0024)(x-0.6695)$$
+        $$+\; 0.4378(x-1.0024)(x-0.6695)(x-0.1309)$$
+        $$+\; 0.3452(x-1.0024)(x-0.6695)(x-0.1309)(x+0.4077)$$
+      </div>
+      <p>Este es el polinomio de grado 4 que minimiza la cota de error en el intervalo dado.</p>
+    </div>
+  </div>
+
+  <!-- Ejemplo 3 -->
+  <div class="card example-card" style="margin-top:32px;">
+    <div class="card-label">Ejemplo C · Avanzado</div>
+    <p><strong>Función:</strong> \(f(x) = 5\cos\!\left(\dfrac{x\pi}{5}\right)\) en \([-1,2]\), \(n=3\)</p>
+    <p>Cálculo analítico de la cota de error usando derivadas de orden superior.</p>
+  </div>
+
+  <div class="ex-step" id="ex3s1">
+    <div class="ex-step-header" onclick="toggleStep('ex3s1')">Paso 1: Calcular \(f^{(4)}(x)\)</div>
+    <div class="ex-step-body">
+      <div class="math-block" style="text-align:left;">
+        $$f'(x) = -\pi\,\operatorname{sen}\!\left(\tfrac{x\pi}{5}\right)$$
+        $$f''(x) = -\tfrac{\pi^2}{5}\cos\!\left(\tfrac{x\pi}{5}\right)$$
+        $$f'''(x) = \tfrac{\pi^3}{25}\,\operatorname{sen}\!\left(\tfrac{x\pi}{5}\right)$$
+        $$f^{(4)}(x) = \tfrac{\pi^4}{125}\cos\!\left(\tfrac{x\pi}{5}\right)$$
+      </div>
+    </div>
+  </div>
+  <div class="ex-step" id="ex3s2">
+    <div class="ex-step-header" onclick="toggleStep('ex3s2')">Paso 2: Acotar \(\max|f^{(4)}(x)|\)</div>
+    <div class="ex-step-body">
+      <p>Como \(\left|\cos\!\left(\frac{x\pi}{5}\right)\right| \leq 1\) para todo \(x\):</p>
+      <div class="math-block">$$\max_{-1 \leq x \leq 2}|f^{(4)}(x)| = \frac{\pi^4}{125}\max\left|\cos\!\left(\frac{x\pi}{5}\right)\right| \leq \frac{\pi^4}{125}$$</div>
+    </div>
+  </div>
+  <div class="ex-step" id="ex3s3">
+    <div class="ex-step-header" onclick="toggleStep('ex3s3')">Paso 3: Calcular la cota de error</div>
+    <div class="ex-step-body">
+      <p>Con \(a=-1\), \(b=2\), \(n=3\):</p>
+      <div class="math-block">$$|f(x) - p_3(x)| \leq \frac{2(b-a)^{n+1}}{4^{n+1}(n+1)!}\,\max|f^{(4)}(x)| = \frac{2(3)^{4}}{4^{4}\cdot 4!}\cdot\frac{\pi^4}{125}$$</div>
+      <div class="math-block">$$= \frac{2 \cdot 81}{256 \cdot 24} \cdot \frac{\pi^4}{125} = \frac{162}{6144} \cdot \frac{\pi^4}{125} = \frac{27}{1024} \cdot \frac{\pi^4}{125} \approx \mathbf{0.020547}$$</div>
+      <div class="card summary-card" style="margin:12px 0 0;">
+        <div class="card-label">Interpretación</div>
+        <p>El mayor error al aproximar \(f\) con el polinomio de Chebyshev de grado 3 en \([-1,2]\) nunca superará \(\mathbf{0.0206}\). Una garantía analítica del peor caso posible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     EVALUACIÓN
+════════════════════════════════════════════ -->
+<div class="section" id="evaluacion">
+  <h2><span class="section-num">Fase 06 · 30 min</span>Evaluación y Cierre</h2>
+
+  <div class="card phase-card">
+    <div class="card-label">Narrativa de cierre</div>
+    <p>Hemos dominado la interpolación de Chebyshev: sabemos cuáles son los nodos óptimos, podemos trasladarlos a cualquier intervalo, y podemos calcular cotas del error antes de hacer ningún cálculo numérico. Pero antes de cerrar, debemos ser honestos sobre los <strong>límites</strong> del método.</p>
+  </div>
+
+  <!-- Síntesis -->
+  <div class="card summary-card">
+    <div class="card-label">Resumen de la Unidad</div>
+    <ul class="steps">
+      <li><span class="step-num" style="background:var(--blue);">1</span><span><strong>El problema:</strong> El error de interpolación depende crucialmente de la ubicación de los nodos. Los nodos equiespaciados pueden causar el fenómeno de Runge.</span></li>
+      <li><span class="step-num" style="background:var(--blue);">2</span><span><strong>La herramienta:</strong> Los polinomios de Chebyshev \(T_n(t)\), definidos recursivamente, tienen acotamiento \(|T_n(t)| \leq 1\) en \([-1,1]\) y ceros distribuidos óptimamente.</span></li>
+      <li><span class="step-num" style="background:var(--blue);">3</span><span><strong>La solución óptima:</strong> Los nodos \(t_k = \cos\!\left(\frac{2k+1}{2(n+1)}\pi\right)\) son los ceros de \(T_{n+1}\) y minimizan \(\max|Q(t)|\).</span></li>
+      <li><span class="step-num" style="background:var(--blue);">4</span><span><strong>La garantía:</strong> Cota en \([-1,1]\): \(\frac{1}{2^n(n+1)!}\max|f^{(n+1)}(t)|\). En \([a,b]\): \(\frac{2(b-a)^{n+1}}{4^{n+1}(n+1)!}\max|f^{(n+1)}(x)|\).</span></li>
+      <li><span class="step-num" style="background:var(--blue);">5</span><span><strong>Los límites:</strong> Si los datos son discretos y ruidosos, usar <em>mínimos cuadrados</em>.</span></li>
+    </ul>
+  </div>
+
+  <!-- Banco de preguntas -->
+  <h3 style="margin-top:32px;">Banco de Evaluación (15 preguntas)</h3>
+  <div id="quiz-container"></div>
+
+  <div class="quiz-score" id="quiz-score-panel" style="display:none;">
+    <div>
+      <div class="score-label">Puntaje Final</div>
+      <div style="font-size:0.85rem;opacity:0.7;margin-top:4px;" id="quiz-score-detail"></div>
+    </div>
+    <div class="score-val" id="quiz-score-val">—</div>
+  </div>
+  <div style="margin-top:16px;text-align:center;" id="quiz-btn-area">
+    <button class="btn-primary" onclick="submitQuiz()">Calcular Puntaje Final</button>
+    <button class="btn-ghost" onclick="resetQuiz()" style="margin-left:10px;">Reiniciar Evaluación</button>
+  </div>
+</div>
+
+</main>
+
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ─── Tab navigation ─── */
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'fase2') { buildGallery(); waitForPlotly(plotChebyshevGallery); }
+  if (id === 'evaluacion') buildQuiz();
+  if (typeof MathJax !== 'undefined') MathJax.typesetPromise && MathJax.typesetPromise();
+}
+
+/* ─── Theory tabs ─── */
+function showTheoryTab(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('ttab'+i);
+    const btn = document.getElementById('tt'+i);
+    if (el) el.style.display = (i===n) ? 'block' : 'none';
+    if (btn) {
+      if (i===n) { btn.style.background='var(--slate)'; btn.style.color='white'; btn.style.borderColor='var(--slate)'; }
+      else { btn.style.background='transparent'; btn.style.color='var(--slate)'; btn.style.borderColor='var(--rule)'; }
+    }
+  });
+}
+
+/* ─── Chebyshev polynomial evaluation ─── */
+function chebyshevT(n, t) {
+  if (n === 0) return 1;
+  if (n === 1) return t;
+  let prev2 = 1, prev1 = t, curr = 0;
+  for (let k = 2; k <= n; k++) {
+    curr = 2*t*prev1 - prev2;
+    prev2 = prev1; prev1 = curr;
+  }
+  return curr;
+}
+function chebyshevPoly(n) {
+  // Returns string representation
+  const polys = ['1','t','2t²−1','4t³−3t','8t⁴−8t²+1','16t⁵−20t³+5t',
+                  '32t⁶−48t⁴+18t²−1','64t⁷−112t⁵+56t³−7t',
+                  '128t⁸−256t⁶+160t⁴−32t²+1','256t⁹−576t⁷+432t⁵−120t³+9t',
+                  '512t¹⁰−1280t⁸+1120t⁶−400t⁴+50t²−1',
+                  '1024t¹¹−2816t⁹+2816t⁷−1232t⁵+220t³−11t',
+                  '2048t¹²−6144t¹⁰+7040t⁸−4096t⁶+840t⁴−84t²+1'];
+  return n < polys.length ? polys[n] : '(usar calculadora)';
+}
+function calcChebyshev() {
+  const k = parseInt(document.getElementById('calc-k').value);
+  const out = document.getElementById('cheby-output');
+  out.innerHTML = `<strong>T<sub>${k}</sub>(t)</strong> = ${chebyshevPoly(k)}`;
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([out]);
+}
+function buildGallery() {
+  const g = document.getElementById('cheby-gallery');
+  if (g.children.length > 0) return;
+  const polys = [0,1,2,3,4,5];
+  const colors = ['#0d47a1','#1565c0','#2e7d32','#e65100','#6a1b9a','#b71c1c'];
+  polys.forEach((n,i) => {
+    const div = document.createElement('div'); div.className = 'tk-card';
+    div.innerHTML = `<div class="tk-label" style="color:${colors[i]};">T<sub>${n}</sub>(t)</div><div style="font-size:0.8rem;color:#555;">${chebyshevPoly(n)}</div>`;
+    g.appendChild(div);
+  });
+}
+
+/* ─── Runge phenomenon plot ─── */
+function plotRunge() {
+  const n = parseInt(document.getElementById('runge-n').value);
+  const xs = linspace(-1, 1, 500);
+  const f = x => 1/(1 + 25*x*x);
+  // equispaced nodes
+  const xn = linspace(-1, 1, n+1);
+  const yn = xn.map(f);
+  const coef = dividedDiff([...xn], [...yn]);
+  const px = xs.map(x => evalNewton(coef, xn, x));
+  const err = xs.map((x,i) => Math.abs(f(x) - px[i]));
+  const maxErr = Math.max(...err).toFixed(4);
+
+  Plotly.newPlot('plot-runge', [
+    { x: xs, y: xs.map(f), name: 'f(x) = 1/(1+25x²)', line:{color:'#0d47a1',width:2.5} },
+    { x: xs, y: px, name: `p_${n} equiespaciado`, line:{color:'#b71c1c',width:2,dash:'dash'} },
+    { x: xs, y: err, name: 'Error absoluto', line:{color:'#aaa',width:1}, yaxis:'y2', fill:'tozeroy', fillcolor:'rgba(180,180,180,0.15)' },
+    { x: xn, y: yn, mode:'markers', name:'Nodos', marker:{color:'#b71c1c',size:7}, yaxis:'y' }
+  ], {
+    margin:{t:30,r:20,b:40,l:50},
+    xaxis:{title:'x'},
+    yaxis:{title:'Valor',range:[-2,2]},
+    yaxis2:{title:'Error',overlaying:'y',side:'right',showgrid:false,range:[0,Math.max(...err)*1.3]},
+    legend:{orientation:'h',y:-0.15},
+    annotations:[{x:0.98,y:0.98,xref:'paper',yref:'paper',text:`Error máx: ${maxErr}`,showarrow:false,bgcolor:'rgba(255,255,255,0.8)',bordercolor:'#ccc',font:{size:11}}]
+  }, {responsive:true,displayModeBar:false});
+}
+
+/* ─── Chebyshev gallery plot ─── */
+function plotChebyshevGallery() {
+  if (!document.getElementById('plot-cheby-gallery')) return;
+  const xs = linspace(-1, 1, 300);
+  const colors = ['#0d47a1','#1565c0','#2e7d32','#e65100','#6a1b9a','#b71c1c'];
+  const traces = [0,1,2,3,4,5].map((n,i) => ({
+    x: xs, y: xs.map(x => chebyshevT(n,x)),
+    name: `T_${n}`, line:{color:colors[i],width:1.8}
+  }));
+  Plotly.newPlot('plot-cheby-gallery', traces, {
+    margin:{t:20,r:20,b:40,l:40},
+    xaxis:{title:'t',range:[-1,1]},
+    yaxis:{title:'T_n(t)',range:[-1.2,1.2]},
+    legend:{orientation:'h',y:-0.2},
+    shapes:[{type:'line',x0:-1,x1:1,y0:1,y1:1,line:{color:'#ccc',dash:'dot'}},
+            {type:'line',x0:-1,x1:1,y0:-1,y1:-1,line:{color:'#ccc',dash:'dot'}}]
+  }, {responsive:true,displayModeBar:false});
+}
+
+/* ─── Simulator ─── */
+function getSimFunc() {
+  const id = document.getElementById('sim-func').value;
+  const funcs = {
+    runge:  x => 4/(4*x*x+1),
+    runge2: x => 1/(1+25*x*x),
+    exp:    x => Math.exp(x),
+    sin:    x => Math.sin(x),
+    atan:   x => Math.atan(x),
+    cos:    x => Math.cos(x),
+  };
+  const names = {runge:'4/(4x²+1)',runge2:'1/(1+25x²)',exp:'e^x',sin:'sin(x)',atan:'arctan(x)',cos:'cos(x)'};
+  return { f: funcs[id], name: names[id] };
+}
+function chebyNodes(n, a, b) {
+  const nodes = [];
+  for (let k = 0; k <= n; k++) {
+    const t = Math.cos((2*k+1)/(2*(n+1))*Math.PI);
+    nodes.push((b-a)/2*t + (a+b)/2);
+  }
+  return nodes.sort((u,v) => u-v);
+}
+function equiNodes(n, a, b) {
+  return Array.from({length:n+1}, (_,i) => a + i*(b-a)/n);
+}
+function dividedDiff(x, y) {
+  const n = x.length, coef = [...y];
+  for (let j=1;j<n;j++) for (let i=n-1;i>=j;i--) coef[i]=(coef[i]-coef[i-1])/(x[i]-x[i-j]);
+  return coef;
+}
+function evalNewton(coef, x, t) {
+  let r = coef[coef.length-1];
+  for (let i=coef.length-2;i>=0;i--) r = r*(t-x[i])+coef[i];
+  return r;
+}
+function linspace(a, b, n) {
+  return Array.from({length:n}, (_,i) => a + i*(b-a)/(n-1));
+}
+function runSimulator() {
+  const {f, name} = getSimFunc();
+  const a = parseFloat(document.getElementById('sim-a').value);
+  const b = parseFloat(document.getElementById('sim-b').value);
+  const n = parseInt(document.getElementById('sim-n').value);
+  if (isNaN(a)||isNaN(b)||a>=b) { alert('Verifica el intervalo: a debe ser menor que b.'); return; }
+
+  const xs = linspace(a, b, 500);
+  const fxs = xs.map(f);
+
+  const xequi = equiNodes(n, a, b), yequi = xequi.map(f);
+  const xcheb = chebyNodes(n, a, b), ycheb = xcheb.map(f);
+
+  const cEqui = dividedDiff([...xequi],[...yequi]);
+  const cCheb = dividedDiff([...xcheb],[...ycheb]);
+
+  const pEqui = xs.map(x => evalNewton(cEqui, xequi, x));
+  const pCheb = xs.map(x => evalNewton(cCheb, xcheb, x));
+
+  const errEqui = xs.map((x,i) => Math.abs(fxs[i]-pEqui[i]));
+  const errCheb = xs.map((x,i) => Math.abs(fxs[i]-pCheb[i]));
+  const maxEq = Math.max(...errEqui), maxCh = Math.max(...errCheb);
+
+  Plotly.newPlot('plot-sim', [
+    {x:xs, y:fxs, name:`f(x) = ${name}`, line:{color:'#0d47a1',width:2.5}},
+    {x:xs, y:pEqui, name:`p_${n} equiespaciado`, line:{color:'#b71c1c',width:2,dash:'dash'}},
+    {x:xs, y:pCheb, name:`p_${n} Chebyshev`, line:{color:'#2d6a4f',width:2}},
+    {x:xequi, y:yequi, mode:'markers', name:'Nodos equi', marker:{color:'#b71c1c',size:8,symbol:'x'}, showlegend:true},
+    {x:xcheb, y:ycheb, mode:'markers', name:'Nodos Cheb', marker:{color:'#2d6a4f',size:8}, showlegend:true}
+  ],{
+    margin:{t:30,r:20,b:50,l:50},
+    xaxis:{title:'x'}, yaxis:{title:'y'},
+    legend:{orientation:'h',y:-0.2},
+    title:{text:`Interpolación de grado ${n} en [${a}, ${b}]`, font:{size:13}}
+  },{responsive:true,displayModeBar:false});
+
+  Plotly.newPlot('plot-err-equi', [{x:xs,y:errEqui,fill:'tozeroy',fillcolor:'rgba(185,76,31,0.15)',line:{color:'#b94c1f',width:1.5},name:`Error equi (máx: ${maxEq.toExponential(2)})`}],
+    {margin:{t:30,r:10,b:40,l:50},title:{text:'Error equiespaciados',font:{size:12}},xaxis:{title:'x'},yaxis:{title:'|error|'}},{responsive:true,displayModeBar:false});
+
+  Plotly.newPlot('plot-err-cheb', [{x:xs,y:errCheb,fill:'tozeroy',fillcolor:'rgba(45,106,79,0.15)',line:{color:'#2d6a4f',width:1.5},name:`Error Cheb (máx: ${maxCh.toExponential(2)})`}],
+    {margin:{t:30,r:10,b:40,l:50},title:{text:'Error Chebyshev',font:{size:12}},xaxis:{title:'x'},yaxis:{title:'|error|'}},{responsive:true,displayModeBar:false});
+
+  // Table
+  const reduction = ((maxEq-maxCh)/maxEq*100).toFixed(1);
+  document.getElementById('sim-table-body').innerHTML = `
+    <tr><td>Error máximo ‖·‖∞</td><td class="td-equi">${maxEq.toExponential(4)}</td><td class="td-cheb">${maxCh.toExponential(4)}</td></tr>
+    <tr><td>Reducción de error</td><td colspan="2" class="td-cheb" style="text-align:center;font-weight:700;">Chebyshev reduce un <strong>${reduction}%</strong></td></tr>
+    <tr><td>Posición de nodos</td><td class="td-equi" style="font-size:0.8rem;">${xequi.map(x=>x.toFixed(3)).join(', ')}</td><td class="td-cheb" style="font-size:0.8rem;">${xcheb.map(x=>x.toFixed(3)).join(', ')}</td></tr>`;
+
+  // Nodes panel
+  const tk = Array.from({length:n+1}, (_,k) => Math.cos((2*k+1)/(2*(n+1))*Math.PI));
+  let tbl = `<div class="table-wrapper"><table><thead><tr><th>k</th><th>t_k (en [-1,1])</th><th>x_k (en [${a},${b}])</th></tr></thead><tbody>`;
+  tk.forEach((t,k) => {
+    const x = (b-a)/2*t+(a+b)/2;
+    tbl += `<tr><td>${k}</td><td class="td-cheb">${t.toFixed(6)}</td><td class="td-cheb">${x.toFixed(6)}</td></tr>`;
+  });
+  tbl += `</tbody></table></div>`;
+  document.getElementById('sim-nodes-panel').innerHTML = tbl;
+}
+function resetSimulator() {
+  ['plot-sim','plot-err-equi','plot-err-cheb'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=''; });
+  document.getElementById('sim-table-body').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted);font-style:italic;">Ejecuta el simulador para ver resultados.</td></tr>';
+  document.getElementById('sim-nodes-panel').innerHTML='<p style="color:var(--muted);font-style:italic;">Ejecuta el simulador para ver los nodos.</p>';
+}
+
+/* ─── Example accordion ─── */
+function toggleStep(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+/* ─── Mini quiz (Fase 2) ─── */
+const miniQs = [
+  {q:'¿Cuál es el coeficiente líder de \\(T_n\\) para \\(n \\geq 1\\)?', opts:['\\(1\\)','\\(n\\)','\\(2^{n-1}\\)','\\(n!\\)'], ans:2, fb:'El coeficiente líder de \\(T_n\\) es \\(2^{n-1}\\). Por ejemplo, \\(T_3 = 4t^3 - 3t\\) tiene coeficiente \\(4 = 2^2\\).'},
+  {q:'¿Cuántos ceros tiene \\(T_5\\) en \\([-1,1]\\)?', opts:['4','5','6','10'], ans:1, fb:'\\(T_n\\) tiene exactamente \\(n\\) ceros en \\([-1,1]\\). Por tanto \\(T_5\\) tiene 5 ceros.'},
+  {q:'Para \\(t \\in [-1,1]\\), ¿qué se cumple con \\(|T_n(t)|\\)?', opts:['\\(|T_n(t)| \\leq n\\)','\\(|T_n(t)| \\leq 1\\)','\\(|T_n(t)| \\geq 1\\)','Puede ser arbitrariamente grande'], ans:1, fb:'Por la representación \\(T_n(t)=\\cos(n\\arccos t)\\) y como \\(|\\cos\\theta|\\leq 1\\), siempre \\(|T_n(t)|\\leq 1\\).'}
+];
+
+/* ─── Main quiz data ─── */
+const quizData = [
+  // Básicas
+  {level:'basic', q:'¿Cuál es \\(T_3(t)\\) usando la relación de recurrencia?',
+   opts:['\\(3t^2-1\\)','\\(4t^3-3t\\)','\\(8t^3-4t\\)','\\(2t^3-t\\)'], ans:1,
+   fb:'\\(T_3 = 2t\\cdot T_2 - T_1 = 2t(2t^2-1)-t = 4t^3-3t\\). Coeficiente líder: \\(2^2=4\\). ✓'},
+  {level:'basic', q:'¿Cuántos ceros distintos tiene \\(T_n(t)\\) en \\([-1,1]\\)?',
+   opts:['\\(n-1\\)','\\(n+1\\)','\\(n\\)','\\(2n\\)'], ans:2,
+   fb:'\\(T_n\\) tiene exactamente \\(n\\) ceros: \\(t_k = \\cos\\!\\left(\\frac{2k+1}{2n}\\pi\\right)\\), \\(k=0,\\ldots,n-1\\).'},
+  {level:'basic', q:'¿Cuál afirmación sobre \\(T_n(t)\\) en \\([-1,1]\\) es verdadera?',
+   opts:['\\(|T_n(t)| \\leq n\\)','\\(|T_n(t)| \\leq 1\\)','\\(|T_n(t)| \\leq 1/2^n\\)','Puede ser arbitrariamente grande'], ans:1,
+   fb:'De \\(T_n(t)=\\cos(n\\arccos t)\\) y \\(|\\cos\\theta|\\leq 1\\) se deduce directamente \\(|T_n(t)|\\leq 1\\).'},
+  {level:'basic', q:'Para interpolar con grado \\(n=4\\) en \\([-1,1]\\) usando Chebyshev, ¿cuántos nodos se necesitan y cuál es el polinomio cuyos ceros se usan?',
+   opts:['4 nodos; ceros de \\(T_4\\)','5 nodos; ceros de \\(T_4\\)','4 nodos; ceros de \\(T_5\\)','5 nodos; ceros de \\(T_5\\)'], ans:3,
+   fb:'Grado \\(n=4\\) necesita \\(n+1=5\\) nodos. Los nodos son los ceros de \\(T_{n+1}=T_5\\).'},
+  {level:'basic', q:'La representación trigonométrica de los polinomios de Chebyshev establece que:',
+   opts:['\\(T_n(t)=\\sin(n\\arccos t)\\)','\\(T_n(t)=\\cos(n\\arctan t)\\)','\\(T_n(t)=\\cos(n\\arccos t)\\) para \\(-1\\leq t\\leq 1\\)','\\(T_n(t)=\\arccos(\\cos(nt))\\)'], ans:2,
+   fb:'\\(T_n(t)=\\cos(n\\arccos t)\\) es fundamental: permite demostrar acotamiento y calcular ceros.'},
+  // Intermedias
+  {level:'inter', q:'Se desea aproximar en \\([1,3]\\) con grado 2. ¿Cuál es el nodo \\(x_1\\) (para \\(k=1\\))?',
+   opts:['\\(x_1 = 1\\)','\\(x_1 = 2\\)','\\(x_1 = 3\\)','\\(x_1 = 1.5\\)'], ans:1,
+   fb:'\\(t_1=\\cos(\\pi/2)=0\\). Luego \\(x_1=\\frac{3-1}{2}(0)+\\frac{1+3}{2}=2\\). ¡El centro del intervalo!'},
+  {level:'inter', q:'Según el Teorema de Chebyshev, ¿cuál es el mínimo de \\(\\max|Q(t)|\\) con \\(n+1\\) nodos en \\([-1,1]\\)?',
+   opts:['\\(1/n!\\)','\\(1/2^{n-1}\\)','\\(1/2^n\\)','\\(1/(n+1)!\\)'], ans:2,
+   fb:'El teorema garantiza que \\(\\max|T(t)| = 1/2^n\\) y ninguna otra elección puede reducirlo más.'},
+  {level:'inter', q:'Para \\(f(x)=e^x\\) en \\([-1,1]\\) con \\(n=3\\) nodos de Chebyshev, la cota del error es:',
+   opts:['\\(e/(2^3\\cdot 4!)\\)','\\(e/(2^3\\cdot 3!)\\)','\\(e/(2^4\\cdot 4!)\\)','\\(1/(2^3\\cdot 4!)\\)'], ans:0,
+   fb:'La cota es \\(\\frac{1}{2^n(n+1)!}\\max|f^{(n+1)}|\\). Con \\(n=3\\): \\(\\frac{1}{2^3\\cdot 4!}\\cdot e = \\frac{e}{192}\\approx 0.0141\\).'},
+  {level:'inter', q:'¿Cuál de los siguientes polinomios de Chebyshev es una función impar?',
+   opts:['\\(T_2(t)=2t^2-1\\)','\\(T_4(t)=8t^4-8t^2+1\\)','\\(T_3(t)=4t^3-3t\\)','\\(T_0(t)=1\\)'], ans:2,
+   fb:'\\(T_n\\) es impar si \\(n\\) es impar. Para \\(T_3\\): \\(T_3(-t)=-(4t^3-3t)=-T_3(t)\\). ✓'},
+  {level:'inter', q:'Al aproximar \\(f(x)=4/(4x^2+1)\\) en \\([-1,1]\\) con \\(n=4\\), los errores son \\(\\approx 0.6472\\) (equi) y \\(\\approx 0.3338\\) (Cheb). ¿En qué porcentaje reducen los nodos de Chebyshev el error?',
+   opts:['~25%','~48%','~60%','~10%'], ans:1,
+   fb:'\\((0.6472-0.3338)/0.6472 \\times 100\\% \\approx 48.4\\%\\). ¡Una reducción significativa!'},
+  // Avanzadas
+  {level:'adv', q:'Para \\(f(x)=5\\cos(x\\pi/5)\\) en \\([-1,2]\\) con \\(n=3\\), ¿cuál es la cota de error teórica?',
+   opts:['\\(\\frac{27}{1024}\\cdot\\frac{\\pi^4}{125}\\approx 0.02055\\)','\\(\\frac{3^4}{4^4\\cdot4!}\\cdot\\pi^4\\approx 0.0498\\)','\\(\\frac{\\pi^4}{24\\cdot125}\\approx 0.0323\\)','\\(\\frac{2\\cdot3^4}{4^4\\cdot4!}\\cdot\\pi^4\\approx 0.0997\\)'], ans:0,
+   fb:'Cota \\(=\\frac{2(3)^4}{4^4\\cdot4!}\\cdot\\frac{\\pi^4}{125}=\\frac{162}{6144}\\cdot\\frac{\\pi^4}{125}=\\frac{27}{1024}\\cdot\\frac{\\pi^4}{125}\\approx0.02055\\).'},
+  {level:'adv', q:'Para aproximar \\(e^x\\) en \\([0,1]\\) con error \\(< 10^{-4}\\) usando Chebyshev, ¿cuál es el grado mínimo \\(n\\)?',
+   opts:['\\(n=5\\)','\\(n=7\\)','\\(n=4\\)','\\(n=10\\)'], ans:1,
+   fb:'La cota \\(\\frac{2e}{4^{n+1}(n+1)!}<10^{-4}\\) se cumple para \\(n=7\\): \\(4^8\\cdot8!\\approx2.64\\times10^9\\gg54366\\).'},
+  {level:'adv', q:'El polinomio \\(\\hat{T}_n=T_n/2^{n-1}\\) es "Chebyshev mónico". Su propiedad distintiva es:',
+   opts:['Tiene el mayor número de ceros','Minimiza \\(\\|\\cdot\\|_2\\) en \\([-1,1]\\)','Minimiza \\(\\|\\cdot\\|_\\infty\\) entre todos los mónicos de grado \\(n\\)','Su integral en \\([-1,1]\\) es cero'], ans:2,
+   fb:'\\(\\hat{T}_n\\) tiene norma infinito \\(1/2^{n-1}\\) y ningún otro polinomio mónico de grado \\(n\\) puede tener norma infinito más pequeña en \\([-1,1]\\).'},
+  {level:'adv', q:'¿Por qué los nodos de Chebyshev se concentran más en los extremos del intervalo?',
+   opts:['Para facilitar el cálculo de diferencias divididas','Porque el coseno varía lentamente cerca de \\(0\\) y \\(\\pi\\), distribuyendo puntos hacia los extremos','Por razones estéticas de la visualización','Para minimizar el número de operaciones'], ans:1,
+   fb:'El coseno varía lentamente cerca de \\(0\\) y \\(\\pi\\), produciendo mayor densidad de nodos en \\(t\\approx\\pm1\\). Esto contrarresta el efecto de Runge en los bordes.'},
+  {level:'adv', q:'¿Cuál situación limita o invalida el uso de interpolación con nodos de Chebyshev?',
+   opts:['Que \\(f\\) sea analítica en \\([a,b]\\)','Que se trabaje con datos discretos ruidosos sin función analítica subyacente','Que el grado \\(n\\) sea mayor que 5','Que el intervalo sea asimétrico respecto al origen'], ans:1,
+   fb:'La interpolación de Chebyshev requiere poder evaluar \\(f\\) en los nodos óptimos. Con datos fijos y ruidosos, se recomienda la aproximación por mínimos cuadrados.'}
+];
+
+let quizBuilt = false;
+let quizAnswers = {};
+let quizScores = {};
+
+function buildQuiz() {
+  if (quizBuilt) return;
+  quizBuilt = true;
+  const container = document.getElementById('quiz-container');
+  const levelNames = {basic:'Básica', inter:'Intermedia', adv:'Avanzada'};
+  const levelClass = {basic:'lvl-basic', inter:'lvl-inter', adv:'lvl-adv'};
+  const pts = {basic:1, inter:2, adv:3};
+  container.innerHTML = '';
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div'); div.className='quiz-question'; div.id=`qq${qi}`;
+    div.innerHTML = `
+      <p class="q">${qi+1}. ${q.q} <span class="q-level ${levelClass[q.level]}">${levelNames[q.level]} · ${pts[q.level]}pt</span></p>
+      <div class="options" id="opts${qi}">
+        ${q.opts.map((o,oi)=>`<button class="opt-btn" id="opt${qi}_${oi}" onclick="selectOpt(${qi},${oi})">
+          <span class="opt-label">${String.fromCharCode(65+oi)}</span>${o}
+        </button>`).join('')}
+      </div>
+      <div class="feedback" id="fb${qi}"></div>`;
+    container.appendChild(div);
+  });
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([container]);
+}
+
+function selectOpt(qi, oi) {
+  if (quizAnswers[qi] !== undefined) return;
+  quizAnswers[qi] = oi;
+  const q = quizData[qi];
+  const correct = oi === q.ans;
+  const pts = {basic:1,inter:2,adv:3};
+  quizScores[qi] = correct ? pts[q.level] : 0;
+  // Disable all options
+  for (let i=0;i<q.opts.length;i++) {
+    const btn = document.getElementById(`opt${qi}_${i}`);
+    btn.disabled = true;
+    if (i===q.ans) btn.classList.add('correct');
+    else if (i===oi) btn.classList.add('wrong');
+  }
+  const fb = document.getElementById(`fb${qi}`);
+  fb.className = `feedback show ${correct?'ok':'err'}`;
+  fb.innerHTML = `<span class="icon">${correct?'✅':'❌'}</span> ${q.fb}`;
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([fb]);
+}
+
+function submitQuiz() {
+  const total = Object.values(quizScores).reduce((a,b)=>a+b,0);
+  const maxPts = quizData.reduce((a,q)=>a+({basic:1,inter:2,adv:3}[q.level]),0);
+  const pct = (total/maxPts*100).toFixed(0);
+  const answered = Object.keys(quizAnswers).length;
+  document.getElementById('quiz-score-val').textContent = `${total}/${maxPts}`;
+  document.getElementById('quiz-score-detail').textContent = `${answered}/15 respondidas · ${pct}% · ${pct>=70?'✅ ¡Aprobado!':'📚 Repasa el material'}`;
+  document.getElementById('quiz-score-panel').style.display = 'flex';
+}
+
+function resetQuiz() {
+  quizBuilt = false;
+  quizAnswers = {}; quizScores = {};
+  document.getElementById('quiz-container').innerHTML = '';
+  document.getElementById('quiz-score-panel').style.display = 'none';
+  buildQuiz();
+}
+
+/* ─── Mini quiz build ─── */
+function buildMiniQuiz() {
+  const c = document.getElementById('mini-quiz');
+  if (!c || c.children.length>0) return;
+  miniQs.forEach((q,qi) => {
+    const div = document.createElement('div'); div.className='quiz-question';
+    div.innerHTML = `
+      <p class="q">${qi+1}. ${q.q}</p>
+      <div class="options">
+        ${q.opts.map((o,oi)=>`<button class="opt-btn" id="mopt${qi}_${oi}" onclick="selectMiniOpt(${qi},${oi})">
+          <span class="opt-label">${String.fromCharCode(65+oi)}</span>${o}
+        </button>`).join('')}
+      </div>
+      <div class="feedback" id="mfb${qi}"></div>`;
+    c.appendChild(div);
+  });
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([c]);
+}
+const miniAnswers = {};
+function selectMiniOpt(qi, oi) {
+  if (miniAnswers[qi] !== undefined) return;
+  miniAnswers[qi] = oi;
+  const q = miniQs[qi];
+  for (let i=0;i<q.opts.length;i++) {
+    const btn = document.getElementById(`mopt${qi}_${i}`); btn.disabled=true;
+    if (i===q.ans) btn.classList.add('correct');
+    else if (i===oi) btn.classList.add('wrong');
+  }
+  const fb = document.getElementById(`mfb${qi}`);
+  fb.className = `feedback show ${oi===q.ans?'ok':'err'}`;
+  fb.innerHTML = `<span class="icon">${oi===q.ans?'✅':'❌'}</span> ${q.fb}`;
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([fb]);
+}
+
+/* ─── Init ─── */
+function waitForPlotly(cb, retries) {
+  retries = retries === undefined ? 20 : retries;
+  if (typeof Plotly !== 'undefined') { cb(); }
+  else if (retries > 0) { setTimeout(() => waitForPlotly(cb, retries - 1), 150); }
+  else { console.warn('Plotly no pudo cargarse después de los reintentos.'); }
+}
+
+window.addEventListener('load', () => {
+  waitForPlotly(plotRunge);
+  buildMiniQuiz();
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise();
+});
+
+// Override showSection to trigger mini quiz
+const _origShow = showSection;
+window.showSection = function(id, btn) {
+  _origShow(id, btn);
+  if (id === 'fase2') { setTimeout(()=>{ buildMiniQuiz(); if(typeof MathJax!=='undefined'&&MathJax.typesetPromise)MathJax.typesetPromise(); },200); }
+};
+</script>
+</body>
+</html>
