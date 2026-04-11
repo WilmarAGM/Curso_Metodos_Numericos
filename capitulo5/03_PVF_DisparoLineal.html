@@ -1,0 +1,1192 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PVF — Método del Disparo Lineal · Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --paper:  #f5f0e8;
+    --ink:    #1a1a2e;
+    --gold:   #c9a84c;
+    --rust:   #b84a1e;
+    --forest: #2e6b4f;
+    --slate:  #3b4a5a;
+    --cream:  #ede8da;
+    --rule:   #d8d0be;
+    --shadow: rgba(0,0,0,0.08);
+    --muted:  #7a7060;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Site topbar ─── */
+  nav.site-topbar {
+    background: var(--ink);
+    padding: 8px 24px;
+    border-bottom: 2px solid var(--rust);
+  }
+  nav.site-topbar a.site-back {
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-decoration: none;
+    letter-spacing: 1px;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+  }
+  nav.site-topbar a.site-back:hover { opacity: 1; }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); border: 1px solid var(--gold);
+    padding: 4px 14px; margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900; line-height: 1.1;
+    letter-spacing: -1px; margin-bottom: 12px;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem; font-weight: 300;
+    opacity: 0.75; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block; margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--gold); opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent; border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; padding: 13px 22px;
+    cursor: pointer; letter-spacing: 0.4px;
+    transition: all 0.2s; position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active { color: var(--paper); font-weight: 600; }
+  nav.tabs button.active::after {
+    content: ''; position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px; background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 840px; margin: 0 auto; padding: 44px 24px 80px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--ink); margin: 0 0 8px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--rust);
+    letter-spacing: 2px; text-transform: uppercase;
+    display: block; margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; color: var(--slate); margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 24px 28px;
+    margin: 20px 0; box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem    { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card.warning    { border-left: 4px solid var(--gold); background: #fffbf0; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem    .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.warning    .card-label { color: #9a7220; }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 18px 22px;
+    margin: 16px 0; overflow-x: auto; font-size: 0.97em;
+    text-align: center;
+  }
+
+  /* ─── Details / reveal ─── */
+  details { border: 1px solid var(--rule); border-radius: 4px; margin: 16px 0; overflow: hidden; }
+  summary {
+    background: var(--cream); padding: 12px 18px; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    font-weight: 600; color: var(--slate); list-style: none;
+    display: flex; align-items: center; gap: 10px;
+    user-select: none; transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before { content: '▶'; font-size: 11px; color: var(--rust); transition: transform 0.2s; flex-shrink: 0; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) { padding: 18px 22px; background: white; border-top: 1px solid var(--rule); }
+
+  /* ─── Tip del Profe ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold); border-radius: 4px;
+    padding: 16px 20px; margin: 18px 0;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    font-weight: 600; margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Grid de conceptos ─── */
+  .omega-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .omega-card { border-radius: 4px; padding: 18px 16px; text-align: center; border: 1px solid var(--rule); }
+  .omega-card .name { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  .omega-card .desc { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+  .omega-card.pvf  { background: #edf7ef; border-color: #89c49a; }
+  .omega-card.pvi  { background: #eaf1fb; border-color: #7aaad4; }
+  .omega-card.lineal   { background: #f0ecfb; border-color: #a48fd4; }
+  .omega-card.general  { background: #fef3ec; border-color: #e8a878; }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Tabla ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; font-size: 0.87rem; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+  td.highlight { color: var(--rust); font-weight: 700; }
+
+  /* ─── Controls / Simulator ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  input[type="text"], input[type="number"] {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem; border-radius: 3px; color: var(--ink); transition: border-color 0.2s;
+  }
+  input:focus { outline: none; border-color: var(--rust); }
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover:not(:disabled) { background: #9d3d15; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+  .plot-container { width: 100%; height: 420px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px; }
+  .sim-msg { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; color: var(--muted); padding: 8px 0; }
+
+  /* ─── Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct  { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong    { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val   { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+  #quiz-container { margin-top: 16px; }
+  .quiz-progress-bar { height: 5px; background: var(--rule); border-radius: 2px; margin: 12px 0 22px; }
+  .quiz-progress-fill { height: 100%; background: var(--rust); border-radius: 2px; transition: width 0.4s ease; }
+  #btn-shuffle { margin-bottom: 16px; }
+
+  /* ─── Resumen final ─── */
+  .resumen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+  .resumen-item { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 18px 20px; border-top: 3px solid var(--rust); }
+  .resumen-item h4 { font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 6px; color: var(--slate); }
+  .resumen-item p  { font-size: 0.88rem; color: var(--muted); margin: 0; }
+
+  @media (max-width: 600px) {
+    .omega-grid   { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 12px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+    .resumen-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<!-- ════════════ HEADER ════════════ -->
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 5 · Ecuaciones diferenciales</div>
+  <h1>Solución Numérica de<br><em>Problemas de Valor en la Frontera</em></h1>
+  <p class="subtitle">P.V.F. Lineal · Método del Disparo Lineal · Euler y Runge-Kutta</p>
+  <span class="author-tag">Profe W</span>
+</header>
+
+<!-- ════════════ NAV TABS ════════════ -->
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Introducción</button>
+  <button onclick="showSection('teoria',this)">② Teoría PVF</button>
+  <button onclick="showSection('disparo',this)">③ Método del Disparo</button>
+  <button onclick="showSection('ejemplo',this)">④ Ejemplo Guiado</button>
+  <button onclick="showSection('simulador',this)">⑤ Simulador</button>
+  <button onclick="showSection('quiz',this)">⑥ Actividades</button>
+  <button onclick="showSection('resumen',this)">⑦ Resumen</button>
+</nav>
+
+<main>
+
+<!-- ══════════ SECCIÓN 1: INTRODUCCIÓN ══════════ -->
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>¿Por qué problemas con condiciones de frontera?</h2>
+
+  <p>En los problemas de valor inicial (P.V.I.) que ya conocemos, toda la información sobre la solución está concentrada en un único punto: el estado inicial. Sin embargo, la naturaleza a menudo nos plantea situaciones donde las condiciones están repartidas entre los <strong>dos extremos</strong> de un intervalo.</p>
+
+  <div class="omega-grid">
+    <div class="omega-card pvi">
+      <div class="name">Problema de Valor Inicial (P.V.I.)</div>
+      <div class="math-block" style="background:transparent;border:none;padding:8px 0;margin:6px 0;">$$y' = f(x,y),\quad y(a)=\alpha$$</div>
+      <div class="desc">Toda la información está en \(x=a\). Apuntamos hacia adelante.</div>
+    </div>
+    <div class="omega-card pvf">
+      <div class="name">Problema de Valor en la Frontera (P.V.F.)</div>
+      <div class="math-block" style="background:transparent;border:none;padding:8px 0;margin:6px 0;">$$y'' = f,\quad y(a)=\alpha,\; y(b)=\beta$$</div>
+      <div class="desc">Las condiciones están en <em>ambos extremos</em>. Hay que satisfacer \(a\) y \(b\) simultáneamente.</div>
+    </div>
+    <div class="omega-card general">
+      <div class="name">Ejemplos físicos</div>
+      <div class="desc">Deflexión de una viga, temperatura a lo largo de una barra, deformación de una membrana, circuitos en estado estacionario.</div>
+    </div>
+    <div class="omega-card lineal">
+      <div class="name">El reto computacional</div>
+      <div class="desc">No podemos simplemente "marchar hacia adelante" como en el P.V.I. Necesitamos estrategias nuevas.</div>
+    </div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎯</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición del Profe W</div>
+      <p>Imagina que quieres lanzar una pelota desde el punto \(A\) para que aterrice exactamente en el punto \(B\). No conoces el ángulo inicial: pruebas, ajustas, calculas. Eso es, en esencia, el <strong>método del disparo</strong>.</p>
+    </div>
+  </div>
+
+  <h3>Estructura general del P.V.F.</h3>
+  <div class="card definition">
+    <div class="card-label">Definición — P.V.F. General</div>
+    <p>Un problema con valores en la frontera de orden 2 tiene la forma:</p>
+    <div class="math-block">
+      $$\mathcal{F}:\quad \begin{cases} y''(x) = f\bigl(x,\,y(x),\,y'(x)\bigr), & a \le x \le b,\\ y(a) = \alpha, \\ y(b) = \beta. \end{cases}$$
+    </div>
+    <p>Donde \(\alpha\) y \(\beta\) son los <strong>valores en la frontera</strong> (condiciones de contorno), y la ecuación diferencial es de segundo orden.</p>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 2: TEORÍA PVF ══════════ -->
+<div class="section" id="teoria">
+  <h2><span class="section-num">Sección 02</span>Existencia, Unicidad y el P.V.F. Lineal</h2>
+
+  <p>Antes de aproximar la solución, necesitamos saber si <em>existe</em> y si es <em>única</em>. El siguiente teorema nos da condiciones suficientes.</p>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema de Unicidad — P.V.F. General</div>
+    <p>Sea \(D = \{(x,y,z)\in\mathbb{R}^3 : a\le x\le b,\; -\infty < y,z < \infty\}\). Supongamos que las funciones \(f\), \(f_y\) y \(f_z\) son continuas en \(D\),</p>
+    <div class="math-block">$$f_y(x,y,z) > 0 \quad \text{en } D,$$</div>
+    <p>y existe una constante \(M>0\) tal que \(|f_z(x,y,z)|\le M\) en \(D\). Entonces el P.V.F. \(\mathcal{F}\) tiene una <strong>única solución</strong> \(y\) en \([a,b]\).</p>
+  </div>
+
+  <details>
+    <summary>Ver ejemplo de verificación del teorema</summary>
+    <div>
+      <p>Verifiquemos unicidad para el P.V.F.:</p>
+      <div class="math-block">
+        $$\begin{cases} y'' + e^{-x^2}y\ln(x^2+2) + \cos(3y') = 0, & 1\le x\le 2,\\ y(1)=0,\quad y(2)=0. \end{cases}$$
+      </div>
+      <p>Despejando: \(f(x,y,y') = -e^{-x^2}y\ln(x^2+2) - \cos(3y')\).</p>
+      <p>\(f_y = -e^{-x^2}\ln(x^2+2)\). Para \(x\in[1,2]\), \(\ln(x^2+2)>0\) y \(e^{-x^2}>0\), luego \(f_y > 0\). ✓</p>
+      <p>\(f_{y'} = 3\sin(3y')\), y \(|f_{y'}| \le 3\). Tomamos \(M=3\). ✓</p>
+      <p>Conclusión: el P.V.F. tiene solución única.</p>
+    </div>
+  </details>
+
+  <h3>El P.V.F. Lineal</h3>
+  <p>La ecuación diferencial del P.V.F. es <strong>lineal</strong> cuando existen funciones \(p(x)\), \(q(x)\) y \(r(x)\) tales que:</p>
+  <div class="card definition">
+    <div class="card-label">Forma Lineal</div>
+    <div class="math-block">
+      $$\mathcal{L}:\quad \begin{cases} y''(x) = p(x)y'(x) + q(x)y(x) + r(x), & a\le x\le b,\\ y(a)=\alpha,\\ y(b)=\beta. \end{cases}$$
+    </div>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Corolario — Unicidad del P.V.F. Lineal</div>
+    <p>Si \(p\), \(q\) y \(r\) son continuas en \([a,b]\) y \(q(x) > 0\) para todo \(x\in[a,b]\), entonces el P.V.F. lineal \(\mathcal{L}\) tiene <strong>única solución</strong> \(y\) en \([a,b]\).</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">⚠️</div>
+    <div class="tip-body">
+      <div class="tip-label">Error común</div>
+      <p>La condición \(q(x)>0\) es <em>suficiente</em>, no necesaria. Si se viola, podría haber solución única, múltiple o ninguna. Siempre verifica las hipótesis antes de aplicar el corolario.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 3: MÉTODO DEL DISPARO ══════════ -->
+<div class="section" id="disparo">
+  <h2><span class="section-num">Sección 03</span>Método del Disparo Lineal</h2>
+
+  <p>La idea fundamental del método del disparo es convertir el P.V.F. \(\mathcal{L}\) en un par de P.V.I.s que sí sabemos resolver numéricamente, y luego <strong>combinar linealmente</strong> sus soluciones.</p>
+
+  <h3>Los dos P.V.I.s auxiliares</h3>
+  <p>Se definen los P.V.I.s de segundo orden:</p>
+  <div class="omega-grid">
+    <div class="omega-card pvi">
+      <div class="name">\(\mathcal{D}_1\) — "Parte particular"</div>
+      <div class="math-block" style="background:transparent;border:none;padding:6px 0;text-align:left;">
+        $$\begin{cases} u'' = p(x)u' + q(x)u + r(x)\\ u(a)=\alpha,\quad u'(a)=0 \end{cases}$$
+      </div>
+    </div>
+    <div class="omega-card lineal">
+      <div class="name">\(\mathcal{D}_2\) — "Parte homogénea"</div>
+      <div class="math-block" style="background:transparent;border:none;padding:6px 0;text-align:left;">
+        $$\begin{cases} v'' = p(x)v' + q(x)v\\ v(a)=0,\quad v'(a)=1 \end{cases}$$
+      </div>
+    </div>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema — Fórmula del Disparo Lineal</div>
+    <p>Sean \(u\) y \(v\) las soluciones de \(\mathcal{D}_1\) y \(\mathcal{D}_2\), respectivamente. Si \(v(b)\neq 0\), entonces la solución del P.V.F. \(\mathcal{L}\) es:</p>
+    <div class="math-block">
+      $$\boxed{y(x) = u(x) + \frac{\beta - u(b)}{v(b)}\,v(x)}$$
+    </div>
+    <p>El factor \(\dfrac{\beta - u(b)}{v(b)}\) es la "corrección" que ajusta la solución de \(\mathcal{D}_1\) para satisfacer la condición en \(x=b\).</p>
+  </div>
+
+  <details>
+    <summary>Ver demostración de la fórmula del disparo</summary>
+    <div>
+      <p>Sea \(\displaystyle y(x) = u(x) + \frac{\beta-u(b)}{v(b)}\,v(x)\). Verificamos las condiciones de frontera:</p>
+      <div class="math-block">
+        $$y(a) = u(a) + \frac{\beta-u(b)}{v(b)}v(a) = \alpha + \frac{\beta-u(b)}{v(b)}\cdot 0 = \alpha \checkmark$$
+      </div>
+      <div class="math-block">
+        $$y(b) = u(b) + \frac{\beta-u(b)}{\cancel{v(b)}}\cancel{v(b)} = u(b)+\beta-u(b) = \beta \checkmark$$
+      </div>
+      <p>Para la ecuación diferencial, derivamos dos veces y sustituimos usando las EDOs de \(\mathcal{D}_1\) y \(\mathcal{D}_2\):</p>
+      <div class="math-block">
+        $$y'' = u'' + \frac{\beta-u(b)}{v(b)}v'' = \bigl[pu'+qu+r\bigr] + \frac{\beta-u(b)}{v(b)}\bigl[pv'+qv\bigr] = p\,y' + q\,y + r \checkmark$$
+      </div>
+    </div>
+  </details>
+
+  <h3>Reducción a sistemas de primer orden</h3>
+  <p>Para resolver \(\mathcal{D}_1\) y \(\mathcal{D}_2\) numéricamente, introducimos las variables \(u_1=y\), \(u_2=y'\) y escribimos cada P.V.I. como un sistema vectorial de primer orden:</p>
+  <div class="card definition">
+    <div class="card-label">Sistemas vectoriales equivalentes</div>
+    <div class="math-block">
+      $$\mathbf{U}' = \mathbf{F}(x,\mathbf{U}) := \begin{pmatrix} u_2 \\ p(x)u_2 + q(x)u_1 + r(x) \end{pmatrix}, \quad \mathbf{U}(a) = \begin{pmatrix}\alpha\\0\end{pmatrix}$$
+    </div>
+    <div class="math-block">
+      $$\mathbf{U}' = \mathbf{G}(x,\mathbf{U}) := \begin{pmatrix} u_2 \\ p(x)u_2 + q(x)u_1 \end{pmatrix}, \quad \mathbf{U}(a) = \begin{pmatrix}0\\1\end{pmatrix}$$
+    </div>
+    <p>Estos sistemas se resuelven con cualquier método numérico para P.V.I. vectoriales: Euler, Euler Modificado, RK4, etc.</p>
+  </div>
+
+  <h3>Algoritmo del disparo lineal</h3>
+  <ul class="steps">
+    <li><span class="step-num">1</span><span>Identificar \(p(x)\), \(q(x)\), \(r(x)\), los extremos \(a\), \(b\) y los valores frontera \(\alpha\), \(\beta\).</span></li>
+    <li><span class="step-num">2</span><span>Resolver el P.V.I. vectorial \(\mathcal{D}_1\) (con \(u(a)=\alpha\), \(u'(a)=0\)) y obtener la tabla \(\{w_i \approx u(x_i)\}\).</span></li>
+    <li><span class="step-num">3</span><span>Resolver el P.V.I. vectorial \(\mathcal{D}_2\) (con \(v(a)=0\), \(v'(a)=1\)) y obtener la tabla \(\{z_i \approx v(x_i)\}\).</span></li>
+    <li><span class="step-num">4</span><span>Verificar que \(v(b) \approx z_N \neq 0\). Si es cero, el método no aplica directamente.</span></li>
+    <li><span class="step-num">5</span><span>Calcular la solución combinada: \(y(x_i) \approx w_i + \dfrac{\beta - w_N}{z_N}\,z_i\) para cada nodo \(x_i\).</span></li>
+  </ul>
+
+  <div class="card warning">
+    <div class="card-label">Advertencia clave</div>
+    <p>Si \(v(b)=0\), la fórmula del disparo lineal <strong>no es aplicable</strong> directamente. Esto sucede en casos degenerados. En la práctica, el Corolario garantiza \(v(b)\neq 0\) cuando \(q(x)>0\).</p>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 4: EJEMPLO GUIADO ══════════ -->
+<div class="section" id="ejemplo">
+  <h2><span class="section-num">Sección 04</span>Ejemplo Resuelto Paso a Paso</h2>
+
+  <p>Consideremos el P.V.F. lineal del documento de clase:</p>
+  <div class="card example-card">
+    <div class="card-label">P.V.F. del ejemplo</div>
+    <div class="math-block">
+      $$\begin{cases} y''(x) + e^{-x}y'(x) - y(x)\tan^{-1}(x) = \cos(x), & 1\le x\le 2.2,\\ y(1) = 5,\\ y(2.2) = -2. \end{cases}$$
+    </div>
+  </div>
+
+  <h3>Paso 0: Verificar unicidad</h3>
+  <p>Despejamos \(y''\): \(y'' = \cos(x) - e^{-x}y' + y\tan^{-1}(x)\), es decir:</p>
+  <div class="math-block">
+    $$p(x)=-e^{-x},\quad q(x)=\tan^{-1}(x),\quad r(x)=\cos(x).$$
+  </div>
+  <p>Las tres funciones son continuas en \([1,2.2]\). Además \(\tan^{-1}(x)>0\) para \(x>0\), en particular para \(x\in[1,2.2]\). Por el Corolario, el P.V.F. tiene <strong>solución única</strong>.</p>
+
+  <h3>Paso 1: Definir los sistemas vectoriales</h3>
+  <p>Con \(u_1=y\), \(u_2=y'\):</p>
+  <div class="math-block">
+    $$\mathbf{F}(x,\mathbf{U}) = \begin{pmatrix}u_2 \\ \cos(x)-e^{-x}u_2+u_1\tan^{-1}(x)\end{pmatrix}, \quad \mathbf{U}(1)=\begin{pmatrix}5\\0\end{pmatrix}$$
+  </div>
+  <div class="math-block">
+    $$\mathbf{G}(x,\mathbf{U}) = \begin{pmatrix}u_2 \\ -e^{-x}u_2+u_1\tan^{-1}(x)\end{pmatrix}, \quad \mathbf{U}(1)=\begin{pmatrix}0\\1\end{pmatrix}$$
+  </div>
+
+  <h3>Paso 2–3: Aplicar Euler con \(h = 0.4\)</h3>
+  <p>El intervalo es \([1,2.2]\), con \(h=0.4\) tenemos los nodos \(x_0=1,\;x_1=1.4,\;x_2=1.8,\;x_3=2.2\).</p>
+
+  <div class="tip-profe">
+    <div class="icon">📐</div>
+    <div class="tip-body">
+      <div class="tip-label">Fórmula de Euler vectorial</div>
+      <p>\(\mathbf{W}_{i+1} = \mathbf{W}_i + h\,\mathbf{F}(x_i,\mathbf{W}_i)\)</p>
+    </div>
+  </div>
+
+  <p>Aplicando Euler al sistema \(\mathcal{D}_1\):</p>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>\(i\)</th><th>\(x_i\)</th><th>\(w_i \approx u(x_i)\)</th><th>\((w_i)'\approx u'(x_i)\)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0</td><td>1.0</td><td class="highlight">5.000</td><td>0.000</td></tr>
+        <tr><td>1</td><td>1.4</td><td class="highlight">5.000</td><td>1.788</td></tr>
+        <tr><td>2</td><td>1.8</td><td class="highlight">5.715</td><td>3.577</td></tr>
+        <tr><td>3</td><td>2.2</td><td class="highlight">7.146</td><td>5.688</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Aplicando Euler al sistema \(\mathcal{D}_2\):</p>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>\(i\)</th><th>\(x_i\)</th><th>\(z_i \approx v(x_i)\)</th><th>\((z_i)'\approx v'(x_i)\)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0</td><td>1.0</td><td class="highlight">0.000</td><td>1.000</td></tr>
+        <tr><td>1</td><td>1.4</td><td class="highlight">0.400</td><td>0.853</td></tr>
+        <tr><td>2</td><td>1.8</td><td class="highlight">0.741</td><td>0.920</td></tr>
+        <tr><td>3</td><td>2.2</td><td class="highlight">1.109</td><td>1.166</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Paso 4: Combinar las soluciones</h3>
+  <p>Con \(u(b)\approx w_3=7.146\) y \(v(b)\approx z_3=1.109\), el coeficiente de corrección es:</p>
+  <div class="math-block">
+    $$\frac{\beta - u(b)}{v(b)} = \frac{-2 - 7.146}{1.109} \approx -8.247$$
+  </div>
+  <p>La solución aproximada del P.V.F. es:</p>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>\(x_i\)</th><th>\(w_i\)</th><th>\(z_i\)</th><th>\(y(x_i)\approx w_i - 8.247\,z_i\)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1.0</td><td>5.000</td><td>0.000</td><td class="highlight">5.000</td></tr>
+        <tr><td>1.4</td><td>5.000</td><td>0.400</td><td class="highlight">1.701</td></tr>
+        <tr><td>1.8</td><td>5.715</td><td>0.741</td><td class="highlight">−0.394</td></tr>
+        <tr><td>2.2</td><td>7.146</td><td>1.109</td><td class="highlight">−2.000</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">✅</div>
+    <div class="tip-body">
+      <div class="tip-label">Verificación</div>
+      <p>Confirmamos: \(y(1)=5=\alpha\) y \(y(2.2)=-2=\beta\). Las condiciones de frontera se satisfacen exactamente en la fórmula combinada, independientemente del error de truncamiento de Euler.</p>
+    </div>
+  </div>
+
+  <h3>Usando RK4 (enfoque computacional)</h3>
+  <p>En la práctica, se reemplaza Euler por el método de Runge-Kutta clásico de orden 4 para mayor precisión. La estructura del algoritmo es idéntica: solo cambia la fórmula de avance interna.</p>
+  <div class="card definition">
+    <div class="card-label">Segundo ejemplo del curso — P.V.F. con RK4</div>
+    <div class="math-block">
+      $$\begin{cases} y'' = \cot(t)y' + e^{-t^2}y + \ln(t^2), & 1\le t\le 2,\\ y(1)=1.5,\quad y(2)=-2. \end{cases}$$
+    </div>
+    <p>Con \(h=0.1\) y RK4 vectorial, la solución aproximada en los nodos clave es:</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>\(t_i\)</th><th>\(w_i\approx y(t_i)\)</th></tr></thead>
+        <tbody>
+          <tr><td>1.0</td><td>1.5000</td></tr>
+          <tr><td>1.2</td><td>0.7952</td></tr>
+          <tr><td>1.5</td><td>−0.3146</td></tr>
+          <tr><td>1.8</td><td>−1.3780</td></tr>
+          <tr><td>2.0</td><td>−2.0000</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 5: SIMULADOR ══════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Sección 05</span>Simulador: Disparo Lineal con Euler</h2>
+
+  <p>Ingresa los coeficientes de tu P.V.F. lineal \(y'' = p(x)y' + q(x)y + r(x)\) y explora la solución numéricamente.</p>
+
+  <div class="card">
+    <div class="card-label">Configuración del P.V.F.</div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>p(x) — coef. de y'</label>
+        <input type="text" id="sim-p" value="-Math.exp(-x)" placeholder="ej: -Math.exp(-x)">
+      </div>
+      <div class="input-group">
+        <label>q(x) — coef. de y</label>
+        <input type="text" id="sim-q" value="Math.atan(x)" placeholder="ej: Math.atan(x)">
+      </div>
+      <div class="input-group">
+        <label>r(x) — término no homog.</label>
+        <input type="text" id="sim-r" value="Math.cos(x)" placeholder="ej: Math.cos(x)">
+      </div>
+      <div class="input-group">
+        <label>a (extremo izquierdo)</label>
+        <input type="number" id="sim-a" value="1" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>b (extremo derecho)</label>
+        <input type="number" id="sim-b" value="2.2" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>α = y(a)</label>
+        <input type="number" id="sim-alpha" value="5" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>β = y(b)</label>
+        <input type="number" id="sim-beta" value="-2" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Paso h</label>
+        <input type="number" id="sim-h" value="0.1" step="0.05" min="0.01" max="1">
+      </div>
+    </div>
+    <div class="action-grid">
+      <button class="btn-primary" onclick="runDisparo()">▶ Resolver P.V.F.</button>
+      <button class="btn-secondary" onclick="resetSim()">↺ Ejemplo del curso</button>
+    </div>
+    <p class="sim-msg" id="sim-msg"></p>
+  </div>
+
+  <div id="sim-plot" class="plot-container" style="display:none;"></div>
+
+  <div id="sim-table-wrap" style="display:none;">
+    <h3>Tabla de resultados</h3>
+    <div class="table-wrapper">
+      <table id="sim-table">
+        <thead><tr><th>\(x_i\)</th><th>\(w_i\approx u(x_i)\)</th><th>\(z_i\approx v(x_i)\)</th><th>\(y(x_i)\approx\)</th></tr></thead>
+        <tbody id="sim-tbody"></tbody>
+      </table>
+    </div>
+    <div class="card warning" id="sim-coeff-card" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 6: QUIZ ══════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 06</span>Actividades de Evaluación</h2>
+
+  <p>Pon a prueba tu comprensión del método del disparo lineal y los P.V.F. Todas las preguntas están relacionadas directamente con los conceptos del tema.</p>
+
+  <button class="btn-secondary" id="btn-shuffle" onclick="initQuiz(true)">🔀 Mezclar preguntas</button>
+
+  <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qprogress" style="width:0%"></div></div>
+  <div id="quiz-container"></div>
+
+  <div class="quiz-score" id="quiz-score" style="display:none;">
+    <div>
+      <div class="score-label">Resultado final</div>
+      <div style="font-size:0.85rem;color:var(--gold);font-family:'JetBrains Mono',monospace;margin-top:4px;" id="score-detail"></div>
+    </div>
+    <div class="score-val" id="score-num">0 / 0</div>
+  </div>
+</div>
+
+<!-- ══════════ SECCIÓN 7: RESUMEN ══════════ -->
+<div class="section" id="resumen">
+  <h2><span class="section-num">Sección 07</span>Resumen y Puntos Clave</h2>
+
+  <p>El método del disparo lineal es una estrategia elegante que reduce un P.V.F. a dos P.V.I.s independientes, aprovechando la linealidad de la ecuación diferencial.</p>
+
+  <div class="resumen-grid">
+    <div class="resumen-item">
+      <h4>P.V.F. Lineal</h4>
+      <p>Requiere \(q(x)>0\) para garantizar unicidad por el corolario. Condiciones en ambos extremos: \(y(a)=\alpha\) y \(y(b)=\beta\).</p>
+    </div>
+    <div class="resumen-item">
+      <h4>Dos P.V.I. auxiliares</h4>
+      <p>\(\mathcal{D}_1\): solución particular \(u\) con condición inicial \((\alpha, 0)\). \(\mathcal{D}_2\): solución homogénea \(v\) con condición inicial \((0, 1)\).</p>
+    </div>
+    <div class="resumen-item">
+      <h4>Fórmula de combinación</h4>
+      <p>\(y = u + \frac{\beta-u(b)}{v(b)}v\). La corrección garantiza \(y(b)=\beta\) exactamente.</p>
+    </div>
+    <div class="resumen-item">
+      <h4>Método de avance</h4>
+      <p>Euler: sencillo pero poco preciso. RK4 vectorial: orden 4, ideal para producción. Euler modificado: intermedio.</p>
+    </div>
+    <div class="resumen-item">
+      <h4>Reducción a orden 1</h4>
+      <p>Siempre convierte el P.V.I. de orden 2 a un sistema vectorial de orden 1 antes de aplicar cualquier método numérico.</p>
+    </div>
+    <div class="resumen-item">
+      <h4>Condición crítica</h4>
+      <p>\(v(b)\neq 0\) es indispensable. Si \(v(b)=0\), el P.V.F. puede tener infinitas soluciones o ninguna.</p>
+    </div>
+  </div>
+
+  <div class="card theorem" style="margin-top:24px;">
+    <div class="card-label">La gran idea</div>
+    <div class="math-block">
+      $$y(x) = \underbrace{u(x)}_{\substack{\text{Resuelve la EDO} \\ \text{con r(x), cumple y(a)=\alpha}}} + \underbrace{\frac{\beta - u(b)}{v(b)}}_{\text{coeficiente de ajuste}} \underbrace{v(x)}_{\substack{\text{Resuelve la EDO}\\\text{homogénea}}}$$
+    </div>
+  </div>
+
+  <div class="tip-profe" style="margin-top:24px;">
+    <div class="icon">🚀</div>
+    <div class="tip-body">
+      <div class="tip-label">Próximo paso</div>
+      <p>En la próxima semana estudiaremos el <strong>método de diferencias finitas</strong> para P.V.F., que en lugar de disparar, discretiza directamente la derivada y construye un sistema lineal de ecuaciones.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ════════════════════════════════
+   NAVEGACIÓN POR SECCIONES
+════════════════════════════════ */
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ════════════════════════════════
+   SIMULADOR — DISPARO LINEAL CON EULER
+════════════════════════════════ */
+function eulerVec(F, a, b, Za, M) {
+  const h = (b - a) / M;
+  const T = [], Z = [];
+  T[0] = a; Z[0] = Za.slice();
+  for (let j = 0; j < M; j++) {
+    const k = F(T[j], Z[j]);
+    Z[j+1] = Z[j].map((z, i) => z + h * k[i]);
+    T[j+1] = a + (j+1) * h;
+  }
+  return { T, Z };
+}
+
+function runDisparo() {
+  const pStr  = document.getElementById('sim-p').value.trim();
+  const qStr  = document.getElementById('sim-q').value.trim();
+  const rStr  = document.getElementById('sim-r').value.trim();
+  const a     = parseFloat(document.getElementById('sim-a').value);
+  const b     = parseFloat(document.getElementById('sim-b').value);
+  const alpha = parseFloat(document.getElementById('sim-alpha').value);
+  const beta  = parseFloat(document.getElementById('sim-beta').value);
+  const h     = parseFloat(document.getElementById('sim-h').value);
+
+  if (isNaN(a)||isNaN(b)||isNaN(alpha)||isNaN(beta)||isNaN(h)||h<=0||a>=b) {
+    document.getElementById('sim-msg').textContent = '⚠ Verifica que a < b y que h > 0.';
+    return;
+  }
+
+  const M = Math.round((b - a) / h);
+  let pFn, qFn, rFn;
+  try {
+    pFn = new Function('x', 'return (' + pStr + ');');
+    qFn = new Function('x', 'return (' + qStr + ');');
+    rFn = new Function('x', 'return (' + rStr + ');');
+    // test
+    pFn(a); qFn(a); rFn(a);
+  } catch(e) {
+    document.getElementById('sim-msg').textContent = '⚠ Error en las funciones: ' + e.message;
+    return;
+  }
+
+  const F1 = (x, u) => [u[1], pFn(x)*u[1] + qFn(x)*u[0] + rFn(x)];
+  const F2 = (x, u) => [u[1], pFn(x)*u[1] + qFn(x)*u[0]];
+
+  let res1, res2;
+  try {
+    res1 = eulerVec(F1, a, b, [alpha, 0], M);
+    res2 = eulerVec(F2, a, b, [0, 1],    M);
+  } catch(e) {
+    document.getElementById('sim-msg').textContent = '⚠ Error al resolver: ' + e.message;
+    return;
+  }
+
+  const wN = res1.Z[M][0];
+  const zN = res2.Z[M][0];
+
+  if (Math.abs(zN) < 1e-12) {
+    document.getElementById('sim-msg').textContent = '⚠ v(b) ≈ 0 — el método no es aplicable para estos datos.';
+    return;
+  }
+
+  const C = (beta - wN) / zN;
+  const Ys = res1.Z.map((w, i) => w[0] + C * res2.Z[i][0]);
+
+  // Plot
+  const plotDiv = document.getElementById('sim-plot');
+  plotDiv.style.display = 'block';
+  Plotly.newPlot(plotDiv, [
+    { x: res1.T, y: res1.Z.map(w=>w[0]), name: 'u(x) — D₁', line: { color: '#3b4a5a', dash: 'dash', width: 2 }, mode: 'lines+markers', marker:{size:5} },
+    { x: res2.T, y: res2.Z.map(w=>w[0]), name: 'v(x) — D₂', line: { color: '#c9a84c', dash: 'dot',  width: 2 }, mode: 'lines+markers', marker:{size:5} },
+    { x: res1.T, y: Ys, name: 'y(x) — solución PVF', line: { color: '#b84a1e', width: 3 }, mode: 'lines+markers', marker:{size:7} }
+  ], {
+    paper_bgcolor: 'white', plot_bgcolor: '#fafafa',
+    font: { family: 'Source Serif 4, serif', size: 13 },
+    xaxis: { title: 'x', gridcolor: '#e8e2d4' },
+    yaxis: { title: 'y', gridcolor: '#e8e2d4' },
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 30, b: 60, l: 55, r: 20 }
+  }, { responsive: true });
+
+  // Table
+  const tbody = document.getElementById('sim-tbody');
+  tbody.innerHTML = '';
+  res1.T.forEach((xi, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${xi.toFixed(4)}</td><td>${res1.Z[i][0].toFixed(6)}</td><td>${res2.Z[i][0].toFixed(6)}</td><td class="highlight">${Ys[i].toFixed(6)}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('sim-table-wrap').style.display = 'block';
+
+  const card = document.getElementById('sim-coeff-card');
+  card.innerHTML = `<div class="card-label">Coeficiente de corrección</div>
+    <p>\\(v(b) = ${zN.toFixed(6)}\\), &nbsp; \\(u(b) = ${wN.toFixed(6)}\\)</p>
+    <div class="math-block">\\[\\frac{\\beta - u(b)}{v(b)} = \\frac{${beta} - (${wN.toFixed(4)})}{${zN.toFixed(4)}} \\approx ${C.toFixed(6)}\\]</div>`;
+  document.getElementById('sim-msg').textContent = `✓ P.V.F. resuelto con ${M} pasos. y(${a}) ≈ ${Ys[0].toFixed(4)}, y(${b}) ≈ ${Ys[M].toFixed(4)} (objetivo: ${beta})`;
+
+  if (window.MathJax) MathJax.typesetPromise([card]);
+}
+
+function resetSim() {
+  document.getElementById('sim-p').value     = '-Math.exp(-x)';
+  document.getElementById('sim-q').value     = 'Math.atan(x)';
+  document.getElementById('sim-r').value     = 'Math.cos(x)';
+  document.getElementById('sim-a').value     = '1';
+  document.getElementById('sim-b').value     = '2.2';
+  document.getElementById('sim-alpha').value = '5';
+  document.getElementById('sim-beta').value  = '-2';
+  document.getElementById('sim-h').value     = '0.1';
+  document.getElementById('sim-msg').textContent = '';
+  document.getElementById('sim-plot').style.display = 'none';
+  document.getElementById('sim-table-wrap').style.display = 'none';
+}
+
+/* ════════════════════════════════
+   BANCO DE PREGUNTAS (15+, con shuffle)
+════════════════════════════════ */
+const BANCO = [
+  {
+    q: "¿Qué distingue fundamentalmente a un Problema de Valor en la Frontera (P.V.F.) de un Problema de Valor Inicial (P.V.I.)?",
+    opts: [
+      "El P.V.F. impone condiciones en ambos extremos del intervalo \\([a,b]\\), mientras el P.V.I. solo en \\(x=a\\).",
+      "El P.V.F. es siempre de orden 1 y el P.V.I. es siempre de orden 2.",
+      "El P.V.F. no requiere especificar ningún valor; el P.V.I. sí.",
+      "No hay diferencia: son formulaciones equivalentes del mismo problema."
+    ],
+    ans: 0,
+    fb: "Correcto. En el P.V.F. la información está repartida entre los dos extremos \\(x=a\\) (\\(y(a)=\\alpha\\)) y \\(x=b\\) (\\(y(b)=\\beta\\)), lo que impide aplicar directamente los métodos de marcha del P.V.I."
+  },
+  {
+    q: "Según el Corolario del P.V.F. lineal, ¿cuál condición sobre \\(q(x)\\) garantiza la unicidad de la solución?",
+    opts: [
+      "\\(q(x) > 0\\) para todo \\(x\\in[a,b]\\).",
+      "\\(q(x) = 0\\) en algún punto interior.",
+      "\\(q(x) < 0\\) para todo \\(x\\in[a,b]\\).",
+      "\\(q(x)\\) puede ser cualquier valor real."
+    ],
+    ans: 0,
+    fb: "Correcto. El corolario exige que \\(q\\) sea continua en \\([a,b]\\) y estrictamente positiva en todo ese intervalo, lo que garantiza la existencia de solución única."
+  },
+  {
+    q: "En el método del disparo lineal, el P.V.I. \\(\\mathcal{D}_2\\) tiene condiciones iniciales:",
+    opts: [
+      "\\(v(a)=0,\\; v'(a)=1\\).",
+      "\\(v(a)=\\alpha,\\; v'(a)=0\\).",
+      "\\(v(a)=1,\\; v'(a)=0\\).",
+      "\\(v(a)=\\beta,\\; v'(a)=1\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. El P.V.I. \\(\\mathcal{D}_2\\) resuelve la ecuación homogénea (sin \\(r(x)\\)) con condición de partida nula \\(v(a)=0\\) y pendiente inicial unitaria \\(v'(a)=1\\), de modo que codifica la dirección del disparo."
+  },
+  {
+    q: "¿Cuál es la fórmula que combina las soluciones \\(u\\) y \\(v\\) de \\(\\mathcal{D}_1\\) y \\(\\mathcal{D}_2\\) para obtener la solución del P.V.F. lineal?",
+    opts: [
+      "\\(y(x)=u(x)+\\dfrac{\\beta-u(b)}{v(b)}\\,v(x)\\).",
+      "\\(y(x)=v(x)+\\dfrac{\\alpha-v(a)}{u(a)}\\,u(x)\\).",
+      "\\(y(x)=u(x)\\cdot v(x)\\).",
+      "\\(y(x)=\\dfrac{u(x)+v(x)}{2}\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. La combinación lineal \\(y=u+Cv\\) con \\(C=(\\beta-u(b))/v(b)\\) garantiza que \\(y(a)=\\alpha\\) y \\(y(b)=\\beta\\) simultáneamente, satisfaciendo ambas condiciones de frontera."
+  },
+  {
+    q: "¿Qué ocurre en el método del disparo lineal si \\(v(b)=0\\)?",
+    opts: [
+      "La fórmula de combinación no es aplicable; podría no existir solución o existir infinitas.",
+      "La solución es simplemente \\(y(x)=u(x)\\).",
+      "Hay que reiniciar con condición inicial \\(v'(a)=0\\).",
+      "Se aplica directamente la fórmula tomando el límite."
+    ],
+    ans: 0,
+    fb: "Correcto. Cuando \\(v(b)=0\\) el denominador es cero y la fórmula deja de tener sentido. Esto indica una degeneración en el P.V.F. que requiere análisis especial."
+  },
+  {
+    q: "Para reducir el P.V.I. de segundo orden \\(y'' = py' + qy + r\\) a un sistema de primer orden, se introduce \\(u_1=y\\) y \\(u_2=y'\\). ¿Cuál es la componente \\(F_2\\) del campo vectorial?",
+    opts: [
+      "\\(F_2 = p(x)u_2 + q(x)u_1 + r(x)\\).",
+      "\\(F_2 = u_1\\).",
+      "\\(F_2 = p(x)u_1 + q(x)u_2\\).",
+      "\\(F_2 = r(x)\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. Como \\(u_2'=y''=py'+qy+r=pu_2+qu_1+r\\), la segunda componente del campo vectorial es exactamente \\(F_2=p(x)u_2+q(x)u_1+r(x)\\)."
+  },
+  {
+    q: "En el ejemplo resuelto en clase con \\(h=0.4\\) y método de Euler, el P.V.F. es \\(y''+e^{-x}y'-y\\tan^{-1}(x)=\\cos(x)\\). ¿Cuáles son \\(p(x)\\) y \\(q(x)\\)?",
+    opts: [
+      "\\(p(x)=-e^{-x}\\) y \\(q(x)=\\tan^{-1}(x)\\).",
+      "\\(p(x)=e^{-x}\\) y \\(q(x)=-\\tan^{-1}(x)\\).",
+      "\\(p(x)=\\cos(x)\\) y \\(q(x)=e^{-x}\\).",
+      "\\(p(x)=\\tan^{-1}(x)\\) y \\(q(x)=-e^{-x}\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. Despejando \\(y''\\): \\(y''=\\cos(x)-e^{-x}y'+y\\tan^{-1}(x)\\). Identificando: \\(p(x)=-e^{-x}\\), \\(q(x)=\\tan^{-1}(x)\\), \\(r(x)=\\cos(x)\\)."
+  },
+  {
+    q: "¿Por qué el P.V.F. del ejemplo (con \\(q(x)=\\tan^{-1}(x)\\) en \\([1,2.2]\\)) tiene solución única?",
+    opts: [
+      "Porque \\(\\tan^{-1}(x)>0\\) para todo \\(x>0\\), en particular en \\([1,2.2]\\), satisfaciendo el Corolario.",
+      "Porque la ecuación es no lineal en ese intervalo.",
+      "Porque el intervalo \\([1,2.2]\\) es suficientemente pequeño.",
+      "Porque \\(r(x)=\\cos(x)\\) es acotada."
+    ],
+    ans: 0,
+    fb: "Correcto. La función \\(\\tan^{-1}(x)>0\\) para \\(x>0\\), luego \\(q(x)>0\\) en \\([1,2.2]\\). Junto a la continuidad de \\(p,q,r\\), el Corolario garantiza unicidad."
+  },
+  {
+    q: "En la fórmula del disparo \\(y(x)=u(x)+C\\,v(x)\\), ¿qué representa el coeficiente \\(C=\\frac{\\beta-u(b)}{v(b)}\\)?",
+    opts: [
+      "El ajuste necesario para que la combinación alcance el valor de frontera \\(y(b)=\\beta\\).",
+      "El número de iteraciones del método de Euler.",
+      "La pendiente de la solución exacta en \\(x=b\\).",
+      "El valor de \\(v\\) en el punto medio del intervalo."
+    ],
+    ans: 0,
+    fb: "Correcto. \\(C\\) cuantifica cuánto de la solución homogénea \\(v\\) se suma a \\(u\\) para corregir el déficit \\(\\beta-u(b)\\) en el extremo derecho."
+  },
+  {
+    q: "Sea \\(y(x)=u(x)+C\\,v(x)\\) la solución del P.V.F. lineal. ¿Qué valor toma \\(y(b)\\) si se sustituye la fórmula del coeficiente \\(C=\\frac{\\beta-u(b)}{v(b)}\\)?",
+    opts: [
+      "\\(y(b)=\\beta\\), la condición de frontera derecha se cumple exactamente.",
+      "\\(y(b)=u(b)\\), independientemente de \\(v\\).",
+      "\\(y(b)=\\alpha+\\beta\\).",
+      "\\(y(b)\\) depende del paso \\(h\\) utilizado."
+    ],
+    ans: 0,
+    fb: "Correcto. Sustituyendo: \\(y(b)=u(b)+\\frac{\\beta-u(b)}{v(b)}v(b)=u(b)+\\beta-u(b)=\\beta\\). La condición de frontera derecha se satisface de forma exacta, sin importar el error de discretización interno."
+  },
+  {
+    q: "En el método del disparo lineal, ¿cuál es el papel de la solución \\(v(x)\\) del P.V.I. \\(\\mathcal{D}_2\\)?",
+    opts: [
+      "Representa la dirección del ajuste: cuánto hay que corregir \\(u(x)\\) para satisfacer la condición en \\(x=b\\).",
+      "Es la solución exacta del P.V.F. cuando \\(r(x)=0\\).",
+      "Aproxima la derivada de \\(u(x)\\) en cada nodo.",
+      "Determina el tamaño de paso \\(h\\) óptimo."
+    ],
+    ans: 0,
+    fb: "Correcto. \\(v\\) resuelve la ecuación homogénea (sin \\(r(x)\\)) con condición inicial \\((0,1)\\). Su valor \\(v(b)\\) normaliza el coeficiente \\(C\\), y la función \\(v(x)\\) distribuye esa corrección a lo largo de todo el intervalo."
+  },
+  {
+    q: "¿Cuál es la condición inicial del P.V.I. \\(\\mathcal{D}_1\\) en el método del disparo lineal?",
+    opts: [
+      "\\(u(a)=\\alpha,\\; u'(a)=0\\).",
+      "\\(u(a)=0,\\; u'(a)=\\alpha\\).",
+      "\\(u(a)=\\beta,\\; u'(a)=0\\).",
+      "\\(u(a)=\\alpha,\\; u'(a)=\\beta\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. \\(\\mathcal{D}_1\\) incluye el término forzante \\(r(x)\\) y parte desde \\((\\alpha, 0)\\), es decir, con el valor de frontera izquierdo pero con pendiente inicial nula."
+  },
+  {
+    q: "¿Cuál de las siguientes afirmaciones sobre el P.V.F. lineal es INCORRECTA?",
+    opts: [
+      "Si \\(q(x)<0\\) en todo \\([a,b]\\), el Corolario garantiza unicidad.",
+      "La ecuación diferencial es lineal cuando \\(f(x,y,y')=p(x)y'+q(x)y+r(x)\\).",
+      "La solución del P.V.F. lineal puede expresarse como combinación lineal de dos soluciones auxiliares.",
+      "El Corolario requiere que \\(p\\), \\(q\\) y \\(r\\) sean continuas en \\([a,b]\\)."
+    ],
+    ans: 0,
+    fb: "Correcto: la afirmación INCORRECTA es que \\(q(x)<0\\) garantiza unicidad. El Corolario exige \\(q(x)>0\\). Con \\(q<0\\) podría no haber solución única."
+  },
+  {
+    q: "Al aplicar la fórmula de Euler vectorial \\(\\mathbf{W}_{i+1}=\\mathbf{W}_i+h\\mathbf{F}(x_i,\\mathbf{W}_i)\\) al sistema \\(\\mathcal{D}_1\\), ¿qué aproxima la primera componente \\((W_{i+1})_1\\)?",
+    opts: [
+      "\\(u(x_{i+1})\\), la solución del P.V.I. \\(\\mathcal{D}_1\\) en el siguiente nodo.",
+      "\\(u'(x_i)\\), la derivada de \\(u\\) en el nodo actual.",
+      "\\(v(x_{i+1})\\), la solución del P.V.I. \\(\\mathcal{D}_2\\).",
+      "El error de truncamiento local."
+    ],
+    ans: 0,
+    fb: "Correcto. La primera componente del vector de estado \\(\\mathbf{W}_i=(u,u')\\) es la aproximación de \\(y=u\\), por lo tanto \\((W_{i+1})_1\\approx u(x_{i+1})\\)."
+  },
+  {
+    q: "En el método del Euler modificado vectorial para el disparo, la fórmula de avance es \\(Z_{j+1}=Z_j+\\frac{h}{2}(k_1+k_2)\\). ¿Qué es \\(k_2\\)?",
+    opts: [
+      "\\(k_2 = F(x_{j+1},\\, Z_j + h\\,k_1)\\), evaluado en el punto predicho por Euler.",
+      "\\(k_2 = F(x_j,\\, Z_j)\\), evaluado en el punto actual.",
+      "\\(k_2\\) es el promedio de \\(k_1\\) y \\(k_3\\).",
+      "\\(k_2 = F(x_{j+1/2},\\, Z_j)\\), evaluado en el punto medio."
+    ],
+    ans: 0,
+    fb: "Correcto. En Euler modificado (Heun), \\(k_1=F(x_j,Z_j)\\) es la pendiente inicial y \\(k_2=F(x_{j+1},Z_j+hk_1)\\) es la pendiente al final del paso predicho por Euler, y luego se promedia."
+  },
+  {
+    q: "Para verificar que el P.V.F. \\(y''+e^{-x^2}y\\ln(x^2+2)+\\cos(3y')=0\\) en \\([1,2]\\) tiene solución única, se comprueba que \\(f_y>0\\). ¿Por qué es positiva?",
+    opts: [
+      "Porque \\(e^{-x^2}>0\\) siempre y \\(\\ln(x^2+2)>0\\) para \\(x\\in[1,2]\\) (ya que \\(x^2+2>1\\)).",
+      "Porque \\(\\cos(3y')>0\\) para toda \\(y'\\).",
+      "Porque la ecuación es lineal en ese intervalo.",
+      "Porque el intervalo es compacto y acotado."
+    ],
+    ans: 0,
+    fb: "Correcto. \\(f_y=-e^{-x^2}\\ln(x^2+2)\\) es negativo, pero hay un signo negativo en la ecuación, por lo que \\(f_y>0\\). La positividad viene de la exponencial siempre positiva y el logaritmo positivo cuando el argumento supera 1."
+  },
+  {
+    q: "¿Cuál es la ventaja principal del método del disparo lineal frente a resolver el P.V.F. directamente?",
+    opts: [
+      "Reduce el P.V.F. de orden 2 a dos P.V.I.s de orden 2, para los cuales existen métodos numéricos bien establecidos.",
+      "Garantiza error cero en los puntos interiores.",
+      "No requiere evaluar derivadas de la función \\(f\\).",
+      "Es aplicable únicamente a P.V.F. no lineales."
+    ],
+    ans: 0,
+    fb: "Correcto. Los P.V.I. tienen métodos robustos (Euler, RK4…). El disparo aprovecha que la solución del P.V.F. lineal es combinación lineal de esas dos soluciones auxiliares, evitando resolver un sistema acoplado global."
+  },
+  {
+    q: "¿Cuál es la diferencia conceptual entre el P.V.I. \\(\\mathcal{D}_1\\) y el P.V.I. \\(\\mathcal{D}_2\\) en el método del disparo lineal?",
+    opts: [
+      "\\(\\mathcal{D}_1\\) incluye el término forzante \\(r(x)\\) con condición \\((\\alpha,0)\\); \\(\\mathcal{D}_2\\) es la ecuación homogénea con condición \\((0,1)\\).",
+      "\\(\\mathcal{D}_1\\) es de orden 1 y \\(\\mathcal{D}_2\\) es de orden 2.",
+      "Ambos son idénticos pero se resuelven en sentidos opuestos del intervalo.",
+      "\\(\\mathcal{D}_1\\) utiliza condición de frontera en \\(b\\); \\(\\mathcal{D}_2\\) utiliza condición inicial en \\(a\\)."
+    ],
+    ans: 0,
+    fb: "Correcto. \\(\\mathcal{D}_1\\) captura la 'parte particular' del P.V.F. (lleva el forzante \\(r(x)\\) y la condición de valor \\(\\alpha\\)), mientras que \\(\\mathcal{D}_2\\) captura la 'dirección de corrección' resolviendo la ecuación sin forzante desde una pendiente unitaria."
+  }
+];
+
+/* ════════════════════════════════
+   LÓGICA DEL QUIZ
+════════════════════════════════ */
+let quizState = { questions: [], answered: 0, correct: 0 };
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initQuiz(doShuffle) {
+  let questions = BANCO.slice();
+  if (doShuffle) questions = shuffle(questions);
+
+  // Shuffle answer options within each question
+  questions = questions.map(q => {
+    const indices = q.opts.map((_, i) => i);
+    const shuffledIdx = shuffle(indices);
+    const newOpts = shuffledIdx.map(i => q.opts[i]);
+    const newAns  = shuffledIdx.indexOf(q.ans);
+    return { ...q, opts: newOpts, ans: newAns };
+  });
+
+  quizState = { questions, answered: 0, correct: 0 };
+  renderQuiz();
+  document.getElementById('quiz-score').style.display = 'none';
+  document.getElementById('qprogress').style.width = '0%';
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  const labels = ['A', 'B', 'C', 'D'];
+  quizState.questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.id = 'qq-' + qi;
+    div.innerHTML = `<p class="q">${qi+1}. ${q.q}</p>
+      <div class="options">
+        ${q.opts.map((opt, oi) => `
+          <button class="opt-btn" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})">
+            <span class="opt-label">${labels[oi]}</span>
+            <span class="opt-text">${opt}</span>
+          </button>`).join('')}
+      </div>
+      <div class="feedback" id="fb-${qi}"></div>`;
+    container.appendChild(div);
+  });
+  if (window.MathJax) MathJax.typesetPromise([container]);
+}
+
+function selectOpt(qi, oi) {
+  const q = quizState.questions[qi];
+  const qDiv = document.getElementById('qq-' + qi);
+  if (qDiv.dataset.answered) return;
+  qDiv.dataset.answered = '1';
+
+  const opts = qDiv.querySelectorAll('.opt-btn');
+  opts.forEach(b => b.disabled = true);
+
+  const chosen = opts[oi];
+  const correct = opts[q.ans];
+  const fb = document.getElementById('fb-' + qi);
+
+  if (oi === q.ans) {
+    chosen.classList.add('correct');
+    fb.className = 'feedback show ok';
+    fb.innerHTML = '<span class="icon">✓</span> ' + q.fb;
+    quizState.correct++;
+  } else {
+    chosen.classList.add('wrong');
+    correct.classList.add('correct');
+    fb.className = 'feedback show err';
+    fb.innerHTML = '<span class="icon">✗</span> Incorrecto. ' + q.fb;
+  }
+
+  quizState.answered++;
+  const pct = (quizState.answered / quizState.questions.length) * 100;
+  document.getElementById('qprogress').style.width = pct + '%';
+
+  if (quizState.answered === quizState.questions.length) {
+    const scoreDiv = document.getElementById('quiz-score');
+    scoreDiv.style.display = 'flex';
+    document.getElementById('score-num').textContent = quizState.correct + ' / ' + quizState.questions.length;
+    const pct2 = Math.round(100 * quizState.correct / quizState.questions.length);
+    document.getElementById('score-detail').textContent = pct2 + '% de respuestas correctas';
+  }
+
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+// Inicializar quiz al cargar
+window.addEventListener('load', () => initQuiz(false));
+</script>
+</body>
+</html>

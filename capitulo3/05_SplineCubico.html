@@ -1,0 +1,1241 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpolación de Trazadores Cúbicos — Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --ink: #1c1a16;
+    --paper: #f5f0e8;
+    --gold: #c9a227;
+    --rust: #b84517;
+    --forest: #2d6a4f;
+    --slate: #3d4f5e;
+    --cream: #ede8da;
+    --rule: #d4cdc0;
+    --shadow: rgba(0,0,0,0.07);
+    --muted: #7a7060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.75;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .author-tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.9;
+    position: relative;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px;
+    padding: 13px 20px;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active {
+    color: var(--paper);
+    font-weight: 600;
+  }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 840px; margin: 0 auto; padding: 44px 24px 90px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 26px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem    { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card.warning  { border-left: 4px solid #d4a017; background: #fffcf0; }
+  .card.intuition { border-left: 4px solid var(--forest); background: #f0f8f4; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem .card-label    { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.warning .card-label  { color: #a07010; }
+  .card.intuition .card-label { color: var(--forest); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 0.97em;
+  }
+
+  /* ─── Details / reveal ─── */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  summary {
+    background: var(--cream);
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--slate);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--rust);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px;
+    background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Tip Profe W ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Grid cards ─── */
+  .bc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 20px 0; }
+  .bc-card {
+    border-radius: 4px; padding: 16px;
+    border: 1px solid var(--rule);
+    background: white;
+  }
+  .bc-card .bc-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--rust); margin-bottom: 6px; }
+  .bc-card p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  /* ─── Controls ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  input[type="text"], input[type="number"], textarea {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem; border-radius: 3px; color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  textarea { resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--rust); }
+
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 20px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover:not(:disabled) { background: #9d3d15; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 20px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+
+  /* ─── Plot & results ─── */
+  .plot-container { width: 100%; height: 420px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px; }
+  .result-box {
+    background: var(--ink); color: var(--paper);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+    padding: 16px 20px; border-radius: 4px; margin: 14px 0;
+    overflow-x: auto; white-space: pre-wrap; line-height: 1.6;
+  }
+
+  /* ─── Table ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); text-align: center; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+
+  /* ─── Code block ─── */
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 20px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    margin: 16px 0;
+    line-height: 1.7;
+  }
+  .kw { color: #cba6f7; }
+  .fn { color: #89b4fa; }
+  .cm { color: #6c7086; }
+  .st { color: #a6e3a1; }
+  .nm { color: #fab387; }
+
+  /* ─── Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong   { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Progress bar ─── */
+  .progress-bar-wrap { background: var(--rule); border-radius: 3px; height: 6px; margin: 12px 0 20px; }
+  .progress-bar-fill { background: var(--gold); height: 6px; border-radius: 3px; transition: width 0.4s; }
+
+  /* ─── Conditions list ─── */
+  .cond-list { list-style: none; padding: 0; }
+  .cond-list li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 8px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .cond-list li:last-child { border-bottom: none; }
+  .cond-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    background: var(--slate); color: white; padding: 2px 8px; border-radius: 3px;
+    flex-shrink: 0; margin-top: 3px;
+  }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    nav.tabs button { font-size: 12px; padding: 10px 12px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+    .bc-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 3 · Interpolación</div>
+  <h1>Interpolación de <em>Trazadores Cúbicos</em></h1>
+  <p class="subtitle">Suavidad sin oscilaciones: la elegancia del spline cúbico</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Introducción</button>
+  <button onclick="showSection('definicion',this)">② Definición</button>
+  <button onclick="showSection('construccion',this)">③ Construcción</button>
+  <button onclick="showSection('frontera',this)">④ Fronteras</button>
+  <button onclick="showSection('ejemplo',this)">⑤ Ejemplo</button>
+  <button onclick="showSection('simulador',this)">⑥ Simulador</button>
+  <button onclick="showSection('quiz',this)">⑦ Quiz</button>
+  <button onclick="showSection('conclusion',this)">⑧ Cierre</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ SECCIÓN 1: INTRODUCCIÓN ══════════════ -->
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>Motivación e Introducción</h2>
+
+  <p>Cuando disponemos de una nube de puntos \(\{(x_i, y_i)\}_{i=0}^n\) y queremos construir una función que los interpole, la primera tentación es usar un polinomio de alto grado. Sin embargo, el <strong>fenómeno de Runge</strong> nos enseña que aumentar el grado puede empeorar la aproximación: las oscilaciones cerca de los extremos del intervalo se disparan.</p>
+
+  <div class="card warning">
+    <div class="card-label">⚠ Problema: Fenómeno de Runge</div>
+    <p>Al interpolar la función \(f(x) = \frac{1}{1+25x^2}\) en \([-1,1]\) con polinomios de grado creciente, el error en los extremos no disminuye sino que <strong>explota</strong>. Más nodos no siempre significa mejor aproximación cuando se usa un único polinomio global.</p>
+  </div>
+
+  <h3>La solución: interpolación fragmentaria</h3>
+  <p>La idea es dividir el intervalo \([x_0, x_n]\) en <em>subintervalos</em> \([x_j, x_{j+1}]\) y usar polinomios de bajo grado en cada tramo, empatados de forma suave en los nodos interiores. A esta estrategia se le llama <strong>interpolación fragmentaria</strong> o <em>piecewise interpolation</em>.</p>
+
+  <div class="card intuition">
+    <div class="card-label">💡 Intuición Geométrica</div>
+    <p>Piensa en cómo un dibujante une puntos con una regla flexible (un "spline" físico, listón de madera). La varilla encuentra la curva más suave que pasa por todos los puntos sin forzar cambios bruscos de curvatura. El spline cúbico matemático replica exactamente ese comportamiento.</p>
+  </div>
+
+  <h3>Interpolación lineal a trozos: punto de partida</h3>
+  <p>El caso más sencillo de interpolación fragmentaria es la <strong>lineal a trozos</strong>: en cada subintervalo \([x_j, x_{j+1}]\) se traza una recta que pasa por los nodos extremos.</p>
+
+  <div class="card example-card">
+    <div class="card-label">Ejemplo Introductorio</div>
+    <p>Dada la tabla de valores:</p>
+    <div class="table-wrapper">
+      <table>
+        <tr><th>\(x_j\)</th><th>1</th><th>3</th><th>5</th><th>9</th></tr>
+        <tr><td><strong>\(y_j\)</strong></td><td>2</td><td>4</td><td>3</td><td>8</td></tr>
+      </table>
+    </div>
+    <p>El interpolante lineal a trozos resulta:</p>
+    <div class="math-block">
+      $$S(x) = \begin{cases} x+1, & x\in[1,3] \\ \tfrac{1}{2}(11-x), & x\in(3,5] \\ \tfrac{1}{4}(5x-13), & x\in(5,9] \end{cases}$$
+    </div>
+    <p>Esta curva es <strong>continua</strong> pero <em>no diferenciable</em> en los nodos interiores: en \(x=3\) y \(x=5\) hay vértices bruscos. Para muchas aplicaciones eso es inadmisible.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">✏️</div>
+    <div class="tip-body">
+      <div class="tip-label">Clave conceptual</div>
+      <p>Para eliminar los vértices necesitamos continuidad de la derivada primera. Para curvas visualmente suaves necesitamos además continuidad de la segunda derivada (curvatura). El spline cúbico logra exactamente eso: \(S \in C^2[x_0, x_n]\).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: DEFINICIÓN ══════════════ -->
+<div class="section" id="definicion">
+  <h2><span class="section-num">Sección 02</span>Definición Formal del Spline Cúbico</h2>
+
+  <div class="card definition">
+    <div class="card-label">Definición — Spline Cúbico</div>
+    <p>Dados \(n+1\) nodos distintos \(a = x_0 < x_1 < \cdots < x_n = b\) y una función \(f\) definida en \([a,b]\), un <strong>interpolante de spline cúbico</strong> \(S\) para \(f\) es una función definida por tramos en \([x_0,x_n]\):</p>
+    <div class="math-block">
+      $$S(x) = S_j(x), \quad x \in [x_j, x_{j+1}],\quad j=0,1,\ldots,n-1$$
+    </div>
+    <p>donde cada tramo es un polinomio cúbico:</p>
+    <div class="math-block">
+      $$S_j(x) = a_j + b_j(x-x_j) + c_j(x-x_j)^2 + d_j(x-x_j)^3$$
+    </div>
+  </div>
+
+  <h3>Las cinco condiciones obligatorias</h3>
+  <p>Para que \(S\) sea un spline cúbico en sentido estricto, debe satisfacer simultáneamente:</p>
+
+  <ul class="cond-list">
+    <li>
+      <span class="cond-tag">a</span>
+      <span>Cada \(S_j\) es un polinomio de grado \(\leq 3\) en \([x_j, x_{j+1}]\). Esto fija la forma \(a_j + b_j(\cdot) + c_j(\cdot)^2 + d_j(\cdot)^3\).</span>
+    </li>
+    <li>
+      <span class="cond-tag">b</span>
+      <span><strong>Interpolación:</strong> \(S_j(x_j) = f(x_j)\) para \(j = 0, \ldots, n-1\) y \(S_{n-1}(x_n) = f(x_n)\).</span>
+    </li>
+    <li>
+      <span class="cond-tag">c</span>
+      <span><strong>Continuidad de \(S\):</strong> \(S_{j+1}(x_{j+1}) = S_j(x_{j+1})\) para \(j = 0, \ldots, n-2\).</span>
+    </li>
+    <li>
+      <span class="cond-tag">d</span>
+      <span><strong>Continuidad de \(S'\):</strong> \(S'_{j+1}(x_{j+1}) = S'_j(x_{j+1})\) para \(j = 0, \ldots, n-2\).</span>
+    </li>
+    <li>
+      <span class="cond-tag">e</span>
+      <span><strong>Continuidad de \(S''\):</strong> \(S''_{j+1}(x_{j+1}) = S''_j(x_{j+1})\) para \(j = 0, \ldots, n-2\). Garantiza suavidad de curvatura.</span>
+    </li>
+  </ul>
+
+  <h3>Conteo de ecuaciones e incógnitas</h3>
+
+  <div class="card theorem">
+    <div class="card-label">Análisis de Grados de Libertad</div>
+    <p>Con \(n\) subintervalos, cada tramo \(S_j\) tiene 4 coeficientes \((a_j, b_j, c_j, d_j)\), dando <strong>\(4n\) incógnitas</strong> en total.</p>
+    <p>Las condiciones aportan:</p>
+    <ul style="margin-left:1.2em; margin-top:0.5em; line-height:2;">
+      <li>Condición <strong>b</strong> (interpolación): \(n+1\) ecuaciones</li>
+      <li>Condición <strong>c</strong> (continuidad de \(S\)): \(n-1\) ecuaciones</li>
+      <li>Condición <strong>d</strong> (continuidad de \(S'\)): \(n-1\) ecuaciones</li>
+      <li>Condición <strong>e</strong> (continuidad de \(S''\)): \(n-1\) ecuaciones</li>
+    </ul>
+    <p style="margin-top:0.8em;">Total: \((n+1) + 3(n-1) = 4n - 2\) ecuaciones.</p>
+    <p>Quedan <strong>2 grados de libertad</strong>. Se necesitan dos condiciones de frontera adicionales para determinar el spline unívocamente.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Por qué grado 3 y no 2</div>
+      <p>Los polinomios cuadráticos solo permitirían imponer continuidad de \(S\) y \(S'\), no de \(S''\). El grado 3 es el mínimo necesario para alcanzar \(C^2\). Grados mayores añaden incógnitas más rápido que ecuaciones.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: CONSTRUCCIÓN ══════════════ -->
+<div class="section" id="construccion">
+  <h2><span class="section-num">Sección 03</span>Construcción del Spline Cúbico</h2>
+
+  <p>La idea central de la construcción es <strong>reducir el sistema de \(4n\) incógnitas</strong> a un sistema tridiagonal mucho más pequeño, en las variables \(c_0, c_1, \ldots, c_n\).</p>
+
+  <h3>Paso 1: notación y simplificaciones inmediatas</h3>
+
+  <p>Definimos la longitud de cada subintervalo:</p>
+  <div class="math-block">$$h_j = x_{j+1} - x_j, \quad j = 0, \ldots, n-1$$</div>
+
+  <p>De la condición de interpolación (b), se tiene directamente:</p>
+  <div class="math-block">$$a_j = f(x_j), \quad j = 0, \ldots, n$$</div>
+  <p>Los coeficientes \(a_j\) quedan determinados por los datos. Solo quedan \(b_j\), \(c_j\), \(d_j\) como incógnitas.</p>
+
+  <h3>Paso 2: expresar \(d_j\) en términos de \(c_j\)</h3>
+  <p>De la condición de continuidad de \(S''\) evaluada en los nodos interiores se obtiene:</p>
+  <div class="math-block">$$d_j = \frac{c_{j+1} - c_j}{3h_j}, \quad j = 0, \ldots, n-1$$</div>
+
+  <h3>Paso 3: expresar \(b_j\) en términos de \(c_j\)</h3>
+  <p>Usando las condiciones de continuidad de \(S\) y de \(S'\), se llega a:</p>
+  <div class="math-block">$$b_j = \frac{1}{h_j}(a_{j+1} - a_j) - \frac{h_j}{3}(2c_j + c_{j+1}), \quad j = 0, \ldots, n-1$$</div>
+
+  <h3>Paso 4: sistema tridiagonal en \(c_j\)</h3>
+  <p>Sustituyendo en la ecuación de continuidad de \(S'\) con subíndice desplazado se obtiene el sistema central:</p>
+
+  <div class="math-block">
+    $$h_{j-1}\,c_{j-1} + 2(h_{j-1}+h_j)\,c_j + h_j\,c_{j+1} = \frac{3}{h_j}(a_{j+1}-a_j) - \frac{3}{h_{j-1}}(a_j - a_{j-1}), \quad j=1,\ldots,n-1$$
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Sistema Matricial Reducido</div>
+    <p>El sistema anterior tiene \(n-1\) ecuaciones en las \(n+1\) incógnitas \(c_0, c_1, \ldots, c_n\). Las dos incógnitas extras se fijan con las <strong>condiciones de frontera</strong>. Una vez resuelto el sistema:</p>
+    <ol style="margin-left:1.2em; margin-top:0.5em; line-height:2.2;">
+      <li>Se calcula \(d_j = \dfrac{c_{j+1}-c_j}{3h_j}\)</li>
+      <li>Se calcula \(b_j = \dfrac{a_{j+1}-a_j}{h_j} - \dfrac{h_j}{3}(2c_j + c_{j+1})\)</li>
+      <li>Los \(a_j\) ya son conocidos</li>
+    </ol>
+    <p style="margin-top:0.8em;">La matriz del sistema es <strong>tridiagonal, simétrica y estrictamente diagonal dominante</strong>: garantiza existencia, unicidad y estabilidad numérica.</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🔑</div>
+    <div class="tip-body">
+      <div class="tip-label">Por qué las c_j son las protagonistas</div>
+      <p>Los coeficientes \(c_j\) están directamente ligados a la <strong>segunda derivada</strong>: \(S_j''(x_j) = 2c_j\). Controlar \(c_j\) es controlar la curvatura del spline. Las condiciones de frontera son precisamente restricciones sobre la curvatura en los extremos.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: FRONTERAS ══════════════ -->
+<div class="section" id="frontera">
+  <h2><span class="section-num">Sección 04</span>Condiciones de Frontera</h2>
+
+  <p>Las dos ecuaciones faltantes que cierran el sistema provienen de imponer condiciones sobre el comportamiento del spline en los extremos \(x_0\) y \(x_n\). Hay cinco opciones clásicas:</p>
+
+  <div class="bc-grid">
+    <div class="bc-card">
+      <div class="bc-name">🍃 Natural</div>
+      <p>Segunda derivada nula en extremos: \(S''(x_0)=0\) y \(S''(x_n)=0\), equivalente a \(c_0=0\), \(c_n=0\).</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">📌 Sujeto (Clamped)</div>
+      <p>Primera derivada conocida en extremos: \(S'(x_0)=f'(x_0)\) y \(S'(x_n)=f'(x_n)\).</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">📐 Curvatura Conocida</div>
+      <p>Segunda derivada especificada: \(S''(x_0)=f''(x_0)\) y \(S''(x_n)=f''(x_n)\), es decir \(c_0=\tfrac{1}{2}f''(x_0)\), \(c_n=\tfrac{1}{2}f''(x_n)\).</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">📎 Terminación Parabólica</div>
+      <p>\(S''\) constante en los tramos extremos: \(d_0=0\) y \(d_{n-1}=0\), lo que implica \(c_0=c_1\) y \(c_n=c_{n-1}\).</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">🔭 Extrapolada</div>
+      <p>\(S''\) se extrapola linealmente en los extremos a partir de los valores interiores de \(S''\).</p>
+    </div>
+  </div>
+
+  <h3>Spline Natural — sistema completo</h3>
+  <p>Con \(c_0 = 0\) y \(c_n = 0\), el sistema queda reducido a \((n-1)\) incógnitas \(c_1, \ldots, c_{n-1}\) y el sistema matricial \(A\mathbf{c} = \mathbf{b}\) con:</p>
+
+  <div class="math-block">
+    $$A = \begin{pmatrix} 2(h_0+h_1) & h_1 & & \\ h_1 & 2(h_1+h_2) & h_2 & \\ & \ddots & \ddots & \ddots \\ & & h_{n-2} & 2(h_{n-2}+h_{n-1}) \end{pmatrix}$$
+  </div>
+
+  <div class="math-block">
+    $$b_j = \frac{3}{h_j}(a_{j+1}-a_j) - \frac{3}{h_{j-1}}(a_j-a_{j-1}), \quad j=1,\ldots,n-1$$
+  </div>
+
+  <h3>Spline Sujeto — condiciones adicionales</h3>
+  <p>Conocidas \(f'(x_0)\) y \(f'(x_n)\), las dos ecuaciones adicionales son:</p>
+  <div class="math-block">
+    $$2h_0\,c_0 + h_0\,c_1 = \frac{3}{h_0}(a_1-a_0) - 3f'(x_0)$$
+  </div>
+  <div class="math-block">
+    $$h_{n-1}\,c_{n-1} + 2h_{n-1}\,c_n = 3f'(x_n) - \frac{3}{h_{n-1}}(a_n - a_{n-1})$$
+  </div>
+
+  <h3>Terminación Parabólica — matriz modificada</h3>
+  <p>Con \(c_0=c_1\) y \(c_n = c_{n-1}\), la primera y última ecuación del sistema cambian la diagonal:</p>
+  <div class="math-block">
+    $$\tilde{A}_{11} = 3h_0 + 2h_1, \quad \tilde{A}_{(n-1)(n-1)} = 2h_{n-2} + 3h_{n-1}$$
+  </div>
+  <p>El resto de la matriz \(\tilde{A}\) coincide con \(A\). En todos los casos, la matriz del sistema es estrictamente diagonal dominante, garantizando solución única.</p>
+
+  <div class="card definition">
+    <div class="card-label">Propiedad — Existencia y Unicidad</div>
+    <p>Para cualquiera de las condiciones de frontera mencionadas (natural, sujeta, curvatura conocida, parabólica, extrapolada), la matriz del sistema lineal resultante es <strong>estrictamente diagonal dominante</strong> y por ende invertible. El spline cúbico correspondiente existe y es único.</p>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: EJEMPLO ══════════════ -->
+<div class="section" id="ejemplo">
+  <h2><span class="section-num">Sección 05</span>Ejemplo Resuelto Paso a Paso</h2>
+
+  <p>Hallamos el spline cúbico que interpola la siguiente nube de 5 puntos con cuatro condiciones de frontera distintas:</p>
+
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <th>\(x_k\)</th><th>−3</th><th>−1</th><th>2</th><th>3</th><th>7</th>
+      </tr>
+      <tr>
+        <td><strong>\(y_k\)</strong></td><td>5</td><td>4</td><td>12</td><td>6</td><td>0</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Datos de entrada</h3>
+  <div class="card">
+    <div class="card-label">Cálculo de h_j y a_j</div>
+    <div class="math-block">
+      $$h_0 = 2,\quad h_1 = 3,\quad h_2 = 1,\quad h_3 = 4$$
+      $$a_0=5,\quad a_1=4,\quad a_2=12,\quad a_3=6,\quad a_4=0$$
+    </div>
+  </div>
+
+  <h3>Sistema central (antes de imponer frontera)</h3>
+  <p>Aplicando la relación general para \(j=1,2,3\) se obtiene el sistema:</p>
+  <div class="math-block">
+    $$\begin{cases} 2c_0 + 10c_1 + 3c_2 = \tfrac{19}{2} \\ 3c_1 + 8c_2 + c_3 = -26 \\ c_2 + 10c_3 + 4c_4 = \tfrac{27}{2} \end{cases}$$
+  </div>
+
+  <details>
+    <summary>▸ Spline Natural (\(c_0 = 0,\, c_4 = 0\))</summary>
+    <div>
+      <p>El sistema se reduce a 3 ecuaciones:</p>
+      <div class="math-block">
+        $$10c_1 + 3c_2 = \tfrac{19}{2}, \quad 3c_1 + 8c_2 + c_3 = -26, \quad c_2 + 10c_3 = \tfrac{27}{2}$$
+      </div>
+      <p>Solución: \(c_1 \approx 2.2443,\; c_2 \approx -4.3143,\; c_3 \approx 1.7814\)</p>
+      <p>Luego se recuperan \(d_j\) y \(b_j\) y el spline queda:</p>
+      <div class="math-block">
+        $$S(x) = \begin{cases} 5 - 1.9962(x+3) + 0.374(x+3)^3, & x\in[-3,-1] \\ 4 + 2.4924(x+1) + 2.2443(x+1)^2 - 0.7287(x+1)^3, & x\in[-1,2] \\ 12 - 6.2505(x-2) + 1.7814(x-2)^2 - 2.0319(x-2)^3, & x\in[2,3] \\ 6 - 3.7176(x-3) - 4.3143(x-3)^2 + 0.1485(x-3)^3, & x\in[3,7] \end{cases}$$
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>▸ Spline con Curvatura Conocida (\(S''(-3)=-1,\; S''(7)=2\))</summary>
+    <div>
+      <p>Se tiene \(c_0 = -\tfrac{1}{2}\) y \(c_4 = 1\). El sistema se modifica en la primera y última ecuación:</p>
+      <div class="math-block">
+        $$10c_1 + 3c_2 = \tfrac{19}{2}+1, \quad 3c_1+8c_2+c_3=-26, \quad c_2+10c_3 = \tfrac{27}{2}-4$$
+      </div>
+      <p>Solución: \(c_1\approx 2.34,\; c_2\approx -4.30,\; c_3\approx 1.38\). El spline resultante:</p>
+      <div class="math-block">
+        $$S(x) = \begin{cases} 5 - 1.3933(x+3) - 0.5(x+3)^2 + 0.4733(x+3)^3, & x\in[-3,-1] \\ 4 + 2.2867(x+1) + 2.34(x+1)^2 - 0.7378(x+1)^3, & x\in[-1,2] \\ 12 - 6.5133(x-2) + 1.38(x-2)^2 + 1.8933(x-2)^3, & x\in[2,3] \\ 6 - 3.5933(x-3) - 4.30(x-3)^2 - 0.0317(x-3)^3, & x\in[3,7] \end{cases}$$
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>▸ Spline con Terminación Parabólica (\(c_0=c_1,\; c_4=c_3\))</summary>
+    <div>
+      <p>La matriz se modifica: \(\tilde{A}_{11}=12\) y \(\tilde{A}_{33}=14\). Sistema:</p>
+      <div class="math-block">
+        $$12c_1 + 3c_2 = \tfrac{19}{2}, \quad 3c_1+8c_2+c_3=-26, \quad c_2+14c_3 = \tfrac{27}{2}$$
+      </div>
+      <p>Solución: \(c_1\approx 1.8134,\; c_2\approx -4.0871,\; c_3\approx 1.2562\). El spline:</p>
+      <div class="math-block">
+        $$S(x) = \begin{cases} 5 - 4.1269(x+3) + 1.8134(x+3)^2, & x\in[-3,-1] \\ 4 + 3.1269(x+1) + 1.8134(x+1)^2 - 0.6556(x+1)^3, & x\in[-1,2] \\ 12 - 6.5249(x-2) + 1.2562(x-2)^2 + 0.9769(x-2)^3, & x\in[2,3] \\ 6 - 3.5944(x-3) - 4.0871(x-3)^2 + 0.1256(x-3)^3, & x\in[3,7] \end{cases}$$
+      </div>
+      <p>Nota: en el primer y último tramo la terminación parabólica hace que \(S''\) sea constante, eliminando la variación de curvatura en esos extremos.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>▸ Spline Extrapolado (\(S''\) se extrapola en los tramos extremos)</summary>
+    <div>
+      <p>La condición de frontera extrapolada no impone un valor fijo de \(S''\), sino que exige que la <strong>pendiente de \(S''\) sea continua</strong> en los nodos \(x_1\) y \(x_{n-1}\), extrapolando desde los tramos interiores hacia los extremos:</p>
+      <div class="math-block">
+        $$\frac{S''(x_2)-S''(x_1)}{x_2-x_1} = \frac{S''(x_1)-S''(x_0)}{x_1-x_0} \quad \Longrightarrow \quad \frac{c_2-c_1}{h_1} = \frac{c_1-c_0}{h_0}$$
+      </div>
+      <div class="math-block">
+        $$\frac{S''(x_{n-1})-S''(x_{n-2})}{x_{n-1}-x_{n-2}} = \frac{S''(x_n)-S''(x_{n-1})}{x_n-x_{n-1}} \quad \Longrightarrow \quad \frac{c_{n-1}-c_{n-2}}{h_{n-2}} = \frac{c_n-c_{n-1}}{h_{n-1}}$$
+      </div>
+      <p>Para nuestro ejemplo (\(h_0=2, h_1=3, h_2=1, h_3=4\)) estas condiciones se traducen en:</p>
+      <div class="math-block">
+        $$\frac{c_2-c_1}{3} = \frac{c_1-c_0}{2} \;\Rightarrow\; c_0 = \tfrac{5c_1-2c_2}{3}$$
+        $$\frac{c_3-c_2}{1} = \frac{c_4-c_3}{4} \;\Rightarrow\; c_4 = 5c_3 - 4c_2$$
+      </div>
+      <p>Sustituyendo en el sistema central se obtiene el sistema \(3\times 3\):</p>
+      <div class="math-block">
+        $$40c_1 + 5c_2 = \tfrac{57}{2}, \quad 3c_1 + 8c_2 + c_3 = -26, \quad -15c_2 + 30c_3 = \tfrac{27}{2}$$
+      </div>
+      <p>Solución: \(c_1 \approx 1.1523,\; c_2 \approx -3.5185,\; c_3 \approx -1.3092\)</p>
+      <p>De donde: \(c_0 \approx 4.2662\) y \(c_4 \approx 7.528\)</p>
+      <p><strong>Característica notable:</strong> \(d_0 = d_1 \approx -0.5190\) y \(d_2 = d_3 \approx 0.7364\), lo que confirma que la variación de curvatura es constante en los tramos extremos (pendiente de \(S''\) continua). El spline extrapolado queda:</p>
+      <div class="math-block">
+        $$S(x) = \begin{cases} 5 - 6.9565(x+3) + 4.2662(x+3)^2 - 0.5190(x+3)^3, & x\in[-3,-1] \\ 4 + 3.8806(x+1) + 1.1523(x+1)^2 - 0.5190(x+1)^3, & x\in[-1,2] \\ 12 - 3.2179(x-2) - 3.5185(x-2)^2 + 0.7364(x-2)^3, & x\in[2,3] \\ 6 - 8.0461(x-3) - 1.3092(x-3)^2 + 0.7364(x-3)^3, & x\in[3,7] \end{cases}$$
+      </div>
+    </div>
+  </details>
+
+  <div class="tip-profe">
+    <div class="icon">📊</div>
+    <div class="tip-body">
+      <div class="tip-label">Evaluación del spline</div>
+      <p>Para evaluar \(S\) en \(x=x^*\), primero determina en qué subintervalo cae: \(x^* \in [x_j, x_{j+1}]\). Luego calcula \(S_j(x^*) = a_j + b_j(x^*-x_j) + c_j(x^*-x_j)^2 + d_j(x^*-x_j)^3\). El argumento siempre es la distancia al nodo izquierdo del tramo, no el valor \(x^*\) directamente.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 6: SIMULADOR ══════════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Sección 06</span>Simulador Interactivo</h2>
+
+  <p>Ingresa tus propios puntos y elige el tipo de frontera. El simulador calcula el spline cúbico y lo grafica automáticamente.</p>
+
+  <div class="card">
+    <div class="card-label">Puntos de Interpolación</div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Valores de x (separados por coma)</label>
+        <input type="text" id="sim-x" value="-3,-1,2,3,7" placeholder="-3,-1,2,3,7">
+      </div>
+      <div class="input-group">
+        <label>Valores de y (separados por coma)</label>
+        <input type="text" id="sim-y" value="5,4,12,6,0" placeholder="5,4,12,6,0">
+      </div>
+    </div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Tipo de frontera</label>
+        <select id="sim-bc" style="background:white;border:1px solid var(--rule);padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;border-radius:3px;color:var(--ink);">
+          <option value="natural">Natural (S''=0 en extremos)</option>
+          <option value="parabolic">Terminación Parabólica</option>
+          <option value="extrapolated">Extrapolado (S'' extrapola en extremos)</option>
+          <option value="clamped">Sujeto (ingresar derivadas)</option>
+        </select>
+      </div>
+    </div>
+    <div id="clamp-inputs" style="display:none;" class="controls-grid">
+      <div class="input-group">
+        <label>S'(x₀) =</label>
+        <input type="number" id="fp0" value="0" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>S'(xₙ) =</label>
+        <input type="number" id="fpn" value="0" step="0.1">
+      </div>
+    </div>
+    <div class="action-grid">
+      <button class="btn-primary" onclick="calcSpline()">▶ Calcular Spline</button>
+      <button class="btn-secondary" onclick="resetSim()">↺ Ejemplo por defecto</button>
+    </div>
+  </div>
+
+  <div id="sim-result" class="result-box" style="display:none;"></div>
+  <div id="sim-plot" class="plot-container"></div>
+</div>
+
+<!-- ══════════════ SECCIÓN 7: QUIZ ══════════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 07</span>Actividades de Evaluación</h2>
+  <p>Pon a prueba tu comprensión del spline cúbico. Las preguntas van desde conceptos básicos hasta razonamiento analítico avanzado.</p>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="qProgress" style="width:0%"></div>
+  </div>
+
+  <div id="quiz-container"></div>
+
+  <div class="quiz-score">
+    <div>
+      <div class="score-label">Puntuación Final</div>
+      <div style="font-size:0.85rem;color:var(--muted);font-family:'JetBrains Mono',monospace;">Preguntas respondidas</div>
+    </div>
+    <div class="score-val" id="scoreVal">0 / 14</div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 9: CONCLUSIÓN ══════════════ -->
+<div class="section" id="conclusion">
+  <h2><span class="section-num">Sección 08</span>Cierre y Síntesis</h2>
+
+  <p>El spline cúbico es uno de los pilares de la aproximación numérica moderna. Su éxito se basa en una idea elegante: en lugar de forzar un solo polinomio de alto grado, usamos muchos polinomios cúbicos que se unen de manera absolutamente suave.</p>
+
+  <div class="card theorem">
+    <div class="card-label">Lo que hemos aprendido</div>
+    <ul style="margin-left:1.2em; line-height:2.3;">
+      <li>La interpolación polinomial global falla con muchos nodos (Runge).</li>
+      <li>El spline cúbico garantiza \(S \in C^2[x_0,x_n]\) con polinomios por tramos.</li>
+      <li>Tiene \(4n\) incógnitas y \(4n-2\) ecuaciones internas → 2 grados de libertad.</li>
+      <li>Las condiciones de frontera cierran el sistema y determinan el tipo de spline.</li>
+      <li>El sistema lineal resultante es tridiagonal, diagonal dominante → estable y eficiente.</li>
+      <li>En Python las rutinas <code>SplineNat</code>, <code>SplineSuj</code>, etc. automatizan el cálculo.</li>
+    </ul>
+  </div>
+
+  <h3>¿Dónde se usa en la práctica?</h3>
+
+  <div class="bc-grid">
+    <div class="bc-card">
+      <div class="bc-name">🎨 Diseño CAD/CAM</div>
+      <p>Curvas B-spline y NURBS derivan del spline cúbico. Toda carrocería de auto y fuselaje de avión se diseña con estas ideas.</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">🎮 Animación 3D</div>
+      <p>El interpolante de movimiento entre fotogramas clave usa splines para lograr trayectorias suaves y naturales.</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">📈 Finanzas</div>
+      <p>Construcción de curvas de rendimiento (yield curves) en mercados de bonos usando spline cúbico sobre tasas de interés.</p>
+    </div>
+    <div class="bc-card">
+      <div class="bc-name">🔬 Ingeniería</div>
+      <p>Ajuste de datos experimentales, interpolación de tablas de propiedades termodinámicas, reconstrucción de señales.</p>
+    </div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🚀</div>
+    <div class="tip-body">
+      <div class="tip-label">Próximos pasos</div>
+      <p>Para profundizar: estudia las <em>B-splines</em> (base de splines), que generalizan el spline cúbico y permiten control local de la curva. También explora <code>scipy.interpolate.CubicSpline</code> como implementación de referencia industrial en Python.</p>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  MÉTODOS NUMÉRICOS 3006907 · Interpolación de Trazadores Cúbicos · Profe W
+</footer>
+
+<script>
+/* ─── Tab Navigation ─── */
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+/* ─── Boundary condition toggle ─── */
+document.getElementById('sim-bc').addEventListener('change', function() {
+  document.getElementById('clamp-inputs').style.display =
+    this.value === 'clamped' ? 'grid' : 'none';
+});
+
+
+/* ─── Cubic Spline Calculator ─── */
+function solveTridiagonal(lower, diag, upper, rhs) {
+  const n = diag.length;
+  const d = [...diag], r = [...rhs], u = [...upper];
+  const l = [...lower];
+  for (let i = 1; i < n; i++) {
+    const m = l[i-1] / d[i-1];
+    d[i] -= m * u[i-1];
+    r[i] -= m * r[i-1];
+  }
+  const x = new Array(n).fill(0);
+  x[n-1] = r[n-1] / d[n-1];
+  for (let i = n-2; i >= 0; i--)
+    x[i] = (r[i] - u[i]*x[i+1]) / d[i];
+  return x;
+}
+
+function calcSpline() {
+  try {
+    const xs = document.getElementById('sim-x').value.split(',').map(Number);
+    const ys = document.getElementById('sim-y').value.split(',').map(Number);
+    const bc = document.getElementById('sim-bc').value;
+
+    if (xs.length !== ys.length || xs.length < 3) {
+      alert('Ingresa al menos 3 puntos y el mismo número de x e y.'); return;
+    }
+    if (bc === 'extrapolated' && xs.length < 4) {
+      alert('La frontera Extrapolada requiere al menos 4 puntos (3 subintervalos).'); return;
+    }
+
+    const n = xs.length - 1; // number of intervals
+    const h = [], a = [...ys];
+    for (let j = 0; j < n; j++) h.push(xs[j+1] - xs[j]);
+
+    // Build system for c[1..n-1]
+    const diagArr = [], lowerArr = [], upperArr = [], rhsArr = [];
+    for (let j = 1; j < n; j++) {
+      diagArr.push(2*(h[j-1]+h[j]));
+      if (j < n-1) upperArr.push(h[j]);
+      if (j > 1)   lowerArr.push(h[j-1]);
+      rhsArr.push(3/h[j]*(a[j+1]-a[j]) - 3/h[j-1]*(a[j]-a[j-1]));
+    }
+
+    let c = new Array(n+1).fill(0);
+
+    if (bc === 'natural') {
+      // c[0]=0, c[n]=0 already set
+      const inner = solveTridiagonal(lowerArr, diagArr, upperArr, rhsArr);
+      for (let i = 1; i < n; i++) c[i] = inner[i-1];
+
+    } else if (bc === 'parabolic') {
+      // c[0]=c[1], c[n]=c[n-1] → modify first and last diag
+      const dg = [...diagArr], lo = [...lowerArr], up = [...upperArr], rh = [...rhsArr];
+      dg[0] += h[0];                // 3h0+2h1 effective
+      if (n > 2) dg[dg.length-1] += h[n-1];
+      const inner = solveTridiagonal(lo, dg, up, rh);
+      for (let i = 1; i < n; i++) c[i] = inner[i-1];
+      c[0] = c[1]; c[n] = c[n-1];
+
+    } else if (bc === 'extrapolated') {
+      // Left:  (c1-c0)/h0 = (c2-c1)/h1  =>  c0 = c1 + h0*(c1-c2)/h1
+      // Right: (c_{n-1}-c_{n-2})/h_{n-2} = (c_n-c_{n-1})/h_{n-1}  =>  c_n = c_{n-1} + h_{n-1}*(c_{n-1}-c_{n-2})/h_{n-2}
+      // We substitute c0 and cn into the first and last interior equations.
+      // The system for c1..c_{n-1} gets modified first/last rows.
+      const dg = [...diagArr], lo = [...lowerArr], up = [...upperArr], rh = [...rhsArr];
+      // Left modification: c0 = c1*(1 + h0/h1) - c2*(h0/h1)
+      // Row j=1 (index 0): h0*c0 + 2(h0+h1)*c1 + h1*c2 = rhs[0]
+      //   substitute c0: h0*(c1*(1+h0/h1) - c2*(h0/h1)) + 2(h0+h1)*c1 + h1*c2 = rhs[0]
+      //   => [h0*(1+h0/h1) + 2(h0+h1)]*c1 + [h1 - h0^2/h1]*c2 = rhs[0]
+      if (n >= 2) {
+        const r0 = h[0]/h[1];
+        dg[0] = dg[0] + h[0]*(1 + r0);           // extra from c0 substitution into diag
+        up[0] = (n-1 > 1 ? up[0] : 0) + h[1] - h[0]*r0; // modify upper[0] (coeff of c2)
+        // actually upper[0] is the coeff of c_{j+1} = c_2 in row j=1
+        // original upper[0] = h[1], but c0 contributes -h[0]*(h[0]/h[1]) to c2 coeff
+        // So new up[0] = h[1] - h[0]^2/h[1]
+        // Let's recalculate cleanly:
+        dg[0] = 2*(h[0]+h[1]) + h[0]*(1 + h[0]/h[1]);
+        if (n-1 > 1) up[0] = h[1] - h[0]*h[0]/h[1];
+      }
+      // Right modification: cn = c_{n-1}*(1 + h_{n-1}/h_{n-2}) - c_{n-2}*(h_{n-1}/h_{n-2})
+      // Row j=n-1 (last row, index n-2): h_{n-2}*c_{n-2} + 2(h_{n-2}+h_{n-1})*c_{n-1} + h_{n-1}*c_n = rhs[n-2]
+      //   substitute cn: ... + h_{n-1}*(c_{n-1}*(1+h_{n-1}/h_{n-2}) - c_{n-2}*(h_{n-1}/h_{n-2}))
+      //   diag[n-2] gets + h_{n-1}*(1 + h_{n-1}/h_{n-2})
+      //   lower[n-3] (coeff of c_{n-2}) gets - h_{n-1}^2/h_{n-2}
+      if (n >= 2) {
+        const lastIdx = n-2;
+        const rLast = h[n-1]/h[n-2];
+        dg[lastIdx] = 2*(h[n-2]+h[n-1]) + h[n-1]*(1 + rLast);
+        if (lastIdx > 0) lo[lastIdx-1] = h[n-2] - h[n-1]*h[n-1]/h[n-2];
+      }
+      const inner = solveTridiagonal(lo, dg, up, rh);
+      for (let i = 1; i < n; i++) c[i] = inner[i-1];
+      // Recover c0 and cn
+      c[0] = c[1] + h[0]*(c[1]-c[2])/h[1];
+      c[n] = c[n-1] + h[n-1]*(c[n-1]-c[n-2])/h[n-2];
+
+    } else if (bc === 'clamped') {
+      const fp0 = parseFloat(document.getElementById('fp0').value);
+      const fpn = parseFloat(document.getElementById('fpn').value);
+      // Build (n+1)x(n+1) system for c[0..n]
+      // Equations: clamped left, n-1 interior, clamped right
+      const size = n+1;
+      const DG = new Array(size).fill(0);
+      const LO = new Array(size).fill(0);
+      const UP = new Array(size).fill(0);
+      const RH = new Array(size).fill(0);
+      // First eq: 2h0*c0 + h0*c1 = 3(a1-a0)/h0 - 3*fp0
+      DG[0] = 2*h[0]; UP[0] = h[0];
+      RH[0] = 3/h[0]*(a[1]-a[0]) - 3*fp0;
+      // Interior
+      for (let j = 1; j < n; j++) {
+        LO[j] = h[j-1];
+        DG[j] = 2*(h[j-1]+h[j]);
+        UP[j] = h[j];
+        RH[j] = 3/h[j]*(a[j+1]-a[j]) - 3/h[j-1]*(a[j]-a[j-1]);
+      }
+      // Last eq: h_{n-1}*c_{n-1} + 2h_{n-1}*c_n = 3*fpn - 3(an-a_{n-1})/h_{n-1}
+      LO[n] = h[n-1]; DG[n] = 2*h[n-1];
+      RH[n] = 3*fpn - 3/h[n-1]*(a[n]-a[n-1]);
+      const loArr = LO.slice(1), upArr = UP.slice(0,size-1);
+      c = solveTridiagonal(loArr, DG, upArr, RH);
+    }
+
+    // Recover d and b
+    const d = [], b = [];
+    for (let j = 0; j < n; j++) {
+      d.push((c[j+1]-c[j])/(3*h[j]));
+      b.push((a[j+1]-a[j])/h[j] - h[j]/3*(2*c[j]+c[j+1]));
+    }
+
+    // Display coefficients
+    let res = '  j │    a_j    │    b_j    │    c_j    │    d_j\n';
+    res += '────┼───────────┼───────────┼───────────┼───────────\n';
+    for (let j = 0; j < n; j++) {
+      res += `  ${j} │ ${a[j].toFixed(5).padStart(9)} │ ${b[j].toFixed(5).padStart(9)} │ ${c[j].toFixed(5).padStart(9)} │ ${d[j].toFixed(5).padStart(9)}\n`;
+    }
+    document.getElementById('sim-result').style.display = 'block';
+    document.getElementById('sim-result').textContent = res;
+
+    // Plot
+    const xMin = xs[0], xMax = xs[n];
+    const xPlot = [], yPlot = [];
+    const steps = 400;
+    for (let k = 0; k <= steps; k++) {
+      const xv = xMin + (xMax-xMin)*k/steps;
+      // Find which interval
+      let j = 0;
+      for (let i = 0; i < n-1; i++) if (xv >= xs[i+1]) j = i+1;
+      const t = xv - xs[j];
+      xPlot.push(xv);
+      yPlot.push(a[j] + b[j]*t + c[j]*t*t + d[j]*t*t*t);
+    }
+
+    const bcLabels = {natural:'Natural', parabolic:'Parabólica', extrapolated:'Extrapolada', clamped:'Sujeta'};
+    Plotly.newPlot('sim-plot', [
+      {x: xPlot, y: yPlot, type:'scatter', mode:'lines',
+       name:`Spline cúbico — Frontera ${bcLabels[bc]||bc}`,
+       line:{color:'#b84517', width:2.5}},
+      {x: xs, y: ys, type:'scatter', mode:'markers', name:'Nodos',
+       marker:{color:'#1c1a16', size:9, symbol:'circle'}}
+    ], {
+      paper_bgcolor:'white', plot_bgcolor:'#fafaf7',
+      margin:{t:36,r:20,b:50,l:55},
+      title:{text:`Frontera: ${bcLabels[bc]||bc}`, font:{family:'JetBrains Mono, monospace', size:12, color:'#7a7060'}, x:0.5},
+      xaxis:{title:'x', gridcolor:'#e5dfcf'},
+      yaxis:{title:'S(x)', gridcolor:'#e5dfcf'},
+      legend:{font:{family:'JetBrains Mono, monospace', size:11}}
+    }, {responsive:true});
+
+  } catch(e) {
+    alert('Error en los datos: ' + e.message);
+  }
+}
+
+function resetSim() {
+  document.getElementById('sim-x').value = '-3,-1,2,3,7';
+  document.getElementById('sim-y').value = '5,4,12,6,0';
+  document.getElementById('sim-bc').value = 'natural';
+  document.getElementById('clamp-inputs').style.display = 'none';
+}
+
+/* ─── Quiz Logic ─── */
+const questions = [
+  {
+    q: "¿Cuál es el principal problema de la interpolación polinomial de alto grado con muchos nodos?",
+    opts: ["La función siempre diverge en todos los puntos","Las oscilaciones cerca de los extremos del intervalo se amplifican (fenómeno de Runge)","El sistema lineal asociado es siempre singular","El polinomio no puede pasar por todos los nodos dados"],
+    ans: 1,
+    fb: "El fenómeno de Runge muestra que aumentar el grado del polinomio interpolante puede empeorar la aproximación en los extremos, con oscilaciones que crecen sin control."
+  },
+  {
+    q: "El interpolante lineal a trozos es continuo en \\([x_0,x_n]\\). ¿Qué propiedad importante NO tiene?",
+    opts: ["Ser continuo","Pasar por todos los nodos dados","Ser diferenciable en los nodos interiores","Existir en todos los subintervalos"],
+    ans: 2,
+    fb: "El interpolante lineal a trozos forma 'vértices' en los nodos interiores: la función es continua pero su derivada primera tiene discontinuidades (saltos) en esos puntos."
+  },
+  {
+    q: "¿A qué clase de regularidad pertenece un spline cúbico? Es decir, ¿qué propiedades de suavidad garantiza en \\([x_0,x_n]\\)?",
+    opts: ["\\(C^0[x_0,x_n]\\): solo continuidad","\\(C^1[x_0,x_n]\\): continua con primera derivada continua","\\(C^2[x_0,x_n]\\): continua con primera y segunda derivadas continuas","\\(C^3[x_0,x_n]\\): tres derivadas continuas en todo el intervalo"],
+    ans: 2,
+    fb: "El spline cúbico garantiza \\(S \\in C^2[x_0,x_n]\\): la función y sus dos primeras derivadas son continuas. La tercera derivada puede tener saltos en los nodos internos."
+  },
+  {
+    q: "Para \\(n+1\\) nodos, el spline cúbico tiene \\(n\\) subintervalos. ¿Cuántas incógnitas totales tiene el sistema antes de imponer condiciones de frontera?",
+    opts: ["\\(n+1\\)","\\(2n\\)","\\(3n\\)","\\(4n\\)"],
+    ans: 3,
+    fb: "Cada uno de los \\(n\\) tramos \\(S_j\\) tiene 4 coeficientes \\((a_j, b_j, c_j, d_j)\\), dando \\(4n\\) incógnitas en total."
+  },
+  {
+    q: "¿Cuántas ecuaciones aportan conjuntamente las condiciones de interpolación, continuidad de \\(S\\), \\(S'\\) y \\(S''\\)?",
+    opts: ["\\(4n-4\\)","\\(4n-2\\)","\\(4n\\)","\\(4n+2\\)"],
+    ans: 1,
+    fb: "Interpolación: \\(n+1\\). Continuidad de \\(S\\), \\(S'\\) y \\(S''\\): \\(3(n-1)\\) cada una en total \\(n+1+3(n-1)=4n-2\\). Faltan 2 para cerrar el sistema."
+  },
+  {
+    q: "En la construcción del spline cúbico, ¿cuál es la relación que permite expresar \\(d_j\\) directamente en función de \\(c_j\\) y \\(c_{j+1}\\)?",
+    opts: ["\\(d_j = \\dfrac{c_{j+1}-c_j}{3h_j}\\)","\\(d_j = \\dfrac{c_j - c_{j+1}}{h_j}\\)","\\(d_j = \\dfrac{c_{j+1}+c_j}{6h_j}\\)","\\(d_j = h_j(c_{j+1}-c_j)\\)"],
+    ans: 0,
+    fb: "Esta relación se obtiene de la condición de continuidad de \\(S''\\) en el nodo \\(x_{j+1}\\): \\(S''_{j+1}(x_{j+1})=S''_j(x_{j+1})\\) implica \\(2c_{j+1} = 2c_j + 6d_j h_j\\), despejando \\(d_j\\)."
+  },
+  {
+    q: "¿Qué tipo de matriz tiene el sistema lineal en \\(c_1,\\ldots,c_{n-1}\\) para el spline natural?",
+    opts: ["Diagonal","Triangular superior","Tridiagonal, simétrica y estrictamente diagonal dominante","Densa (con entradas no nulas en todas las posiciones)"],
+    ans: 2,
+    fb: "La matriz \\(A\\) del sistema del spline es tridiagonal (solo diagonal y dos subdiagonales), simétrica y estrictamente diagonal dominante. Esto garantiza existencia, unicidad y estabilidad numérica del sistema."
+  },
+  {
+    q: "En la condición de frontera natural, ¿qué se impone en los extremos?",
+    opts: ["\\(S'(x_0)=S'(x_n)=0\\)","\\(S''(x_0)=S''(x_n)=0\\)","\\(S(x_0)=S(x_n)\\)","\\(S'''(x_0)=S'''(x_n)=0\\)"],
+    ans: 1,
+    fb: "La condición natural impone segunda derivada nula en los extremos: \\(S''(x_0)=0\\) y \\(S''(x_n)=0\\), equivalente a \\(c_0=0\\) y \\(c_n=0\\)."
+  },
+  {
+    q: "En la condición de frontera sujeta (clamped), ¿qué información adicional se necesita?",
+    opts: ["Los valores de \\(f''\\) en los extremos","Los valores de \\(f'\\) en los extremos","Los valores de \\(f\\) en puntos interiores adicionales","Ninguna: no requiere datos extra"],
+    ans: 1,
+    fb: "El spline sujeto requiere conocer \\(f'(x_0)\\) y \\(f'(x_n)\\), las derivadas primeras en los extremos. Esto 'sujeta' la pendiente del spline en los bordes del intervalo."
+  },
+  {
+    q: "En la terminación parabólica, ¿qué condición se impone sobre los tramos extremos?",
+    opts: ["\\(S''\\) es cero en los extremos","\\(S''\\) es lineal en los tramos extremos","\\(S''\\) es constante en \\([x_0,x_1]\\) y en \\([x_{n-1},x_n]\\)","\\(S'\\) coincide con la derivada de f en los extremos"],
+    ans: 2,
+    fb: "Terminación parabólica significa \\(S''_0\\) constante (y \\(S''_{n-1}\\) constante) en los tramos extremos. Esto equivale a \\(d_0=0\\) y \\(d_{n-1}=0\\), o sea \\(c_0=c_1\\) y \\(c_n=c_{n-1}\\)."
+  },
+  {
+    q: "Para el ejemplo con puntos \\((-3,5),(-1,4),(2,12),(3,6),(7,0)\\), ¿cuánto valen \\(h_0, h_1, h_2, h_3\\)?",
+    opts: ["\\(h_0=1, h_1=2, h_2=3, h_3=4\\)","\\(h_0=2, h_1=3, h_2=1, h_3=4\\)","\\(h_0=3, h_1=2, h_2=4, h_3=1\\)","\\(h_0=4, h_1=1, h_2=3, h_3=2\\)"],
+    ans: 1,
+    fb: "\\(h_0=x_1-x_0=-1-(-3)=2\\), \\(h_1=x_2-x_1=2-(-1)=3\\), \\(h_2=x_3-x_2=3-2=1\\), \\(h_3=x_4-x_3=7-3=4\\)."
+  },
+  {
+    q: "¿Cuál de estas afirmaciones es FALSA respecto al spline cúbico?",
+    opts: ["La primera derivada \\(S'\\) es continua en todos los nodos","La tercera derivada \\(S'''\\) puede tener discontinuidades en los nodos interiores","El spline cúbico es un polinomio de grado 3 en todo \\([x_0,x_n]\\)","Con \\(n+1\\) nodos y condición natural, el sistema tiene \\(n-1\\) ecuaciones en \\(n-1\\) incógnitas"],
+    ans: 2,
+    fb: "El spline cúbico es un polinomio de grado \\(\\leq 3\\) en CADA subintervalo, pero en el intervalo completo \\([x_0,x_n]\\) es una función por tramos, NO un único polinomio. Esto es precisamente lo que lo distingue del interpolante polinomial global."
+  },
+  {
+    q: "¿Qué garantiza que el sistema lineal del spline cúbico (en cualquiera de sus variantes: natural, sujeto, parabólico) tenga solución única?",
+    opts: ["La matriz del sistema es ortogonal","La matriz del sistema es estrictamente diagonal dominante e invertible","El determinante de la matriz siempre es 1","Los nodos son equiespaciados"],
+    ans: 1,
+    fb: "En todos los casos la matriz del sistema del spline cúbico es estrictamente diagonal dominante (la entrada diagonal es mayor en valor absoluto que la suma de las demás entradas de la fila). Por el criterio de Gershgorin esto garantiza que la matriz es no singular, asegurando existencia y unicidad."
+  },
+  {
+    q: "Un estudiante quiere usar el spline cúbico para aproximar \\(f(x)=\\sin(x)\\) en \\([0,\\pi]\\) con nodos \\(x_0=0, x_1=\\pi/2, x_2=\\pi\\). Conoce que \\(f'(0)=1\\) y \\(f'(\\pi)=-1\\). ¿Qué tipo de spline es más apropiado?",
+    opts: ["Natural, porque \\(\\sin(x)\\) es suave","Sujeto (clamped), porque se conocen las derivadas en los extremos","Terminación parabólica, porque \\(\\sin(x)\\) es casi parabólico","Extrapolado, porque los nodos son equiespaciados"],
+    ans: 1,
+    fb: "Cuando se conocen las derivadas primeras en los extremos (aquí \\(f'(0)=\\cos(0)=1\\) y \\(f'(\\pi)=\\cos(\\pi)=-1\\)), el spline sujeto (clamped) es la opción más informada y generalmente produce la mejor aproximación."
+  }
+];
+
+let answered = new Array(questions.length).fill(false);
+let score = 0;
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  questions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.innerHTML = `<p class="q">Q${i+1}. ${q.q}</p>
+      <div class="options" id="opts-${i}">
+        ${q.opts.map((o,k) => `
+          <button class="opt-btn" onclick="checkAnswer(${i},${k})" id="opt-${i}-${k}">
+            <span class="opt-label">${String.fromCharCode(65+k)}</span>
+            <span>${o}</span>
+          </button>`).join('')}
+      </div>
+      <div class="feedback" id="fb-${i}"></div>`;
+    container.appendChild(div);
+  });
+  updateProgress();
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+function checkAnswer(qi, selected) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  const q = questions[qi];
+  const opts = document.querySelectorAll(`#opts-${qi} .opt-btn`);
+  opts.forEach((btn, k) => {
+    btn.disabled = true;
+    if (k === q.ans) btn.classList.add('correct');
+    else if (k === selected) btn.classList.add('wrong');
+  });
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.classList.add('show');
+  if (selected === q.ans) {
+    score++;
+    fb.classList.add('ok');
+    fb.innerHTML = `<span class="icon">✓</span> ¡Correcto! ${q.fb}`;
+  } else {
+    fb.classList.add('err');
+    fb.innerHTML = `<span class="icon">✗</span> Incorrecto. ${q.fb}`;
+  }
+  document.getElementById('scoreVal').textContent = `${score} / ${questions.length}`;
+  updateProgress();
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+function updateProgress() {
+  const done = answered.filter(Boolean).length;
+  document.getElementById('qProgress').style.width = (done/questions.length*100)+'%';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

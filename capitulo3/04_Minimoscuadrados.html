@@ -1,0 +1,986 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mínimos Cuadrados — Aproximación Discreta · Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --paper:   #F5F0E8;
+    --ink:     #1C2331;
+    --gold:    #C9A84C;
+    --rust:    #B5451B;
+    --forest:  #2E7D52;
+    --slate:   #3D5166;
+    --cream:   #EDE7D9;
+    --rule:    #D5CCBA;
+    --muted:   #7A7060;
+    --shadow:  rgba(0,0,0,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.78;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 64px 40px 52px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); border: 1px solid var(--gold);
+    padding: 4px 14px; margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900; line-height: 1.1;
+    letter-spacing: -1px; margin-bottom: 12px;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem; font-weight: 300;
+    opacity: 0.75; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block; margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--gold); opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation tabs ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent; border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; padding: 13px 20px;
+    cursor: pointer; letter-spacing: 0.4px;
+    transition: all 0.2s; position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active { color: var(--paper); font-weight: 600; }
+  nav.tabs button.active::after {
+    content: ''; position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px; background: var(--gold);
+  }
+
+  /* ─── Main layout ─── */
+  main { max-width: 840px; margin: 0 auto; padding: 42px 24px 90px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.85rem; font-weight: 700;
+    color: var(--ink); margin: 0 0 8px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem; color: var(--rust);
+    letter-spacing: 2px; text-transform: uppercase;
+    display: block; margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.22rem; color: var(--slate); margin: 30px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 24px 28px;
+    margin: 20px 0; box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition  { border-left: 4px solid var(--forest); }
+  .card.theorem     { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card{ border-left: 4px solid var(--rust); }
+  .card.warning     { border-left: 4px solid var(--gold); background: #fffbf0; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .card.definition  .card-label { color: var(--forest); }
+  .card.theorem     .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.warning     .card-label { color: var(--gold); }
+
+  /* ─── Math blocks ─── */
+  .math-block {
+    background: var(--cream); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 18px 22px; margin: 16px 0;
+    overflow-x: auto; font-size: 0.97em;
+  }
+
+  /* ─── Details / reveal ─── */
+  details { border: 1px solid var(--rule); border-radius: 4px; margin: 16px 0; overflow: hidden; }
+  summary {
+    background: var(--cream); padding: 12px 18px; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    font-weight: 600; color: var(--slate); list-style: none;
+    display: flex; align-items: center; gap: 10px; user-select: none;
+    transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before { content: '▶'; font-size: 11px; color: var(--rust); transition: transform 0.2s; flex-shrink: 0; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) { padding: 18px 22px; background: white; border-top: 1px solid var(--rule); }
+
+  /* ─── Tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold); border-radius: 4px;
+    padding: 16px 20px; margin: 18px 0;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Error type grid ─── */
+  .error-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 20px 0; }
+  .error-card {
+    border-radius: 4px; padding: 18px 14px; text-align: center;
+    border: 1px solid var(--rule); background: white;
+  }
+  .error-card .ename { font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; color: var(--slate); font-family:'JetBrains Mono',monospace; }
+  .error-card .edesc { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+  .error-card.active-err { background: #edf7ef; border-color: #89c49a; }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li { display: flex; gap: 14px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Table ─── */
+  .table-wrapper { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; background: white; }
+  th { background: var(--slate); color: white; padding: 10px 14px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); text-align: center; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+
+  /* ─── Linearization table ─── */
+  .lin-table td:first-child { text-align: left; font-style: italic; }
+
+  /* ─── Controls / Simulator ─── */
+  .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; margin-bottom: 16px; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  textarea, input[type="text"], input[type="number"] {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.93rem; border-radius: 3px; color: var(--ink);
+    transition: border-color 0.2s; width: 100%;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--rust); }
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 20px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #9d3d15; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 20px; font-family: 'Source Serif 4', serif; font-size: 0.95rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+  .result-box {
+    background: var(--ink); color: var(--paper); border-radius: 4px;
+    padding: 20px 24px; margin-top: 16px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem; line-height: 1.8; display: none;
+  }
+  .result-box.show { display: block; }
+  .result-box .rh { color: var(--gold); font-weight: 600; margin-bottom: 6px; }
+  .plot-container { width: 100%; height: 440px; background: white; border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px; }
+
+  /* ─── Degree selector ─── */
+  .deg-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .deg-btn { background: var(--cream); border: 1px solid var(--rule); border-radius: 3px; padding: 6px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; transition:all .2s; color:var(--slate); }
+  .deg-btn.sel { background: var(--slate); color: white; border-color: var(--slate); }
+
+  /* ─── Quiz ─── */
+  .quiz-question { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 22px 26px; margin: 18px 0; }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .quiz-question p.q span.qn { font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--rust); background:var(--cream); padding:2px 8px; border-radius:10px; margin-right:8px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong   { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+
+  /* ─── Score ─── */
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px;
+    border-radius: 4px; display: flex; justify-content: space-between;
+    align-items: center; margin-top: 28px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Conclusion highlights ─── */
+  .highlight-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 14px; margin: 24px 0; }
+  .hl-card { background: white; border: 1px solid var(--rule); border-radius: 4px; padding: 20px 18px; text-align: center; }
+  .hl-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .hl-card .title { font-weight: 700; font-size: 0.95rem; color: var(--slate); margin-bottom: 4px; }
+  .hl-card .desc  { font-size: 0.83rem; color: var(--muted); }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; padding: 28px; font-size: 0.8rem; color: var(--muted);
+    border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+  }
+
+  @media (max-width: 620px) {
+    .error-grid { grid-template-columns: 1fr; }
+    nav.tabs button { font-size: 12px; padding: 10px 12px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 3 · Interpolación</div>
+  <h1>Aproximación por <em>Mínimos Cuadrados</em></h1>
+  <p class="subtitle">Ajuste óptimo de curvas a datos discretos en el sentido de la norma cuadrática</p>
+  <div class="author-tag">Profe W</div>
+</header>
+
+<nav class="tabs" id="mainNav">
+  <button class="active" onclick="showSection('intro',this)">① Fundamentos</button>
+  <button onclick="showSection('regresion',this)">② Recta de Regresión</button>
+  <button onclick="showSection('polinomial',this)">③ Ajuste Polinomial</button>
+  <button onclick="showSection('lineal',this)">④ Linealización</button>
+  <button onclick="showSection('simulador',this)">⑤ Simulador</button>
+  <button onclick="showSection('quiz',this)">⑥ Actividades</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ SECCIÓN 1: FUNDAMENTOS ══════════════ -->
+<div class="section active" id="intro">
+  <h2><span class="section-num">Sección 01</span>El Problema de Aproximación Discreta</h2>
+
+  <p>Dado un conjunto de \(m\) puntos medidos experimentalmente \((x_1,y_1),\ldots,(x_m,y_m)\) con \(x_i \neq x_j\), queremos encontrar la ecuación de la curva \(y = f(x)\) que <em>mejor representa</em> el comportamiento de esos datos, sin necesariamente pasar por todos ellos.</p>
+
+  <div class="tip-profe">
+    <div class="icon">💡</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición</div>
+      <p>Interpolación obliga a que la curva pase exactamente por todos los puntos. El ajuste por mínimos cuadrados, en cambio, busca una curva que <em>minimice el error total</em> respecto a todos los puntos. Esto es crucial cuando los datos contienen ruido experimental.</p>
+    </div>
+  </div>
+
+  <h3>Medidas de Error</h3>
+  <p>Para cuantificar qué tan bien se ajusta \(f(x)\) a los datos, definimos la <strong>desviación o residuo</strong> en cada punto como \(e_k = f(x_k) - y_k\). A partir de estos residuos, existen varias formas de medir el error global:</p>
+
+  <div class="error-grid">
+    <div class="error-card">
+      <div class="ename">E∞(f)</div>
+      <div class="math-block">\(\max_{1\le k\le m}|f(x_k)-y_k|\)</div>
+      <div class="edesc">Error máximo — sensible a datos atípicos</div>
+    </div>
+    <div class="error-card">
+      <div class="ename">E₁(f)</div>
+      <div class="math-block">\(\dfrac{1}{m}\sum_{k=1}^{m}|f(x_k)-y_k|\)</div>
+      <div class="edesc">Error medio — más robusto</div>
+    </div>
+    <div class="error-card active-err">
+      <div class="ename">E₂(f) ✓</div>
+      <div class="math-block">\(\sqrt{\dfrac{1}{m}\sum_{k=1}^{m}(f(x_k)-y_k)^2}\)</div>
+      <div class="edesc">Error cuadrático medio — el más utilizado</div>
+    </div>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">¿Por qué el error cuadrático?</div>
+    <p>Los errores \(E_\infty(f)\) y \(E_1(f)\) no son diferenciables en general, lo que complica la optimización. Minimizar \(E_2(f)\) es equivalente a minimizar la suma de cuadrados:</p>
+    <div class="math-block">
+      $$E(f) = \sum_{k=1}^{m}\bigl(f(x_k) - y_k\bigr)^2$$
+    </div>
+    <p>Esta función sí es diferenciable y conduce a un <strong>sistema lineal de ecuaciones normales</strong>, resoluble de forma directa. Por eso el método se llama <em>mínimos cuadrados</em>.</p>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label">Error conceptual frecuente</div>
+    <p>Los residuos \(e_k = f(x_k) - y_k\) se miden en dirección <em>vertical</em> (diferencia en \(y\)), no como distancia perpendicular a la curva. El método de mínimos cuadrados minimiza la suma de cuadrados de estas distancias verticales.</p>
+  </div>
+
+  <h3>¿Cuándo usar mínimos cuadrados?</h3>
+  <div class="highlight-row">
+    <div class="hl-card"><div class="icon">📊</div><div class="title">Datos ruidosos</div><div class="desc">Mediciones con error experimental donde no conviene interpolar exactamente.</div></div>
+    <div class="hl-card"><div class="icon">📈</div><div class="title">Tendencias</div><div class="desc">Se quiere capturar el comportamiento global sin reproducir fluctuaciones.</div></div>
+    <div class="hl-card"><div class="icon">🔢</div><div class="title">Más datos que parámetros</div><div class="desc">Cuando \(m \gg n+1\), el sistema está sobredeterminado y no tiene solución exacta.</div></div>
+    <div class="hl-card"><div class="icon">🎯</div><div class="title">Modelo conocido</div><div class="desc">Cuando la forma funcional del modelo (\(f = Ax+B\), \(f = ae^{bx}\), etc.) es conocida a priori.</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 2: RECTA DE REGRESIÓN ══════════════ -->
+<div class="section" id="regresion">
+  <h2><span class="section-num">Sección 02</span>Recta de Regresión</h2>
+
+  <p>El caso más simple y fundamental es encontrar la <strong>recta</strong> \(y = Ax + B\) que mejor se ajusta a \(m\) puntos en el sentido de mínimos cuadrados.</p>
+
+  <div class="card definition">
+    <div class="card-label">Definición — Recta de Regresión</div>
+    <p>Dados \(m\) puntos \((x_1,y_1),\ldots,(x_m,y_m)\) con \(x_i \neq x_j\), la <strong>recta de regresión</strong> u <em>óptima en el sentido de mínimos cuadrados</em> es \(y = Ax + B\) donde \(A\) y \(B\) minimizan la función de error:</p>
+    <div class="math-block">$$E(A,B) = \sum_{k=1}^{m}(Ax_k + B - y_k)^2$$</div>
+  </div>
+
+  <h3>Derivación del Sistema Normal</h3>
+  <p>Para hallar el mínimo de \(E(A,B)\) igualamos a cero sus derivadas parciales:</p>
+
+  <div class="math-block">
+    $$\frac{\partial E}{\partial A} = 2\sum_{k=1}^{m}x_k(Ax_k+B-y_k) = 0$$
+    $$\frac{\partial E}{\partial B} = 2\sum_{k=1}^{m}(Ax_k+B-y_k) = 0$$
+  </div>
+
+  <p>Expandiendo y reorganizando, obtenemos el <strong>sistema de ecuaciones normales</strong>:</p>
+
+  <div class="card theorem">
+    <div class="card-label">Sistema de Ecuaciones Normales (n = 1)</div>
+    <div class="math-block">
+      $$\begin{cases}
+        A\displaystyle\sum_{k=1}^{m}x_k^2 + B\displaystyle\sum_{k=1}^{m}x_k = \displaystyle\sum_{k=1}^{m}x_k y_k \\[10pt]
+        A\displaystyle\sum_{k=1}^{m}x_k + Bm = \displaystyle\sum_{k=1}^{m}y_k
+      \end{cases}$$
+    </div>
+    <p>La solución \((A^*, B^*)\) de este sistema <em>garantiza el mínimo global</em> de \(E(A,B)\), ya que la función es convexa.</p>
+  </div>
+
+  <h3>Ejemplo Resuelto 1</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Ajuste lineal a 5 puntos</div>
+    <p>Calcule la recta de regresión para los datos:</p>
+    <div class="table-wrapper">
+      <table>
+        <tr><th>\(x_k\)</th><td>−2</td><td>0</td><td>1</td><td>3.8</td><td>4.3</td></tr>
+        <tr><th>\(y_k\)</th><td>−14</td><td>−2</td><td>2.5</td><td>20</td><td>18</td></tr>
+      </table>
+    </div>
+    <details>
+      <summary>Ver solución completa</summary>
+      <div>
+        <p>Construimos la tabla de productos:</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>\(x_k\)</th><th>\(y_k\)</th><th>\(x_k^2\)</th><th>\(x_ky_k\)</th></tr></thead>
+            <tbody>
+              <tr><td>−2</td><td>−14</td><td>4</td><td>28</td></tr>
+              <tr><td>0</td><td>−2</td><td>0</td><td>0</td></tr>
+              <tr><td>1</td><td>2.5</td><td>1</td><td>2.5</td></tr>
+              <tr><td>3.8</td><td>20</td><td>14.44</td><td>76</td></tr>
+              <tr><td>4.3</td><td>18</td><td>18.49</td><td>77.4</td></tr>
+              <tr style="font-weight:700;"><td>Σ = 7.1</td><td>Σ = 19</td><td>Σ = 37.93</td><td>Σ = 183.9</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>El sistema normal es:</p>
+        <div class="math-block">
+          $$\begin{cases} 37.93\,A + 7.1\,B = 183.9 \\ 7.1\,A + 5\,B = 19 \end{cases}$$
+        </div>
+        <p><strong>Solución:</strong> \(A \approx 5.3544\), \(B \approx -2.7033\)</p>
+        <div class="math-block">$$y \approx 5.3544x - 2.7033$$</div>
+        <p>Error de mínimos cuadrados:</p>
+        <div class="math-block">$$E = \sum_{k=1}^{5}(5.3544x_k - 2.7033 - y_k)^2 \approx 11.8018$$</div>
+      </div>
+    </details>
+  </div>
+
+  <h3>Ejemplo Resuelto 2</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Datos generados por una función</div>
+    <p>Determine la recta de regresión para \(\{(x_k,y_k)\}_{k=1}^{10}\), con \(x_k = 0.1k\) e \(y_k = x_k + \cos(\sqrt{k})\).</p>
+    <details>
+      <summary>Ver solución completa</summary>
+      <div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>\(x_k\)</th><th>0.1</th><th>0.2</th><th>0.3</th><th>0.4</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>0.9</th><th>1.0</th></tr></thead>
+            <tbody>
+              <tr><th>\(y_k\)</th><td>0.6403</td><td>0.3559</td><td>0.1394</td><td>−0.0161</td><td>−0.1173</td><td>−0.1699</td><td>−0.1796</td><td>−0.1514</td><td>−0.090</td><td>0.0002</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Calculando las sumas: \(\sum x_k^2 \approx 3.85\), \(\sum x_k \approx 5.5\), \(\sum y_k \approx 0.4117\), \(\sum x_ky_k \approx -0.3176\).</p>
+        <p>Sistema normal:</p>
+        <div class="math-block">$$\begin{cases}3.85A + 5.5B = -0.3176 \\ 5.5A + 10B = 0.4117\end{cases}$$</div>
+        <p><strong>Solución:</strong> \(A \approx -0.6594\), \(B \approx 0.4039\)</p>
+        <div class="math-block">$$y \approx -0.6594x + 0.4039, \quad E \approx 0.2867$$</div>
+        <p>El error es relativamente grande, lo que sugiere que la recta no es la mejor curva de ajuste para estos datos. Los puntos tienen un comportamiento más parabólico.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">⚠️</div>
+    <div class="tip-body">
+      <div class="tip-label">Límite de la recta de regresión</div>
+      <p>La recta de regresión es óptima entre todas las rectas, pero si los datos siguen un patrón no lineal (parabólico, exponencial, logístico…), el error seguirá siendo grande. En ese caso, conviene un ajuste polinomial o no lineal.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 3: AJUSTE POLINOMIAL ══════════════ -->
+<div class="section" id="polinomial">
+  <h2><span class="section-num">Sección 03</span>Ajuste Polinomial</h2>
+
+  <p>Cuando los datos muestran curvatura, la recta de regresión no es suficiente. Podemos buscar el <strong>polinomio de grado \(n\)</strong> óptimo en el sentido de mínimos cuadrados.</p>
+
+  <h3>Caso Cúbico — Derivación</h3>
+  <p>Para \(f(x) = Ax^3 + Bx^2 + Cx + D\), la función de error es:</p>
+  <div class="math-block">$$E(A,B,C,D) = \sum_{k=1}^{m}(Ax_k^3 + Bx_k^2 + Cx_k + D - y_k)^2$$</div>
+
+  <p>Igualando a cero las cuatro derivadas parciales, se obtiene el sistema de ecuaciones normales \(4 \times 4\).</p>
+
+  <h3>Caso General — Polinomio de Grado n</h3>
+  <div class="card theorem">
+    <div class="card-label">Sistema Normal General</div>
+    <p>El polinomio \(y = a_n x^n + \cdots + a_1 x + a_0\) óptimo en el sentido de mínimos cuadrados se obtiene resolviendo el sistema \((n+1)\times(n+1)\):</p>
+    <div class="math-block">
+      $$\begin{pmatrix}
+        \sum x_k^{2n} & \sum x_k^{2n-1} & \cdots & \sum x_k^n \\
+        \sum x_k^{2n-1} & \sum x_k^{2n-2} & \cdots & \sum x_k^{n-1} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        \sum x_k^n & \sum x_k^{n-1} & \cdots & m
+      \end{pmatrix}
+      \begin{pmatrix}a_n \\ a_{n-1} \\ \vdots \\ a_0\end{pmatrix}
+      =
+      \begin{pmatrix}\sum x_k^n y_k \\ \sum x_k^{n-1} y_k \\ \vdots \\ \sum y_k\end{pmatrix}$$
+    </div>
+    <p>donde todas las sumas son de \(k = 1\) a \(m\). La matriz del sistema se llama <em>matriz de Gram</em> y siempre es <strong>simétrica y definida positiva</strong> si los \(x_k\) son distintos.</p>
+  </div>
+
+  <h3>Ejemplo Resuelto — Ajuste Parabólico</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Polinomio de grado 2</div>
+    <p>Ajustar un polinomio cuadrático \(p_2(x) = a_2 x^2 + a_1 x + a_0\) a los datos \(\{(x_k,y_k)\}_{k=1}^{10}\) con \(x_k = 0.1k\), \(y_k = x_k + \cos(\sqrt{k})\).</p>
+    <details>
+      <summary>Ver solución y comparación con la recta</summary>
+      <div>
+        <p>El sistema normal de \(3 \times 3\) resulta en:</p>
+        <div class="math-block">
+          $$\begin{pmatrix}3.5033 & 3.85 & 3.025\\ 3.85 & 3.025 & 3.5 \\ 3.025 & 3.5 & 10\end{pmatrix}
+          \begin{pmatrix}a_2 \\ a_1 \\ a_0\end{pmatrix}
+          =
+          \begin{pmatrix}-0.3176 \\ -0.3176 \\ 0.4117\end{pmatrix}$$
+        </div>
+        <p><strong>Solución:</strong> \(a_2 \approx 2.3207\), \(a_1 \approx -3.2122\), \(a_0 \approx 0.9144\)</p>
+        <div class="math-block">$$p_2(x) \approx 2.3207x^2 - 3.2122x + 0.9144$$</div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Modelo</th><th>Error de mínimos cuadrados</th></tr></thead>
+            <tbody>
+              <tr><td>Recta \(y = -0.6594x + 0.4039\)</td><td>\(\approx 0.2867\)</td></tr>
+              <tr style="background:#edf7ef;"><td>Parábola \(p_2(x)\)</td><td>\(\approx 0.0027\)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>La parábola reduce el error en más de <strong>100 veces</strong> respecto a la recta. Esto confirma que el comportamiento de los datos es cuadrático.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">📐</div>
+    <div class="tip-body">
+      <div class="tip-label">¿Qué grado elegir?</div>
+      <p>Un grado alto no siempre es mejor — puede producir sobreajuste (<em>overfitting</em>). La regla práctica: aumentar el grado mientras el error cuadrático disminuya significativamente, pero nunca usar \(n \ge m\) (eso sería interpolación).</p>
+    </div>
+  </div>
+
+  <h3>Pasos para el ajuste polinomial</h3>
+  <ul class="steps">
+    <li><span class="step-num">1</span><div>Definir el grado \(n\) del polinomio basándose en la gráfica de los datos.</div></li>
+    <li><span class="step-num">2</span><div>Calcular las sumas \(\sum x_k^j\) para \(j=0,1,\ldots,2n\) y \(\sum x_k^j y_k\) para \(j=0,1,\ldots,n\).</div></li>
+    <li><span class="step-num">3</span><div>Armar la matriz de Gram (simétrica) y el vector independiente.</div></li>
+    <li><span class="step-num">4</span><div>Resolver el sistema lineal \((n+1)\times(n+1)\) (Gauss, LU, etc.).</div></li>
+    <li><span class="step-num">5</span><div>Calcular el error cuadrático \(E = \sum (p_n(x_k)-y_k)^2\) para validar.</div></li>
+  </ul>
+</div>
+
+<!-- ══════════════ SECCIÓN 4: LINEALIZACIÓN ══════════════ -->
+<div class="section" id="lineal">
+  <h2><span class="section-num">Sección 04</span>Ajuste No Lineal y Linealización</h2>
+
+  <p>Muchos fenómenos reales siguen patrones no lineales: crecimiento exponencial, leyes de potencia, curvas logísticas. Para aplicar mínimos cuadrados a estos modelos, se puede realizar un <strong>cambio de variables</strong> que linealice el problema.</p>
+
+  <div class="card warning">
+    <div class="card-label">Advertencia importante</div>
+    <p>La curva obtenida tras linealizar y aplicar mínimos cuadrados <em>no es la óptima</em> para el problema original — es óptima para el problema transformado. Para la óptima real se requiere optimización no lineal. Aun así, la linealización da una buena aproximación inicial.</p>
+  </div>
+
+  <h3>Tabla de Linealizaciones Usuales</h3>
+  <div class="table-wrapper">
+    <table class="lin-table">
+      <thead><tr><th>Modelo original \(y = f(x)\)</th><th>Transformación \(Y = F(X)\)</th><th>Cambio de variables</th></tr></thead>
+      <tbody>
+        <tr><td>\(y = C e^{Ax}\)</td><td>\(Y = a_0 + a_1 X\)</td><td>\(X = x,\; Y = \ln y,\; C = e^{a_0},\; A = a_1\)</td></tr>
+        <tr><td>\(y = C x^A\)</td><td>\(Y = a_0 + a_1 X\)</td><td>\(X = \ln x,\; Y = \ln y,\; C = e^{a_0},\; A = a_1\)</td></tr>
+        <tr><td>\(y = \dfrac{1}{Cx+A}\)</td><td>\(Y = a_0 + a_1 X\)</td><td>\(X = x,\; Y = \dfrac{1}{y},\; C = a_1,\; A = a_0\)</td></tr>
+        <tr><td>\(y = \dfrac{A}{x} + C\)</td><td>\(Y = a_0 + a_1 X\)</td><td>\(X = \dfrac{1}{x},\; Y = y,\; C = a_0,\; A = a_1\)</td></tr>
+        <tr><td>\(y = \dfrac{L}{1+Ce^{At}}\) (logística)</td><td>\(Y = a_0 + a_1 X\)</td><td>\(X = t,\; Y = \ln\!\left(\tfrac{L}{y}-1\right),\; C = e^{a_0},\; A = a_1\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Ejemplo Resuelto — Curva Logística</h3>
+  <div class="card example-card">
+    <div class="card-label">Ejemplo — Crecimiento poblacional con límite</div>
+    <p>Una población sigue la curva logística \(y = \dfrac{L}{1+Ce^{At}}\) con \(L = 5000\). Ajuste \(A\) y \(C\) a los datos:</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>\(t\)</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+        <tbody><tr><th>\(y\)</th><td>500</td><td>1000</td><td>1800</td><td>2800</td><td>3700</td></tr></tbody>
+      </table>
+    </div>
+    <details>
+      <summary>Ver solución paso a paso</summary>
+      <div>
+        <p><strong>Paso 1: Linealizar.</strong> Despejamos:</p>
+        <div class="math-block">$$\ln\!\left(\frac{5000}{y}-1\right) = A\,t + \ln C$$</div>
+        <p>Sea \(Y = \ln\!\left(\frac{5000}{y}-1\right)\), \(X = t\), \(B = \ln C\). Entonces \(Y = AX + B\).</p>
+        <p><strong>Paso 2: Construir la tabla transformada.</strong></p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>\(X_k = t\)</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+            <tbody>
+              <tr><th>\(Y_k\)</th><td>2.1972</td><td>1.3863</td><td>0.5754</td><td>−0.2412</td><td>−1.0460</td></tr>
+              <tr><th>\(X_k^2\)</th><td>0</td><td>1</td><td>4</td><td>9</td><td>16</td></tr>
+              <tr><th>\(X_kY_k\)</th><td>0</td><td>1.3863</td><td>1.1507</td><td>−0.7235</td><td>−4.1839</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Sumas: \(\sum X_k = 10\), \(\sum X_k^2 = 30\), \(\sum Y_k = 2.8718\), \(\sum X_kY_k = -2.3703\)</p>
+        <p><strong>Paso 3: Sistema normal:</strong></p>
+        <div class="math-block">$$\begin{cases}30A + 10B = -2.3703 \\ 10A + 5B = 2.8718\end{cases}$$</div>
+        <p><strong>Solución:</strong> \(A \approx -0.8114\), \(B \approx 2.1971\), luego \(C = e^B \approx 8.9991\).</p>
+        <div class="math-block">$$y \approx \frac{5000}{1 + 8.9991\,e^{-0.8114\,t}}$$</div>
+        <p>Error cuadrático: \(E \approx 32.81\) (en unidades de población — razonable dado que \(y\) llega a 3700).</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 5: SIMULADOR ══════════════ -->
+<div class="section" id="simulador">
+  <h2><span class="section-num">Sección 05</span>Simulador Interactivo</h2>
+  <p>Ingresa tus propios datos y elige el grado del polinomio de ajuste. El simulador resuelve el sistema de ecuaciones normales, grafica la curva y calcula el error cuadrático.</p>
+
+  <div class="card">
+    <div class="card-label">Datos de entrada</div>
+    <div class="controls-grid">
+      <div class="input-group">
+        <label>Valores de X (separados por comas)</label>
+        <textarea id="xInput" placeholder="-2, 0, 1, 3.8, 4.3">-2, 0, 1, 3.8, 4.3</textarea>
+      </div>
+      <div class="input-group">
+        <label>Valores de Y (separados por comas)</label>
+        <textarea id="yInput" placeholder="-14, -2, 2.5, 20, 18">-14, -2, 2.5, 20, 18</textarea>
+      </div>
+    </div>
+
+    <div class="card-label" style="margin-top:14px;">Grado del polinomio de ajuste</div>
+    <div class="deg-row">
+      <button class="deg-btn sel" onclick="selectDeg(1,this)">n = 1 (Recta)</button>
+      <button class="deg-btn" onclick="selectDeg(2,this)">n = 2 (Parábola)</button>
+      <button class="deg-btn" onclick="selectDeg(3,this)">n = 3 (Cúbico)</button>
+      <button class="deg-btn" onclick="selectDeg(4,this)">n = 4</button>
+    </div>
+
+    <div class="action-grid">
+      <button class="btn-primary" onclick="runSimulator()">Calcular ajuste</button>
+      <button class="btn-secondary" onclick="loadExample()">Cargar Ejemplo 2</button>
+    </div>
+  </div>
+
+  <div class="result-box" id="simResult">
+    <div class="rh">RESULTADO</div>
+    <div id="resultText"></div>
+  </div>
+
+  <div class="plot-container" id="simPlot"></div>
+</div>
+
+<!-- ══════════════ SECCIÓN 6: QUIZ ══════════════ -->
+<div class="section" id="quiz">
+  <h2><span class="section-num">Sección 06</span>Actividades de Evaluación</h2>
+  <p>Responde las siguientes preguntas sobre aproximación discreta por mínimos cuadrados. Recibirás retroalimentación inmediata en cada respuesta.</p>
+
+  <div id="quizContainer"></div>
+
+  <div class="quiz-score">
+    <div>
+      <div class="score-label">Puntaje actual</div>
+      <div id="scoreDisplay" style="font-family:'Playfair Display',serif;font-size:1.2rem;">— / 15</div>
+    </div>
+    <div class="score-val" id="scorePercent">0%</div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  Métodos Numéricos · Aproximación Discreta por Mínimos Cuadrados · Profe W
+</footer>
+
+<script>
+/* ─── Navigation ─── */
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ─── Simulator ─── */
+let currentDeg = 1;
+function selectDeg(n, btn) {
+  currentDeg = n;
+  document.querySelectorAll('.deg-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function parseInput(id) {
+  return document.getElementById(id).value
+    .split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+}
+
+function loadExample() {
+  document.getElementById('xInput').value = '0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0';
+  document.getElementById('yInput').value = '0.6403, 0.3559, 0.1394, -0.0161, -0.1173, -0.1699, -0.1796, -0.1514, -0.090, 0.0002';
+  document.querySelector('.deg-btn').click();
+}
+
+function runSimulator() {
+  const xs = parseInput('xInput');
+  const ys = parseInput('yInput');
+  if (xs.length !== ys.length || xs.length < 2) {
+    alert('Introduce igual número de valores X e Y (mínimo 2 pares).');
+    return;
+  }
+  const n = currentDeg;
+  if (n >= xs.length) {
+    alert('El grado del polinomio debe ser menor al número de puntos.');
+    return;
+  }
+
+  // Build Gram matrix and RHS
+  const size = n + 1;
+  // Compute power sums
+  const S = {};
+  for (let p = 0; p <= 2 * n; p++) {
+    S[p] = xs.reduce((acc, x) => acc + Math.pow(x, p), 0);
+  }
+  const R = [];
+  for (let p = 0; p <= n; p++) {
+    R[p] = xs.reduce((acc, x, i) => acc + Math.pow(x, n - p) * ys[i], 0);
+  }
+
+  // Build matrix (row i, col j) = S[2n - i - j]
+  const A = [];
+  for (let i = 0; i < size; i++) {
+    A[i] = [];
+    for (let j = 0; j < size; j++) {
+      A[i][j] = S[2 * n - i - j];
+    }
+  }
+  const b = R.slice();
+
+  // Gaussian elimination with partial pivoting
+  const coeffs = gaussSolve(A, b);
+  if (!coeffs) { alert('El sistema no pudo resolverse (matriz singular).'); return; }
+
+  // coeffs[0] = a_n, ..., coeffs[n] = a_0
+  const poly = x => coeffs.reduce((acc, c, i) => acc + c * Math.pow(x, n - i), 0);
+
+  // Error
+  const err = xs.reduce((acc, x, i) => acc + Math.pow(poly(x) - ys[i], 2), 0);
+
+  // Format polynomial
+  let eq = 'p(x) = ';
+  coeffs.forEach((c, i) => {
+    const pow = n - i;
+    const sign = i === 0 ? '' : (c >= 0 ? ' + ' : ' − ');
+    const abs = Math.abs(c).toFixed(5);
+    if (pow === 0) eq += sign + abs;
+    else if (pow === 1) eq += sign + abs + 'x';
+    else eq += sign + abs + 'x^' + pow;
+  });
+
+  // Show result
+  const rb = document.getElementById('simResult');
+  rb.classList.add('show');
+  document.getElementById('resultText').innerHTML =
+    `Polinomio: ${eq}<br>` +
+    `Grado: ${n}<br>` +
+    `Puntos: ${xs.length}<br>` +
+    `Error cuadrático: ${err.toFixed(6)}`;
+
+  // Plot
+  const xMin = Math.min(...xs);
+  const xMax = Math.max(...xs);
+  const xRange = [];
+  const yRange = [];
+  const steps = 300;
+  for (let i = 0; i <= steps; i++) {
+    const xi = xMin + i * (xMax - xMin) / steps;
+    xRange.push(xi);
+    yRange.push(poly(xi));
+  }
+
+  const dataPts = { x: xs, y: ys, mode: 'markers', type: 'scatter',
+    marker: { color: '#B5451B', size: 9, symbol: 'circle' }, name: 'Datos' };
+  const dataCurve = { x: xRange, y: yRange, mode: 'lines', type: 'scatter',
+    line: { color: '#3D5166', width: 2.5 }, name: `Ajuste (n=${n})` };
+
+  Plotly.newPlot('simPlot', [dataPts, dataCurve], {
+    margin: { t: 30, r: 20, b: 50, l: 55 },
+    xaxis: { title: 'x', gridcolor: '#E0D9CC' },
+    yaxis: { title: 'y', gridcolor: '#E0D9CC' },
+    plot_bgcolor: '#fff', paper_bgcolor: '#fff',
+    font: { family: 'Source Serif 4, serif', size: 13 },
+    legend: { x: 0.02, y: 0.98 }
+  }, { responsive: true });
+
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+function gaussSolve(A, b) {
+  const n = b.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++)
+      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    if (Math.abs(M[col][col]) < 1e-12) return null;
+    for (let row = col + 1; row < n; row++) {
+      const factor = M[row][col] / M[col][col];
+      for (let k = col; k <= n; k++) M[row][k] -= factor * M[col][k];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    x[i] = M[i][n];
+    for (let j = i + 1; j < n; j++) x[i] -= M[i][j] * x[j];
+    x[i] /= M[i][i];
+  }
+  return x;
+}
+
+/* ─── Quiz ─── */
+const questions = [
+  {
+    q: "¿Qué minimiza el método de mínimos cuadrados?",
+    opts: ["La suma de los residuos absolutos", "La suma de los cuadrados de los residuos", "El residuo máximo", "La media de los residuos"],
+    ans: 1,
+    exp: "El método minimiza \\(E(f)=\\sum(f(x_k)-y_k)^2\\), la suma de cuadrados de los residuos (distancias verticales al cuadrado)."
+  },
+  {
+    q: "¿Por qué se prefiere el error cuadrático sobre el error máximo \\(E_\\infty\\)?",
+    opts: ["Es siempre menor", "Es diferenciable, lo que permite optimización analítica", "Es más fácil de calcular", "Penaliza menos los errores grandes"],
+    ans: 1,
+    exp: "\\(E_\\infty\\) y \\(E_1\\) no son diferenciables. El error cuadrático sí lo es, por lo que podemos igualar derivadas a cero para hallar el mínimo."
+  },
+  {
+    q: "Para la recta de regresión \\(y=Ax+B\\) ajustada a \\(m\\) puntos, ¿cuántas ecuaciones tiene el sistema normal?",
+    opts: ["1", "m", "2", "m+1"],
+    ans: 2,
+    exp: "Hay 2 incógnitas (A y B), por lo que se obtienen exactamente 2 ecuaciones normales al igualar \\(\\partial E/\\partial A=0\\) y \\(\\partial E/\\partial B=0\\)."
+  },
+  {
+    q: "En el sistema normal para la recta de regresión, ¿qué aparece en el lugar de \\(B\\) en la segunda ecuación?",
+    opts: ["\\(\\sum y_k^2\\)", "\\(\\sum x_k\\)", "\\(m\\) (número de datos)", "\\(\\sum x_k y_k\\)"],
+    ans: 2,
+    exp: "La segunda ecuación normal es \\(A\\sum x_k + Bm = \\sum y_k\\), donde el coeficiente de \\(B\\) es \\(m\\), la cantidad de puntos."
+  },
+  {
+    q: "¿Qué propiedad tiene la matriz de Gram del sistema de ecuaciones normales?",
+    opts: ["Antisimétrica", "Diagonal", "Simétrica y definida positiva (si los \\(x_k\\) son distintos)", "Triangular superior"],
+    ans: 2,
+    exp: "La matriz de Gram siempre es simétrica. Si los nodos \\(x_k\\) son todos distintos, es además definida positiva, lo que garantiza solución única."
+  },
+  {
+    q: "Si se ajusta un polinomio de grado \\(n\\) a \\(m\\) puntos con \\(n < m\\), ¿cuántas ecuaciones tiene el sistema normal?",
+    opts: ["\\(m\\)", "\\(n\\)", "\\(n+1\\)", "\\(m+1\\)"],
+    ans: 2,
+    exp: "El polinomio de grado \\(n\\) tiene \\(n+1\\) coeficientes, por lo que el sistema normal tiene \\(n+1\\) ecuaciones."
+  },
+  {
+    q: "¿Cuál sería un indicador de que se debe aumentar el grado del polinomio de ajuste?",
+    opts: ["Que el error cuadrático sea exactamente 0", "Que el número de datos sea par", "Que el error cuadrático sea grande y la gráfica muestre curvatura sistemática en los residuos", "Que los datos estén ordenados"],
+    ans: 2,
+    exp: "Un error grande con una distribución sistemática de residuos (no aleatoria) indica que el modelo es insuficiente y conviene aumentar el grado."
+  },
+  {
+    q: "¿Qué ocurre si se intenta ajustar un polinomio de grado \\(n = m-1\\) a \\(m\\) puntos con mínimos cuadrados?",
+    opts: ["El error siempre es cero (se convierte en interpolación)", "El sistema no tiene solución", "El método diverge", "El error es máximo"],
+    ans: 0,
+    exp: "Con \\(n = m-1\\), el polinomio tiene tantos coeficientes como puntos, por lo que puede pasar exactamente por todos ellos (interpolación). El error cuadrático es exactamente cero."
+  },
+  {
+    q: "En el ajuste de la curva logística \\(y = L/(1+Ce^{At})\\), ¿cuál es la variable transformada \\(Y\\)?",
+    opts: ["\\(Y = \\ln y\\)", "\\(Y = \\ln(L/y - 1)\\)", "\\(Y = 1/y\\)", "\\(Y = y/L\\)"],
+    ans: 1,
+    exp: "Despejando \\(\\ln(Ce^{At}) = \\ln(L/y - 1) = At + \\ln C\\), se define \\(Y = \\ln(L/y - 1)\\) para linealizar como \\(Y = At + B\\) con \\(B = \\ln C\\)."
+  },
+  {
+    q: "Si se aplica linealización a \\(y = Ce^{Ax}\\) y se calcula la recta de regresión en las variables transformadas, ¿qué aproximación se obtiene?",
+    opts: ["La curva exactamente óptima en el sentido de mínimos cuadrados del problema original", "La curva óptima para el problema transformado \\(\\ln y = Ax + \\ln C\\)", "Un resultado sin sentido matemático", "La interpolación de los datos"],
+    ans: 1,
+    exp: "La linealización minimiza \\(\\sum(\\ln y_k - Ax_k - B)^2\\), que es el error cuadrático del problema transformado — no necesariamente el del original. Son problemas distintos."
+  },
+  {
+    q: "Para el ajuste potencial \\(y = Cx^A\\), ¿qué cambio de variables se aplica?",
+    opts: ["\\(X = x\\), \\(Y = \\ln y\\)", "\\(X = 1/x\\), \\(Y = y\\)", "\\(X = \\ln x\\), \\(Y = \\ln y\\)", "\\(X = x^2\\), \\(Y = y\\)"],
+    ans: 2,
+    exp: "Tomando logaritmo: \\(\\ln y = \\ln C + A \\ln x\\). Con \\(X = \\ln x\\) e \\(Y = \\ln y\\), la ecuación es lineal: \\(Y = \\ln C + A X\\)."
+  },
+  {
+    q: "En el Ejemplo 1 (5 puntos, recta de regresión), se obtuvo \\(A \\approx 5.3544\\) y \\(B \\approx -2.7033\\). ¿Qué representa el error cuadrático \\(E \\approx 11.80\\)?",
+    opts: ["La suma de los errores verticales absolutos", "La distancia total entre puntos", "La suma de los cuadrados de las diferencias entre la recta y cada \\(y_k\\)", "El valor máximo de la diferencia"],
+    ans: 2,
+    exp: "\\(E = \\sum_{k=1}^{5}(5.3544x_k - 2.7033 - y_k)^2 \\approx 11.80\\). Es la suma de los cuadrados de las diferencias verticales (residuos al cuadrado)."
+  },
+  {
+    q: "Al comparar la recta \\(y \\approx -0.6594x + 0.4039\\) (\\(E \\approx 0.287\\)) con la parábola \\(p_2(x)\\) (\\(E \\approx 0.003\\)) para los mismos 10 datos, ¿qué conclusión es correcta?",
+    opts: ["La recta es preferible porque es más simple", "La parábola es superior porque el error es aproximadamente 100 veces menor", "Ambos modelos son equivalentes", "El error de la recta no puede calcularse"],
+    ans: 1,
+    exp: "El error de la parábola (\\(\\approx 0.003\\)) es casi 100 veces menor al de la recta (\\(\\approx 0.287\\)), lo que confirma que los datos tienen comportamiento cuadrático."
+  },
+  {
+    q: "¿Por qué el sistema de ecuaciones normales es siempre un sistema cuadrado, aunque se tengan muchos más datos que incógnitas?",
+    opts: ["Porque se eliminan datos redundantes", "Porque se derivan \\(n+1\\) condiciones a partir de los \\(n+1\\) coeficientes del polinomio", "Porque se promedian los datos", "Por un teorema de Gauss"],
+    ans: 1,
+    exp: "Aunque haya \\(m \\gg n+1\\) datos, el sistema normal tiene exactamente \\(n+1\\) ecuaciones: una por cada condición \\(\\partial E/\\partial a_i = 0\\), una por cada coeficiente del polinomio."
+  },
+  {
+    q: "Dado que en el ajuste de la curva logística se obtuvo \\(A \\approx -0.8114\\), ¿cómo se interpreta el signo negativo de \\(A\\)?",
+    opts: ["El ajuste es incorrecto", "La población decrece con el tiempo", "El factor \\(e^{At}\\) en el denominador decrece, haciendo que la población crezca hacia \\(L\\)", "El parámetro \\(C\\) es negativo"],
+    ans: 2,
+    exp: "Con \\(A < 0\\), el término \\(Ce^{At} \\to 0\\) cuando \\(t \\to \\infty\\), lo que hace que \\(y \\to L = 5000\\). Es la interpretación correcta de la curva logística de crecimiento."
+  }
+];
+
+let score = 0;
+let answered = 0;
+
+function buildQuiz() {
+  const container = document.getElementById('quizContainer');
+  questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.id = `q${qi}`;
+    const letters = ['A','B','C','D'];
+    div.innerHTML = `
+      <p class="q"><span class="qn">P${qi+1}</span>${q.q}</p>
+      <div class="options">
+        ${q.opts.map((o,oi) => `
+          <button class="opt-btn" onclick="answer(${qi},${oi})">
+            <span class="opt-label">${letters[oi]}</span>${o}
+          </button>`).join('')}
+      </div>
+      <div class="feedback" id="fb${qi}"></div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function answer(qi, oi) {
+  const q = questions[qi];
+  const btns = document.querySelectorAll(`#q${qi} .opt-btn`);
+  if (btns[0].disabled) return;
+  btns.forEach(b => b.disabled = true);
+  btns[oi].classList.add(oi === q.ans ? 'correct' : 'wrong');
+  if (oi !== q.ans) btns[q.ans].classList.add('correct');
+  if (oi === q.ans) score++;
+  answered++;
+  const fb = document.getElementById(`fb${qi}`);
+  fb.className = `feedback show ${oi === q.ans ? 'ok' : 'err'}`;
+  fb.innerHTML = `${oi === q.ans ? '✓ Correcto.' : '✗ Incorrecto.'} ${q.exp}`;
+  document.getElementById('scoreDisplay').textContent = `${score} / ${answered}`;
+  document.getElementById('scorePercent').textContent = `${Math.round(score/answered*100)}%`;
+  if (window.MathJax) MathJax.typesetPromise([fb]);
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

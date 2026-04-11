@@ -1,0 +1,942 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpolación por el Método de Lagrange-Profe W</title>
+
+<!-- Fuentes tipográficas -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+
+<!-- Librerías -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+<style>
+  :root {
+    --paper: #f9f7f3;
+    --ink: #1a1a1a;
+    --primary: #c0392b; /* Rust/Red */
+    --secondary: #2980b9; /* Blue */
+    --success: #27ae60; /* Green */
+    --dark-slate: #2c3e50;
+    --light-slate: #ecf0f1;
+    --gold: #f39c12;
+    --rule: #e0dcd3;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --radius: 8px;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Playfair Display', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-serif);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 18px;
+    overflow-x: hidden;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--dark-slate);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 15px;
+    line-height: 1.1;
+  }
+  header p.subtitle {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    font-weight: 300;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ─── Navegación ─── */
+  nav.tabs {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-bottom: 2px solid var(--rule);
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    color: var(--dark-slate);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 16px 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+  nav.tabs button:hover {
+    color: var(--primary);
+    background: rgba(192, 57, 43, 0.05);
+  }
+  nav.tabs button.active {
+    color: var(--primary);
+  }
+  nav.tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 3px;
+    background: var(--primary);
+  }
+
+  /* ─── Layout Principal ─── */
+  main { max-width: 900px; margin: 0 auto; padding: 40px 20px; min-height: 80vh; }
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Tipografía y Elementos ─── */
+  h2 {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    color: var(--dark-slate);
+    margin: 0 0 20px;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 10px;
+  }
+  h3 {
+    font-family: var(--font-sans);
+    font-size: 1.3rem;
+    color: var(--secondary);
+    margin: 30px 0 15px;
+    font-weight: 600;
+  }
+  p { margin-bottom: 1.2rem; }
+  strong { color: var(--dark-slate); }
+
+  /* ─── Tarjetas y Cajas ─── */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 25px;
+    margin: 25px 0;
+    box-shadow: 0 4px 15px var(--shadow);
+    border: 1px solid var(--rule);
+    position: relative;
+  }
+  .card.concept { border-left: 5px solid var(--secondary); }
+  .card.theorem { border-left: 5px solid var(--gold); background: #fffcf5; }
+  .card.example { border-left: 5px solid var(--success); }
+  .card.warning { border-left: 5px solid var(--primary); }
+
+  .card-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 15px;
+    display: inline-block;
+  }
+  .concept .card-label { color: var(--secondary); }
+  .theorem .card-label { color: var(--gold); }
+  .example .card-label { color: var(--success); }
+
+  .math-block {
+    background: var(--light-slate);
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 15px 0;
+    font-size: 1.1rem;
+    text-align: center;
+    border: 1px solid var(--rule);
+  }
+
+  /* ─── Ejemplos Guiados ─── */
+  .step-container {
+    margin: 20px 0;
+    padding-left: 20px;
+    border-left: 2px dashed var(--rule);
+  }
+  .step {
+    position: relative;
+    margin-bottom: 25px;
+  }
+  .step::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px white;
+  }
+  .step h4 {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    color: var(--dark-slate);
+    margin-bottom: 10px;
+  }
+  .data-table {
+    width: 100%;
+    max-width: 400px;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: white;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+  }
+  .data-table th, .data-table td {
+    border: 1px solid var(--rule);
+    padding: 10px;
+    text-align: center;
+  }
+  .data-table th { background: var(--dark-slate); color: white; }
+  .data-table td { background: var(--light-slate); }
+
+  /* ─── Acordeón ─── */
+  details {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    margin: 15px 0;
+  }
+  summary {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    padding: 15px 20px;
+    cursor: pointer;
+    background: #fdfdfd;
+    border-radius: var(--radius);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '▼'; font-size: 0.8rem; color: var(--primary); transition: transform 0.3s; }
+  details[open] summary::after { transform: rotate(180deg); }
+  details > div { padding: 0 20px 20px; border-top: 1px solid var(--rule); margin-top: 10px; padding-top: 15px; }
+
+  /* ─── Simulador Interactivo ─── */
+  .sim-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+  }
+  @media(max-width: 800px) { .sim-layout { grid-template-columns: 1fr; } }
+  
+  .point-list {
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    box-shadow: 0 4px 10px var(--shadow);
+  }
+  .point-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .point-row input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    text-align: center;
+  }
+  .point-row input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 2px rgba(41,128,185,0.2); }
+  .btn-icon {
+    background: var(--primary); color: white; border: none;
+    width: 36px; height: 36px; border-radius: 4px;
+    cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .btn-icon:hover { background: #a93226; }
+  .btn-icon.add { background: var(--success); width: 100%; margin-top: 10px; }
+  .btn-icon.add:hover { background: #229954; }
+
+  .eval-box {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px dashed var(--rule);
+  }
+  .btn-main {
+    background: var(--dark-slate); color: white; border: none;
+    padding: 12px 20px; border-radius: var(--radius); font-family: var(--font-sans);
+    font-weight: 600; cursor: pointer; width: 100%; margin-top: 15px;
+    transition: background 0.2s; font-size: 1rem;
+  }
+  .btn-main:hover { background: #1a252f; }
+
+  .plot-container {
+    background: white; border: 1px solid var(--rule); border-radius: var(--radius);
+    height: 400px; width: 100%; box-shadow: 0 4px 10px var(--shadow);
+    overflow: hidden;
+  }
+
+  .sim-results { margin-top: 30px; }
+  .sim-results .math-block { text-align: left; font-size: 1rem; }
+
+  .alert {
+    padding: 15px; border-radius: 6px; margin: 15px 0; font-family: var(--font-sans); font-size: 0.95rem; display: none;
+  }
+  .alert.error { background: #fadbd8; color: #78281f; border: 1px solid #f5b7b1; display: block; }
+  .alert.success { background: #d5f5e3; color: #186a3b; border: 1px solid #abebc6; display: block; }
+
+  /* ─── Evaluación (Quiz) ─── */
+  .quiz-card {
+    background: white; border: 1px solid var(--rule); border-radius: var(--radius);
+    padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px var(--shadow);
+  }
+  .quiz-q { font-family: var(--font-sans); font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opt {
+    background: var(--paper); border: 1px solid var(--rule); padding: 12px 15px;
+    border-radius: 6px; cursor: pointer; font-family: var(--font-sans); text-align: left;
+    transition: all 0.2s; display: flex; align-items: center; gap: 15px;
+  }
+  .quiz-opt:hover:not(:disabled) { background: #ece8df; }
+  .quiz-opt.correct { background: #d5f5e3; border-color: var(--success); color: #186a3b; }
+  .quiz-opt.wrong { background: #fadbd8; border-color: var(--primary); color: #78281f; }
+  .quiz-opt:disabled { cursor: not-allowed; }
+  .opt-letter {
+    background: white; border: 1px solid var(--rule); width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center; border-radius: 4px;
+    font-family: var(--font-mono); font-weight: bold; font-size: 0.85rem;
+  }
+  .quiz-opt.correct .opt-letter { background: var(--success); color: white; border-color: var(--success); }
+  .quiz-opt.wrong .opt-letter { background: var(--primary); color: white; border-color: var(--primary); }
+  .quiz-feedback { margin-top: 15px; padding: 15px; border-radius: 6px; font-size: 0.95rem; display: none; }
+  .quiz-feedback.show { display: block; animation: fadeIn 0.3s; }
+
+  /* Footer */
+  footer { text-align: center; padding: 40px 20px; color: var(--dark-slate); font-family: var(--font-sans); font-size: 0.9rem; border-top: 1px solid var(--rule); margin-top: 40px;}
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<header>
+  <div class="badge">Análisis Numérico · Capítulo 3 · Interpolación</div>
+  <h1>Método de Lagrange</h1>
+  <p class="subtitle">Construcción de polinomios de interpolación.</p>
+</header>
+
+<nav class="tabs" id="nav-tabs" aria-label="Navegación principal">
+  <button class="active" onclick="switchTab('tab-intro')">1. Concepto y Teoría</button>
+  <button onclick="switchTab('tab-ejemplos')">2. Ejemplos Resueltos</button>
+  <button onclick="switchTab('tab-simulador')">3. Simulador Interactivo</button>
+  <button onclick="switchTab('tab-evaluacion')">4. Evaluación</button>
+  <button onclick="switchTab('tab-conclusion')">5. Resumen</button>
+</nav>
+
+<main>
+  <!-- ==================== PESTAÑA 1: TEORÍA ==================== -->
+  <section id="tab-intro" class="section active">
+    <h2>¿Qué es la Interpolación?</h2>
+    <p>Imagina que realizaste un experimento y mediste la temperatura de un horno en tres instantes diferentes. Tienes los datos de los minutos 2, 5 y 8, pero te preguntas: <em>¿Cuál era la temperatura exacta en el minuto 6?</em></p>
+    
+    <div class="card concept">
+      <div class="card-label">Definición Clave</div>
+      <p>La <strong>interpolación polinómica</strong> consiste en encontrar una única curva matemática (un polinomio) que pase <strong>exactamente</strong> por todos los puntos de datos conocidos. Una vez construida esta curva, la usamos para estimar (interpolar) valores en posiciones intermedias.</p>
+    </div>
+
+    <p>A diferencia de la <em>regresión lineal</em> (que busca una línea de tendencia que pase "cerca" de los puntos), la interpolación exige un <strong>ajuste perfecto</strong>. El error en los puntos conocidos debe ser estrictamente cero.</p>
+
+    <h3>La genialidad de Joseph-Louis Lagrange</h3>
+    <p>Lagrange diseñó un método sumamente elegante para construir este polinomio sin tener que resolver sistemas de ecuaciones complejos. Su idea fue usar <strong>"polinomios interruptor"</strong>.</p>
+
+    <div class="card theorem">
+      <div class="card-label">Fórmula General de Lagrange</div>
+      <p>Dado un conjunto de \(n+1\) puntos \((x_0, y_0), (x_1, y_1), \dots, (x_n, y_n)\), el polinomio interpolante \(P(x)\) de grado máximo \(n\) se construye sumando términos individuales:</p>
+      <div class="math-block">
+        $$ P(x) = \sum_{i=0}^{n} y_i \cdot L_i(x) $$
+      </div>
+      <p>Donde cada \(L_i(x)\) es un <strong>polinomio base</strong> definido como:</p>
+      <div class="math-block">
+        $$ L_i(x) = \prod_{\substack{j=0 \\ j \neq i}}^{n} \frac{x - x_j}{x_i - x_j} $$
+      </div>
+    </div>
+
+    <h3>¿Cómo funciona el polinomio base \(L_i(x)\)?</h3>
+    <p>La magia del término \(L_i(x)\) es su comportamiento al ser evaluado en los puntos conocidos (nodos):</p>
+    <ul>
+      <li>Si evaluamos \(L_i(x)\) en su propio nodo (\(x = x_i\)), el resultado es <strong>1</strong> (El interruptor se <em>enciende</em>).</li>
+      <li>Si lo evaluamos en cualquier otro nodo (\(x = x_j\) donde \(j \neq i\)), el numerador se vuelve cero y el resultado es <strong>0</strong> (El interruptor se <em>apaga</em>).</li>
+    </ul>
+    <p>Por lo tanto, al evaluar \(P(x_i)\), todos los términos se anulan excepto el que corresponde a \(y_i \cdot 1\), garantizando que la curva pase exactamente por el punto \((x_i, y_i)\).</p>
+  </section>
+
+  <!-- ==================== PESTAÑA 2: EJEMPLOS ==================== -->
+  <section id="tab-ejemplos" class="section">
+    <h2>Ejemplos Guiados Paso a Paso</h2>
+    <p>Para dominar el método de Lagrange, debemos aprender a construir las bases \(L_i(x)\) manualmente, armar el polinomio \(P(x)\) y luego evaluarlo.</p>
+
+    <!-- Ejemplo 1 -->
+    <details open>
+      <summary>Ejemplo 1 (Básico): Interpolación Lineal (2 puntos)</summary>
+      <div>
+        <p>Queremos encontrar la recta que conecta los puntos <strong>(1, 2)</strong> y <strong>(3, 4)</strong>.</p>
+        <table class="data-table">
+          <tr><th>\(i\)</th><th>\(x_i\)</th><th>\(y_i\)</th></tr>
+          <tr><td>0</td><td>1</td><td>2</td></tr>
+          <tr><td>1</td><td>3</td><td>4</td></tr>
+        </table>
+        
+        <div class="step-container">
+          <div class="step">
+            <h4>Paso 1: Construir las bases \(L_i(x)\)</h4>
+            <p>Para \(i=0\) (\(x_0=1\)), usamos el otro nodo (\(x_1=3\)):</p>
+            <div class="math-block">$$ L_0(x) = \frac{x - x_1}{x_0 - x_1} = \frac{x - 3}{1 - 3} = \frac{x - 3}{-2} $$</div>
+            <p>Para \(i=1\) (\(x_1=3\)), usamos el otro nodo (\(x_0=1\)):</p>
+            <div class="math-block">$$ L_1(x) = \frac{x - x_0}{x_1 - x_0} = \frac{x - 1}{3 - 1} = \frac{x - 1}{2} $$</div>
+          </div>
+          
+          <div class="step">
+            <h4>Paso 2: Armar el polinomio \(P(x)\)</h4>
+            <p>Multiplicamos cada base por su respectivo \(y_i\) (\(y_0=2\), \(y_1=4\)):</p>
+            <div class="math-block">$$ P(x) = 2 \cdot \left( \frac{x - 3}{-2} \right) + 4 \cdot \left( \frac{x - 1}{2} \right) $$</div>
+          </div>
+
+          <div class="step">
+            <h4>Paso 3: Simplificación (Opcional pero útil)</h4>
+            <div class="math-block">$$ P(x) = -(x - 3) + 2(x - 1) = -x + 3 + 2x - 2 = x + 1 $$</div>
+            <p><strong>Conclusión:</strong> El polinomio interpolante es \(P(x) = x + 1\). Puedes verificar que \(P(1)=2\) y \(P(3)=4\).</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Ejemplo 2 -->
+    <details>
+      <summary>Ejemplo 2 (Intermedio): Interpolación Cuadrática (3 puntos)</summary>
+      <div>
+        <p>Construyamos el polinomio que pasa por <strong>(0, 1)</strong>, <strong>(2, 5)</strong> y <strong>(4, 17)</strong>, y estimemos el valor de \(y\) cuando <strong>\(x = 3\)</strong>.</p>
+        <table class="data-table">
+          <tr><th>\(i\)</th><th>\(x_i\)</th><th>\(y_i\)</th></tr>
+          <tr><td>0</td><td>0</td><td>1</td></tr>
+          <tr><td>1</td><td>2</td><td>5</td></tr>
+          <tr><td>2</td><td>4</td><td>17</td></tr>
+        </table>
+
+        <div class="step-container">
+          <div class="step">
+            <h4>Paso 1: Construir las tres bases \(L_i(x)\)</h4>
+            <p>Para \(i=0\) (\(x_0=0\)):</p>
+            <div class="math-block">$$ L_0(x) = \frac{(x-2)(x-4)}{(0-2)(0-4)} = \frac{(x-2)(x-4)}{8} $$</div>
+            <p>Para \(i=1\) (\(x_1=2\)):</p>
+            <div class="math-block">$$ L_1(x) = \frac{(x-0)(x-4)}{(2-0)(2-4)} = \frac{x(x-4)}{-4} $$</div>
+            <p>Para \(i=2\) (\(x_2=4\)):</p>
+            <div class="math-block">$$ L_2(x) = \frac{(x-0)(x-2)}{(4-0)(4-2)} = \frac{x(x-2)}{8} $$</div>
+          </div>
+
+          <div class="step">
+            <h4>Paso 2: Ecuación General \(P(x)\)</h4>
+            <div class="math-block" style="font-size:1rem;">$$ P(x) = 1 \cdot \frac{(x-2)(x-4)}{8} + 5 \cdot \frac{x(x-4)}{-4} + 17 \cdot \frac{x(x-2)}{8} $$</div>
+          </div>
+
+          <div class="step">
+            <h4>Paso 3: Estimar para \(x = 3\)</h4>
+            <p>Sustituimos el valor de \(x=3\) directamente en las bases (es más fácil que simplificar el polinomio completo algebraicamente):</p>
+            <ul>
+              <li>\( L_0(3) = \frac{(3-2)(3-4)}{8} = \frac{(1)(-1)}{8} = -0.125 \)</li>
+              <li>\( L_1(3) = \frac{3(3-4)}{-4} = \frac{3(-1)}{-4} = 0.75 \)</li>
+              <li>\( L_2(3) = \frac{3(3-2)}{8} = \frac{3(1)}{8} = 0.375 \)</li>
+            </ul>
+            <p>Finalmente:</p>
+            <div class="math-block">$$ P(3) = 1(-0.125) + 5(0.75) + 17(0.375) = -0.125 + 3.75 + 6.375 = 10 $$</div>
+            <p><strong>Resultado:</strong> Cuando \(x = 3\), el valor estimado de \(y\) es <strong>10</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Ejemplo 3 -->
+    <details>
+      <summary>Ejemplo 3 (Aplicado): Problema de Temperatura</summary>
+      <div>
+        <p>Durante un experimento, un químico registra la temperatura \(T\) (en °C) de una solución en función del tiempo \(t\) (en horas). Se obtienen los siguientes datos:</p>
+        <table class="data-table">
+          <tr><th>\(i\)</th><th>Tiempo (\(t\))</th><th>Temperatura (\(T\))</th></tr>
+          <tr><td>0</td><td>8.0</td><td>15.0</td></tr>
+          <tr><td>1</td><td>10.0</td><td>22.0</td></tr>
+          <tr><td>2</td><td>12.0</td><td>25.0</td></tr>
+        </table>
+        <p>El sistema automático falló a las <strong>11.0 horas</strong> y no registró el dato. Usa el método de Lagrange para estimar la temperatura en \(t = 11\).</p>
+        
+        <div class="step-container">
+          <div class="step">
+            <h4>Paso 1: Planteamiento y evaluación directa</h4>
+            <p>Evaluaremos \(P(11)\). Construimos los \(L_i(11)\) directamente evaluando en el punto solicitado:</p>
+            <p><strong>Para \(i=0\) (\(t_0=8\)):</strong></p>
+            <div class="math-block">$$ L_0(11) = \frac{(11 - 10)(11 - 12)}{(8 - 10)(8 - 12)} = \frac{(1)(-1)}{(-2)(-4)} = \frac{-1}{8} = -0.125 $$</div>
+            <p><strong>Para \(i=1\) (\(t_1=10\)):</strong></p>
+            <div class="math-block">$$ L_1(11) = \frac{(11 - 8)(11 - 12)}{(10 - 8)(10 - 12)} = \frac{(3)(-1)}{(2)(-2)} = \frac{-3}{-4} = 0.75 $$</div>
+            <p><strong>Para \(i=2\) (\(t_2=12\)):</strong></p>
+            <div class="math-block">$$ L_2(11) = \frac{(11 - 8)(11 - 10)}{(12 - 8)(12 - 10)} = \frac{(3)(1)}{(4)(2)} = \frac{3}{8} = 0.375 $$</div>
+          </div>
+          <div class="step">
+            <h4>Paso 2: Suma ponderada con \(y_i\)</h4>
+            <div class="math-block">$$ P(11) = 15(-0.125) + 22(0.75) + 25(0.375) $$</div>
+            <div class="math-block">$$ P(11) = -1.875 + 16.5 + 9.375 = 24.0 $$</div>
+            <p><strong>Interpretación:</strong> Se estima que a las 11:00 horas, la temperatura de la solución era exactamente de <strong>24.0 °C</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </section>
+
+  <!-- ==================== PESTAÑA 3: SIMULADOR ==================== -->
+  <section id="tab-simulador" class="section">
+    <h2>Simulador Interactivo</h2>
+    <p>Ingresa tus propios puntos (coordenadas X e Y). El sistema generará el polinomio de Lagrange, lo graficará y evaluará el punto que solicites.</p>
+
+    <div class="sim-layout">
+      <!-- Panel de Controles -->
+      <div>
+        <div class="point-list" id="point-list-container">
+          <h4 style="margin-bottom: 15px; font-family: var(--font-sans);">Puntos Conocidos \((x_i, y_i)\)</h4>
+          <div id="sim-points">
+            <!-- Renderizado dinámico -->
+          </div>
+          <button class="btn-icon add" onclick="simulador.addPoint()">+ Agregar Punto</button>
+        </div>
+
+        <div class="eval-box">
+          <h4 style="margin-bottom: 10px; font-family: var(--font-sans);">Punto a Estimar</h4>
+          <div class="point-row">
+            <label style="font-family: var(--font-mono); font-weight: bold;">X =</label>
+            <input type="number" id="sim-eval-x" value="2.5" step="any">
+          </div>
+          <button class="btn-main" onclick="simulador.calcular()">Generar y Calcular</button>
+        </div>
+        
+        <div id="sim-alert" class="alert"></div>
+      </div>
+
+      <!-- Panel Visual -->
+      <div>
+        <div id="sim-plot" class="plot-container"></div>
+      </div>
+    </div>
+
+    <!-- Resultados Matemáticos -->
+    <div id="sim-results" class="sim-results" style="display: none;">
+      <h3 style="margin-top:0;">Desarrollo Matemático</h3>
+      <div class="card">
+        <div class="card-label">Polinomio de Lagrange P(x)</div>
+        <div id="sim-math-poly" class="math-block" style="overflow-x: auto; white-space: nowrap;"></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-label">Evaluación paso a paso en X = <span id="lbl-eval-x"></span></div>
+        <table class="data-table" style="max-width: 100%; margin-top: 15px;">
+          <thead>
+            <tr><th>\(i\)</th><th>\(y_i\)</th><th>Fórmula \(L_i(X)\) Evaluada</th><th>Valor \(L_i(X)\)</th><th>Término \(y_i \cdot L_i(X)\)</th></tr>
+          </thead>
+          <tbody id="sim-table-body">
+            <!-- Rellenado por JS -->
+          </tbody>
+        </table>
+        
+        <div class="math-block" style="background: #d5f5e3; border-color: var(--success); margin-top: 20px;">
+          <strong>Resultado Final:</strong> <span id="sim-math-result" style="font-size: 1.3rem;"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 4: EVALUACIÓN ==================== -->
+  <section id="tab-evaluacion" class="section">
+    <h2>Ponte a Prueba</h2>
+    <p>Verifica tu comprensión sobre la formulación y uso del método de Lagrange.</p>
+
+    <div id="quiz-container">
+      <!-- Q1 -->
+      <div class="quiz-card" id="q1">
+        <div class="quiz-q">1. Si necesitas construir un polinomio de interpolación que pase exactamente por 4 puntos dados, ¿cuál será el grado máximo de este polinomio?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="evaluarPregunta(1, 'A', 'C')"><span class="opt-letter">A</span> Grado 4</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(1, 'B', 'C')"><span class="opt-letter">B</span> Grado 2</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(1, 'C', 'C')"><span class="opt-letter">C</span> Grado 3</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(1, 'D', 'C')"><span class="opt-letter">D</span> Grado 5</button>
+        </div>
+        <div class="quiz-feedback" id="fb1">Para \(n+1\) puntos (4 puntos), el grado máximo del polinomio siempre es \(n\) (Grado 3). ¡Bien hecho!</div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-card" id="q2">
+        <div class="quiz-q">2. En la fórmula del polinomio base \(L_i(x)\), ¿qué sucede matemáticamente si evaluamos \(L_1(x)\) exactamente en el nodo \(x_1\)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="evaluarPregunta(2, 'A', 'A')"><span class="opt-letter">A</span> El resultado es exactamente 1.</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(2, 'B', 'A')"><span class="opt-letter">B</span> El resultado es exactamente 0.</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(2, 'C', 'A')"><span class="opt-letter">C</span> Se produce una división por cero (error).</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(2, 'D', 'A')"><span class="opt-letter">D</span> El resultado es el valor de \(y_1\).</button>
+        </div>
+        <div class="quiz-feedback" id="fb2">El numerador y denominador se igualan, resultando en 1. Esta propiedad es la que garantiza que la curva pase por \(y_1\).</div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-card" id="q3">
+        <div class="quiz-q">3. Te dan los puntos \((1, 5)\) y \((4, 10)\). ¿Cuál es el denominador correcto para la base \(L_0(x)\)? (Recordando que \(x_0=1\) y \(x_1=4\)).</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="evaluarPregunta(3, 'A', 'B')"><span class="opt-letter">A</span> \(4 - 1 = 3\)</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(3, 'B', 'B')"><span class="opt-letter">B</span> \(1 - 4 = -3\)</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(3, 'C', 'B')"><span class="opt-letter">C</span> \(10 - 5 = 5\)</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(3, 'D', 'B')"><span class="opt-letter">D</span> \(x - 4\)</button>
+        </div>
+        <div class="quiz-feedback" id="fb3">¡Correcto! El denominador de \(L_i\) se forma restando al nodo actual (\(x_0\)) todos los demás nodos (\(x_1\)). Por ende: \(1 - 4 = -3\).</div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-card" id="q4">
+        <div class="quiz-q">4. ¿Cuál es el principal objetivo de usar el método de Lagrange en lugar de una Regresión Lineal?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="evaluarPregunta(4, 'A', 'D')"><span class="opt-letter">A</span> Trazar una recta promedio que pase cerca de los puntos.</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(4, 'B', 'D')"><span class="opt-letter">B</span> Encontrar el margen de error entre puntos.</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(4, 'C', 'D')"><span class="opt-letter">C</span> Eliminar los puntos atípicos (outliers) de una muestra.</button>
+          <button class="quiz-opt" onclick="evaluarPregunta(4, 'D', 'D')"><span class="opt-letter">D</span> Construir una curva que pase 100% de forma exacta por cada punto conocido.</button>
+        </div>
+        <div class="quiz-feedback" id="fb4">¡Exacto! La interpolación obliga a la función a tocar todos los nodos, asumiendo que los datos medidos son 100% precisos.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 5: CONCLUSIÓN ==================== -->
+  <section id="tab-conclusion" class="section">
+    <h2>Resumen del Método</h2>
+    <p>El método de Lagrange es una herramienta matemática hermosa que transforma el complejo problema de ajustar curvas en una simple sumatoria de polinomios diseñados inteligentemente.</p>
+    
+    <div class="card concept">
+      <h3>Lo que debes recordar:</h3>
+      <ul>
+        <li><strong>Precisión:</strong> Pasa por todos los puntos. El error en los nodos es siempre 0.</li>
+        <li><strong>Unicidad:</strong> Para \(n+1\) puntos (con coordenadas x diferentes), solo existe un único polinomio interpolante de grado \(\leq n\). No importa si usas Lagrange u otro método, llegarás al mismo polinomio simplificado.</li>
+        <li><strong>Desventaja principal:</strong> Si añades un nuevo punto a tu conjunto de datos, debes recalcular todos los polinomios base \(L_i(x)\) desde cero.</li>
+      </ul>
+    </div>
+
+    <div class="card warning">
+      <div class="card-label">El Fenómeno de Runge</div>
+      <p>Ten cuidado: no siempre "más puntos = mejor". Cuando se utilizan muchos puntos equidistantes (por ejemplo, grado > 10), el polinomio de Lagrange tiende a <strong>oscilar violentamente en los extremos</strong>. Para esos casos avanzados, se prefiere usar curvas fragmentadas llamadas <em>Splines</em>.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Diseñado para propósitos educativos. Matemáticas Interactivas - Método de Lagrange.</p>
+</footer>
+
+<script>
+  /* ─── NAVEGACIÓN DE PESTAÑAS ─── */
+  function switchTab(tabId) {
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('nav.tabs button').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    
+    // Forzar renderizado si es necesario
+    if(window.MathJax) MathJax.typesetPromise();
+    if(tabId === 'tab-simulador') simulador.resizePlot();
+  }
+
+  /* ─── LÓGICA DEL SIMULADOR ─── */
+  const simulador = {
+    puntos:[
+      { id: 1, x: 1, y: 2 },
+      { id: 2, x: 2, y: 5 },
+      { id: 3, x: 4, y: 17 }
+    ],
+    siguienteId: 4,
+
+    init: function() {
+      this.renderInputs();
+      this.calcular();
+    },
+
+    renderInputs: function() {
+      const container = document.getElementById('sim-points');
+      container.innerHTML = '';
+      this.puntos.forEach((p, index) => {
+        const row = document.createElement('div');
+        row.className = 'point-row';
+        row.innerHTML = `
+          <label style="font-family: var(--font-mono); color: var(--secondary); font-size:14px;">P${index}</label>
+          <input type="number" step="any" placeholder="X" value="${p.x}" onchange="simulador.updatePoint(${p.id}, 'x', this.value)">
+          <input type="number" step="any" placeholder="Y" value="${p.y}" onchange="simulador.updatePoint(${p.id}, 'y', this.value)">
+          <button class="btn-icon" title="Eliminar punto" onclick="simulador.removePoint(${p.id})">×</button>
+        `;
+        container.appendChild(row);
+      });
+    },
+
+    updatePoint: function(id, axis, value) {
+      const p = this.puntos.find(p => p.id === id);
+      if(p) p[axis] = parseFloat(value) || 0;
+    },
+
+    addPoint: function() {
+      if(this.puntos.length >= 8) {
+        this.showAlert("Máximo 8 puntos recomendados para evitar oscilaciones severas.", "error");
+        return;
+      }
+      const lastX = this.puntos.length > 0 ? this.puntos[this.puntos.length-1].x : 0;
+      this.puntos.push({ id: this.siguienteId++, x: lastX + 1, y: 0 });
+      this.renderInputs();
+    },
+
+    removePoint: function(id) {
+      if(this.puntos.length <= 2) {
+        this.showAlert("Se necesitan al menos 2 puntos para interpolar.", "error");
+        return;
+      }
+      this.puntos = this.puntos.filter(p => p.id !== id);
+      this.renderInputs();
+    },
+
+    showAlert: function(msg, type) {
+      const alert = document.getElementById('sim-alert');
+      alert.textContent = msg;
+      alert.className = `alert ${type}`;
+      setTimeout(() => alert.style.display = 'none', 4000);
+    },
+
+    calcular: function() {
+      document.getElementById('sim-alert').style.display = 'none';
+
+      // Validar datos únicos en X
+      const xs = this.puntos.map(p => p.x);
+      const uniqueXs = new Set(xs);
+      if(uniqueXs.size !== xs.length) {
+        this.showAlert("Error: Los valores de X deben ser todos diferentes (nodos únicos).", "error");
+        return;
+      }
+
+      const evalX = parseFloat(document.getElementById('sim-eval-x').value);
+      if(isNaN(evalX)) {
+        this.showAlert("Ingresa un valor válido para estimar X.", "error");
+        return;
+      }
+
+      document.getElementById('sim-results').style.display = 'block';
+      document.getElementById('lbl-eval-x').textContent = evalX;
+
+      this.generarDesarrollo(evalX);
+      this.graficar(evalX);
+      
+      if(window.MathJax) MathJax.typesetPromise();
+    },
+
+    generarDesarrollo: function(evalX) {
+      let latexP = "$$ P(x) = ";
+      const tbody = document.getElementById('sim-table-body');
+      tbody.innerHTML = '';
+      
+      let sumTotal = 0;
+      const n = this.puntos.length;
+
+      for(let i = 0; i < n; i++) {
+        let numLatex = [];
+        let denLatex = [];
+        
+        let numEvalStr =[];
+        let denEvalStr =[];
+        
+        let numVal = 1;
+        let denVal = 1;
+
+        const xi = this.puntos[i].x;
+        const yi = this.puntos[i].y;
+
+        for(let j = 0; j < n; j++) {
+          if(i !== j) {
+            const xj = this.puntos[j].x;
+            numLatex.push(`(x - ${xj})`);
+            denLatex.push(`(${xi} - ${xj})`);
+
+            numEvalStr.push(`(${evalX} - ${xj})`);
+            denEvalStr.push(`(${xi} - ${xj})`);
+
+            numVal *= (evalX - xj);
+            denVal *= (xi - xj);
+          }
+        }
+
+        // Construir string para el P(x) algebraico
+        let signStr = i === 0 ? "" : (yi >= 0 ? " + " : " - ");
+        let absYi = i === 0 ? yi : Math.abs(yi);
+        
+        if (numLatex.length === 0) {
+           latexP += `${signStr}${absYi}`;
+        } else {
+           latexP += `${signStr}${absYi} \\cdot \\frac{${numLatex.join('')}}{${denLatex.join('')}}`;
+        }
+
+        // Calcular valores
+        let Li_val = numVal / denVal;
+        let term_val = yi * Li_val;
+        sumTotal += term_val;
+
+        // Fila de la tabla (Evaluación paso a paso)
+        let evalLatex = `\\(\\frac{${numEvalStr.join('')}}{${denEvalStr.join('')}}\\)`;
+        if(n === 1) evalLatex = "1"; // Caso borde, aunque exigimos >= 2
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i}</td>
+          <td>${yi}</td>
+          <td>${evalLatex}</td>
+          <td>${Li_val.toFixed(4)}</td>
+          <td style="font-weight:bold; color:var(--dark-slate);">${term_val.toFixed(4)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      latexP += " $$";
+      document.getElementById('sim-math-poly').innerHTML = latexP;
+      document.getElementById('sim-math-result').innerHTML = `\\( P(${evalX}) = ${sumTotal.toFixed(4)} \\)`;
+    },
+
+    graficar: function(evalX) {
+      const xs = this.puntos.map(p => p.x);
+      const ys = this.puntos.map(p => p.y);
+      
+      const minX = Math.min(...xs, evalX);
+      const maxX = Math.max(...xs, evalX);
+      const margin = (maxX - minX) * 0.1 || 1; // Margen del 10%
+      
+      // Crear curva suave
+      let xPlot = [];
+      let yPlot =[];
+      const steps = 150;
+      for(let i = 0; i <= steps; i++) {
+        let x = (minX - margin) + (i / steps) * (maxX - minX + 2*margin);
+        xPlot.push(x);
+        yPlot.push(this.evaluateLagrangeRaw(x));
+      }
+
+      // Valor estimado
+      const evalY = this.evaluateLagrangeRaw(evalX);
+
+      const traceCurve = { x: xPlot, y: yPlot, mode: 'lines', name: 'P(x) Interpolante', line: {color: '#2980b9', width: 3} };
+      const tracePoints = { x: xs, y: ys, mode: 'markers', name: 'Nodos Conocidos', marker: {color: '#c0392b', size: 10} };
+      const traceEst = { x: [evalX], y: [evalY], mode: 'markers', name: `Estimación (X=${evalX})`, marker: {color: '#27ae60', size: 14, symbol: 'star'} };
+
+      const layout = {
+        margin: {t: 30, r: 30, b: 40, l: 50},
+        plot_bgcolor: '#fdfdfd',
+        paper_bgcolor: 'transparent',
+        xaxis: { title: 'Eje X', gridcolor: '#e0dcd3' },
+        yaxis: { title: 'Eje Y', gridcolor: '#e0dcd3' },
+        showlegend: true,
+        legend: { orientation: 'h', y: 1.1 }
+      };
+
+      Plotly.newPlot('sim-plot',[traceCurve, tracePoints, traceEst], layout, {responsive: true});
+    },
+
+    evaluateLagrangeRaw: function(x_target) {
+      let sum = 0;
+      const n = this.puntos.length;
+      for(let i = 0; i < n; i++) {
+        let term = this.puntos[i].y;
+        for(let j = 0; j < n; j++) {
+          if(i !== j) {
+            term *= (x_target - this.puntos[j].x) / (this.puntos[i].x - this.puntos[j].x);
+          }
+        }
+        sum += term;
+      }
+      return sum;
+    },
+
+    resizePlot: function() {
+      if(document.getElementById('sim-plot').innerHTML !== "") {
+        Plotly.Plots.resize(document.getElementById('sim-plot'));
+      }
+    }
+  };
+
+  /* ─── LÓGICA DE EVALUACIÓN ─── */
+  function evaluarPregunta(qNum, selectedVal, correctVal) {
+    const card = document.getElementById(`q${qNum}`);
+    const btns = card.querySelectorAll('.quiz-opt');
+    const feedback = document.getElementById(`fb${qNum}`);
+
+    // Deshabilitar todos
+    btns.forEach(btn => btn.disabled = true);
+
+    const isCorrect = selectedVal === correctVal;
+    
+    // Marcar colores
+    btns.forEach(btn => {
+      const letter = btn.innerText.charAt(0);
+      if(letter === correctVal) btn.classList.add('correct');
+      if(letter === selectedVal && !isCorrect) btn.classList.add('wrong');
+    });
+
+    // Mostrar feedback
+    feedback.classList.add('show');
+    if(isCorrect) {
+      feedback.style.backgroundColor = '#d5f5e3';
+      feedback.style.borderColor = '#abebc6';
+      feedback.style.color = '#186a3b';
+      feedback.innerHTML = `<strong>¡Correcto!</strong> ` + feedback.innerHTML;
+    } else {
+      feedback.style.backgroundColor = '#fadbd8';
+      feedback.style.borderColor = '#f5b7b1';
+      feedback.style.color = '#78281f';
+      feedback.innerHTML = `<strong>Incorrecto.</strong> ` + feedback.innerHTML;
+    }
+  }
+
+  // Inicializar todo
+  document.addEventListener('DOMContentLoaded', () => {
+    simulador.init();
+  });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1342 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solución Numérica de EDO — Profe W</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<style>
+  :root {
+    --paper:  #f5f0e8;
+    --ink:    #1a1a2e;
+    --gold:   #c9a84c;
+    --rust:   #b84a1e;
+    --forest: #2e6b4f;
+    --slate:  #3b4a5a;
+    --cream:  #ede8da;
+    --rule:   #d8d0be;
+    --shadow: rgba(0,0,0,0.08);
+    --muted:  #7a7060;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-size: 17px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  header h1 em { font-style: italic; color: var(--gold); }
+  header p.subtitle {
+    font-size: 1.05rem; font-weight: 300;
+    opacity: 0.75; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .author-tag {
+    display: inline-block; margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--gold); opacity: 0.9;
+  }
+  .author-tag::before { content: '— '; }
+
+  /* ─── Navigation ─── */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink);
+    display: flex; flex-wrap: wrap;
+    border-bottom: 3px solid var(--rust);
+  }
+  nav.tabs button {
+    background: transparent; border: none;
+    color: rgba(245,240,232,0.55);
+    font-family: 'Source Serif 4', serif;
+    font-size: 13px; padding: 13px 20px;
+    cursor: pointer; letter-spacing: 0.4px;
+    transition: all 0.2s; position: relative;
+  }
+  nav.tabs button:hover { color: var(--paper); }
+  nav.tabs button.active { color: var(--paper); font-weight: 600; }
+  nav.tabs button.active::after {
+    content: ''; position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 3px; background: var(--gold);
+  }
+
+  /* ─── Main ─── */
+  main { max-width: 840px; margin: 0 auto; padding: 40px 24px 80px; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ─── Typography ─── */
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--ink); margin: 0 0 8px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--rule);
+  }
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--rust);
+    letter-spacing: 2px; text-transform: uppercase;
+    display: block; margin-bottom: 4px;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.22rem; color: var(--slate);
+    margin: 28px 0 10px;
+  }
+  p { margin-bottom: 1rem; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: white; border: 1px solid var(--rule);
+    border-radius: 4px; padding: 22px 26px;
+    margin: 20px 0; box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card.definition { border-left: 4px solid var(--forest); }
+  .card.theorem    { border-left: 4px solid var(--slate); background: #f8f9fb; }
+  .card.example-card { border-left: 4px solid var(--rust); }
+  .card.warning    { border-left: 4px solid var(--gold); background: #fffbf0; }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px; font-weight: 600;
+  }
+  .card.definition .card-label { color: var(--forest); }
+  .card.theorem    .card-label { color: var(--slate); }
+  .card.example-card .card-label { color: var(--rust); }
+  .card.warning    .card-label { color: #9a7a20; }
+
+  /* ─── Math ─── */
+  .math-block {
+    background: var(--cream); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 16px 20px;
+    margin: 14px 0; overflow-x: auto; font-size: 0.97em;
+    text-align: center;
+  }
+
+  /* ─── Details ─── */
+  details {
+    border: 1px solid var(--rule); border-radius: 4px;
+    margin: 14px 0; overflow: hidden;
+  }
+  summary {
+    background: var(--cream); padding: 12px 18px;
+    cursor: pointer; font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem; font-weight: 600; color: var(--slate);
+    list-style: none; display: flex; align-items: center;
+    gap: 10px; user-select: none; transition: background 0.2s;
+  }
+  summary:hover { background: #e5dfcf; }
+  summary::before {
+    content: '▶'; font-size: 11px; color: var(--rust);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) {
+    padding: 18px 22px; background: white;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── Tip ─── */
+  .tip-profe {
+    background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+    border: 1px solid var(--gold); border-radius: 4px;
+    padding: 16px 20px; margin: 18px 0;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .tip-profe .icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .tip-profe .tip-body { flex: 1; }
+  .tip-profe .tip-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 4px;
+  }
+  .tip-profe p { margin: 0; font-size: 0.95rem; color: var(--slate); }
+
+  /* ─── Steps ─── */
+  .steps { list-style: none; padding: 0; margin: 12px 0; }
+  .steps li {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px dashed var(--rule);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    background: var(--rust); color: white;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ─── Table ─── */
+  .table-wrapper {
+    overflow-x: auto; margin: 16px 0;
+    border: 1px solid var(--rule); border-radius: 3px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; }
+  th {
+    background: var(--slate); color: white;
+    padding: 10px 14px; text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 1px;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--rule); text-align: center; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--cream); }
+
+  /* ─── Controls ─── */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 16px;
+  }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--slate); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  input[type="text"], input[type="number"], select {
+    background: white; border: 1px solid var(--rule);
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem; border-radius: 3px; color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--rust); }
+  .action-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-primary {
+    background: var(--rust); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #9d3d15; }
+  .btn-secondary {
+    background: var(--slate); color: white; border: none; border-radius: 3px;
+    padding: 10px 18px; font-family: 'Source Serif 4', serif;
+    font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #2a3441; }
+
+  /* ─── Plot ─── */
+  .plot-container {
+    width: 100%; height: 420px; background: white;
+    border: 1px solid var(--rule); border-radius: 4px; margin-top: 16px;
+  }
+
+  /* ─── Resultado Simulador ─── */
+  #sim-result-box {
+    background: white; border: 1px solid var(--rule); border-radius: 4px;
+    padding: 16px 20px; margin-top: 14px; display: none;
+  }
+  #sim-result-box .res-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--rust); margin-bottom: 10px; font-weight: 600;
+  }
+  .result-table-wrapper { overflow-x: auto; }
+
+  /* ─── Error comparison ─── */
+  .method-compare {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin: 20px 0;
+  }
+  .method-card {
+    border: 1px solid var(--rule); border-radius: 4px;
+    padding: 18px 16px; text-align: center; background: white;
+  }
+  .method-card .m-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .method-card .m-order {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--gold); letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .method-card .m-desc { font-size: 0.88rem; color: var(--muted); }
+  .method-card.euler-c  { border-top: 4px solid var(--rust); }
+  .method-card.taylor2c { border-top: 4px solid var(--forest); }
+  .method-card.taylor3c { border-top: 4px solid var(--slate); }
+
+  /* ─── Quiz ─── */
+  .quiz-question {
+    background: white; border: 1px solid var(--rule); border-radius: 4px;
+    padding: 22px 26px; margin: 18px 0;
+  }
+  .quiz-question p.q { font-weight: 600; margin-bottom: 14px; font-size: 1rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--cream); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 10px 16px; text-align: left; cursor: pointer;
+    font-family: 'Source Serif 4', serif; font-size: 0.93rem; color: var(--ink);
+    transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  }
+  .opt-btn:hover:not(:disabled) { background: #e8e2d4; border-color: var(--muted); }
+  .opt-btn.correct { background: #e6f5ea; border-color: var(--forest); color: var(--forest); }
+  .opt-btn.wrong   { background: #fdecea; border-color: #c0392b; color: #c0392b; }
+  .opt-btn .opt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .opt-btn.correct .opt-label { background: var(--forest); color: white; }
+  .opt-btn.wrong   .opt-label { background: #c0392b; color: white; }
+  .feedback {
+    margin-top: 12px; padding: 10px 14px; border-radius: 3px;
+    font-size: 0.9rem; display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #e6f5ea; color: var(--forest); border: 1px solid #89c49a; }
+  .feedback.err { background: #fdecea; color: #c0392b; border: 1px solid #e8a8a8; }
+  .quiz-score {
+    background: var(--ink); color: var(--paper); padding: 18px 24px;
+    border-radius: 4px; display: flex;
+    justify-content: space-between; align-items: center; margin-top: 24px;
+  }
+  .score-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--gold); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+
+  /* ─── Summary section ─── */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; margin: 20px 0;
+  }
+  .summary-card {
+    background: white; border: 1px solid var(--rule); border-radius: 4px;
+    padding: 20px 18px; text-align: center; box-shadow: 0 2px 6px var(--shadow);
+  }
+  .summary-card .s-icon { font-size: 2rem; margin-bottom: 10px; }
+  .summary-card .s-title {
+    font-family: 'Playfair Display', serif; font-size: 1rem;
+    font-weight: 700; color: var(--ink); margin-bottom: 6px;
+  }
+  .summary-card .s-text { font-size: 0.88rem; color: var(--muted); }
+
+  @media (max-width: 600px) {
+    nav.tabs button { font-size: 12px; padding: 10px 12px; }
+    header { padding: 40px 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+    .method-compare { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- ════════════ SITE TOPBAR ════════════ -->
+<nav class="site-topbar" aria-label="Navegación principal">
+  <a class="site-back" href="../index.html">⬅ Volver al inicio</a>
+</nav>
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header>
+  <div class="header-badge">Análisis Numérico · Capítulo 5 · Ecuaciones diferenciales</div>
+  <h1>Solución <em>Numérica</em><br>de Ecuaciones Diferenciales</h1>
+  <p class="subtitle">Problema de Valor Inicial · Método de Euler · Métodos de Taylor</p>
+  <span class="author-tag">Profe W</span>
+</header>
+
+<!-- ════════════════ NAV ════════════════ -->
+<nav class="tabs">
+  <button class="active" onclick="showSection('intro',this)">Introducción</button>
+  <button onclick="showSection('teoria',this)">Teoría PVI</button>
+  <button onclick="showSection('euler',this)">Método de Euler</button>
+  <button onclick="showSection('taylor',this)">Métodos de Taylor</button>
+  <button onclick="showSection('error',this)">Error y Convergencia</button>
+  <button onclick="showSection('simulador',this)">Simulador</button>
+  <button onclick="showSection('quiz',this)">Quiz</button>
+  <button onclick="showSection('resumen',this)">Resumen</button>
+</nav>
+
+<main>
+
+<!-- ════════════════ SECCIÓN 0: INTRODUCCIÓN ════════════════ -->
+<section class="section active" id="intro">
+  <h2><span class="section-num">00 · Panorama</span>¿Por qué aproximar soluciones?</h2>
+
+  <p>Las ecuaciones diferenciales ordinarias (EDO) modelan fenómenos que cambian en el tiempo o el espacio: el enfriamiento de un cuerpo, el crecimiento de una población, la trayectoria de un satélite. En todos estos casos existe una <em>ley de evolución</em> —la derivada— y una <em>condición inicial</em> —el estado de partida.</p>
+
+  <div class="card definition">
+    <div class="card-label">Problema de Valor Inicial (PVI)</div>
+    <p>El PVI escalar de referencia tiene la forma:</p>
+    <div class="math-block">
+      \[y'(t) = f(t, y(t)), \quad a \le t \le b, \qquad y(a) = \alpha\]
+    </div>
+    <p>Donde \(f\) es la función que describe la tasa de cambio, \([a,b]\) el intervalo de interés y \(\alpha\) el valor inicial conocido.</p>
+  </div>
+
+  <p>El problema fundamental es que <strong>la mayoría de los PVI no tienen solución analítica cerrada</strong>. Incluso cuando la teoría garantiza existencia y unicidad, encontrar una fórmula explícita es excepcionalmente difícil. La solución numérica construye una <em>nube de puntos</em> \(\{(t_i, w_i)\}_{i=0}^n\) que aproxima la curva solución \(y(t)\).</p>
+
+  <div class="tip-profe">
+    <div class="icon">🎯</div>
+    <div class="tip-body">
+      <div class="tip-label">Idea Central</div>
+      <p>Discretizamos el intervalo \([a,b]\) en \(n\) subintervalos de tamaño \(h = (b-a)/n\), obteniendo nodos \(t_i = a + ih\). En cada nodo buscamos \(w_i \approx y(t_i)\). La clave es <strong>cómo pasamos de \(w_i\) a \(w_{i+1}\)</strong>: eso define el método numérico.</p>
+    </div>
+  </div>
+
+  <h3>Discretización del intervalo</h3>
+  <div class="math-block">
+    \[h = \frac{b-a}{n}, \qquad t_i = a + ih \quad (i = 0, 1, \ldots, n)\]
+  </div>
+
+  <div class="method-compare">
+    <div class="method-card euler-c">
+      <div class="m-name">Euler</div>
+      <div class="m-order">Orden 1 · Error O(h)</div>
+      <div class="m-desc">Tangente lineal en cada punto. Simple pero requiere \(h\) muy pequeño.</div>
+    </div>
+    <div class="method-card taylor2c">
+      <div class="m-name">Taylor Orden 2</div>
+      <div class="m-order">Error O(h²)</div>
+      <div class="m-desc">Incluye curvatura. Mayor precisión con el mismo \(h\).</div>
+    </div>
+    <div class="method-card taylor3c">
+      <div class="m-name">Taylor Orden m</div>
+      <div class="m-order">Error O(hᵐ)</div>
+      <div class="m-desc">Precisión arbitraria al costo de calcular derivadas de orden superior.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 1: TEORÍA ════════════════ -->
+<section class="section" id="teoria">
+  <h2><span class="section-num">01 · Fundamentos</span>Teoría Elemental del PVI</h2>
+
+  <p>Antes de aproximar, necesitamos saber <em>cuándo</em> tiene sentido hacerlo: ¿existe solución? ¿es única? La respuesta descansa en el concepto de condición de Lipschitz.</p>
+
+  <div class="card definition">
+    <div class="card-label">Definición · Condición de Lipschitz</div>
+    <p>Se dice que \(f(t,y)\) satisface una <strong>condición de Lipschitz</strong> con respecto a \(y\) en una región \(D \subseteq \mathbb{R}^2\), si existe una constante \(L > 0\) tal que:</p>
+    <div class="math-block">
+      \[|f(t, y_1) - f(t, y_2)| \le L\,|y_1 - y_2|\]
+    </div>
+    <p>para cualquier \((t, y_1)\) y \((t, y_2)\) en \(D\). La constante \(L\) se llama <em>constante de Lipschitz</em> de \(f\) en \(D\).</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">💡</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición Geométrica</div>
+      <p>La condición de Lipschitz controla qué tan rápido puede variar \(f\) en la dirección de \(y\). Si \(f\) es "demasiado sensible" a cambios en \(y\), dos soluciones cercanas podrían divergir rápidamente.</p>
+    </div>
+  </div>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema · Criterio Práctico</div>
+    <p>Si \(f(t,y)\) está definida en una región convexa \(D \subseteq \mathbb{R}^2\) y existe \(L > 0\) tal que:</p>
+    <div class="math-block">
+      \[\left|\frac{\partial f}{\partial y}(t,y)\right| \le L \quad \forall\,(t,y) \in D\]
+    </div>
+    <p>entonces \(f\) verifica la condición de Lipschitz con constante \(L\). Este resultado convierte la verificación de Lipschitz en un simple cálculo de derivada parcial.</p>
+  </div>
+
+  <details>
+    <summary>📝 Ejemplo resuelto — Verificar la condición de Lipschitz</summary>
+    <div>
+      <p><strong>Problema:</strong> Verificar que \(f(t,y) = 4t^3 \arctan(2y)\) satisface la condición de Lipschitz en \(D_1 = [-4,3] \times \mathbb{R}\).</p>
+      <p><strong>Solución:</strong> Aplicamos el criterio de la derivada parcial:</p>
+      <div class="math-block">
+        \[\frac{\partial f}{\partial y} = 4t^3 \cdot \frac{2}{1+4y^2} = \frac{8t^3}{1+4y^2}\]
+      </div>
+      <p>Para acotar esta expresión en \(D_1\): el factor \(\frac{1}{1+4y^2} \le 1\) y el máximo de \(|4t^3|\) en \([-4,3]\) ocurre en \(t=-4\), dando \(|4(-4)^3| = 256\). Entonces:</p>
+      <div class="math-block">
+        \[\left|\frac{\partial f}{\partial y}\right| \le 8 \cdot 64 = 512\]
+      </div>
+      <p>Por lo tanto \(f\) satisface la condición de Lipschitz con constante \(L = 512\).</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>📝 Ejemplo resuelto — Región no acotada</summary>
+    <div>
+      <p><strong>Problema:</strong> Verificar que \(f(t,y) = \sqrt{t^2+4y} - t\) satisface la condición de Lipschitz en \(D = [2,3] \times [-\tfrac{1}{2}, +\infty)\).</p>
+      <p><strong>Solución:</strong> \(D\) es rectangular, no acotada y convexa. En \(D\) se cumple \(t^2 + 4y \ge 0\), así que \(f\) está bien definida y es diferenciable respecto a \(y\):</p>
+      <div class="math-block">
+        \[f_y(t,y) = \frac{2}{\sqrt{t^2+4y}}\]
+      </div>
+      <p>El máximo de \(|f_y|\) en \(D\) ocurre cuando \(t^2 + 4y\) es mínimo, lo que sucede en \(t=2\), \(y = -\tfrac{1}{2}\), dando \(\sqrt{4-2} = \sqrt{2}\). Por tanto:</p>
+      <div class="math-block">
+        \[|f_y| \le \frac{2}{\sqrt{2}} = \sqrt{2}\]
+      </div>
+      <p>La constante de Lipschitz es \(L = \sqrt{2}\).</p>
+    </div>
+  </details>
+
+  <div class="card theorem">
+    <div class="card-label">Teorema de Existencia y Unicidad</div>
+    <p>Sea \(D = \{(t,y) \in \mathbb{R}^2 : a \le t \le b,\ -\infty < y < \infty\}\). Si \(f\) es continua en \(D\) y satisface la condición de Lipschitz con respecto a \(y\) en \(D\), entonces el PVI</p>
+    <div class="math-block">
+      \[y'(t) = f(t,y(t)),\quad y(a) = \alpha\]
+    </div>
+    <p>tiene <strong>solución única</strong> \(y(t)\) para todo \(t \in [a,b]\).</p>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🧩</div>
+    <div class="tip-body">
+      <div class="tip-label">Profe W — Estrategia de Verificación</div>
+      <p>En la práctica, para verificar que un PVI tiene solución única, <strong>no necesitas demostrar Lipschitz desde la definición</strong>. Basta con calcular \(\partial f/\partial y\) y acotarla en la región de interés. Si esa derivada parcial es continua y acotada en un dominio rectangular convexo, ¡ya tienes la constante de Lipschitz y el teorema hace el resto!</p>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label">Advertencia Conceptual</div>
+    <p>El teorema garantiza existencia y unicidad, pero <strong>no dice nada sobre cómo encontrar</strong> esa solución. Para eso recurrimos a los métodos numéricos. Tampoco implica que la solución sea "suave" indefinidamente: puede haber valores de singularidad fuera de \([a,b]\).</p>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 2: EULER ════════════════ -->
+<section class="section" id="euler">
+  <h2><span class="section-num">02 · Método</span>Método de Euler</h2>
+
+  <p>El método de Euler es el más simple y el más antiguo de los métodos numéricos para PVI. Su derivación proviene directamente del <strong>teorema de Taylor de primer orden</strong>.</p>
+
+  <h3>Derivación</h3>
+  <p>Si la solución \(y \in \mathcal{C}^2[a,b]\), por Taylor en torno a \(t_i\) existe \(\beta \in (t_i, t_{i+1})\) tal que:</p>
+  <div class="math-block">
+    \[y(t_{i+1}) = y(t_i) + h\,y'(t_i) + \frac{h^2}{2}\,y''(\beta)\]
+  </div>
+  <p>Para \(h\) pequeño, el término \(h^2\) es despreciable. Usando que \(y'(t_i) = f(t_i, y(t_i))\):</p>
+  <div class="math-block">
+    \[y(t_{i+1}) \approx y(t_i) + h\,f(t_i,\,y(t_i))\]
+  </div>
+
+  <div class="card definition">
+    <div class="card-label">Ecuación de Avance · Método de Euler</div>
+    <div class="math-block">
+      \[\begin{cases} w_0 = \alpha \\ w_{i+1} = w_i + h\,f(t_i,\,w_i), \quad i = 0, 1, \ldots, n-1 \end{cases}\]
+    </div>
+    <p>donde \(w_i \approx y(t_i)\) es la aproximación en el nodo \(t_i\).</p>
+  </div>
+
+  <h3>Interpretación geométrica — Método de la tangente</h3>
+  <p>En cada punto \((t_i, w_i)\), la pendiente de la curva solución es \(f(t_i, w_i)\). Euler <em>traza la recta tangente</em> y avanza a lo largo de ella durante un paso \(h\). El proceso se repite desde el nuevo punto.</p>
+
+  <div class="tip-profe">
+    <div class="icon">📐</div>
+    <div class="tip-body">
+      <div class="tip-label">Intuición Geométrica</div>
+      <p>Piensa en el método de Euler como seguir la pendiente del terreno en cada punto dado por la brújula \(f(t,y)\). Si el terreno es suave y los pasos son pequeños, la trayectoria aproximada seguirá bien a la curva real. Con pasos grandes, nos alejamos más.</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>📝 Ejemplo resuelto — Aplicación del Método de Euler</summary>
+    <div>
+      <p><strong>PVI:</strong></p>
+      <div class="math-block">
+        \[y'(t) = t e^{3t} - 2\arctan(y(t)),\quad 0 \le t \le 1,\quad y(0) = 0\]
+      </div>
+      <p><strong>Con \(h = 0.25\)</strong>, los nodos son \(t_0=0,\, t_1=0.25,\, t_2=0.5,\, t_3=0.75,\, t_4=1\). Sea \(f(t,y) = te^{3t} - 2\arctan(y)\).</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>i</th><th>tᵢ</th><th>wᵢ ≈ y(tᵢ)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>0.25</td><td>0</td></tr>
+            <tr><td>2</td><td>0.50</td><td>0.1323</td></tr>
+            <tr><td>3</td><td>0.75</td><td>0.6267</td></tr>
+            <tr><td>4</td><td>1.00</td><td>2.1258</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Procedimiento para \(w_2\):</strong></p>
+      <div class="math-block">
+        \[w_2 = w_1 + 0.25\,f(t_1, w_1) = 0 + 0.25\,(0.25\,e^{0.75} - 2\arctan(0)) \approx 0.1323\]
+      </div>
+    </div>
+  </details>
+
+  <div class="tip-profe">
+    <div class="icon">⚠️</div>
+    <div class="tip-body">
+      <div class="tip-label">Profe W — Error Frecuente</div>
+      <p>Un error muy común es confundir \(w_i\) con \(y(t_i)\). Recuerda: \(w_i\) es la <em>aproximación</em> que construye el método; \(y(t_i)\) es el valor <em>exacto</em> (generalmente desconocido). El error global \(|y(t_i) - w_i|\) se acumula en cada paso —nunca se cancela— por eso Euler necesita \(h\) muy pequeño para ser confiable en intervalos largos.</p>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label">Limitación del Método de Euler</div>
+    <p>El error de truncamiento local de Euler es \(\mathcal{O}(h)\), lo que significa que para <strong>reducir el error a la mitad</strong> es necesario <strong>duplicar el número de pasos</strong> (y por tanto duplicar el costo computacional). Para problemas donde se necesita alta precisión, esto lo hace ineficiente.</p>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 3: TAYLOR ════════════════ -->
+<section class="section" id="taylor">
+  <h2><span class="section-num">03 · Método</span>Métodos de Taylor de Orden Superior</h2>
+
+  <p>La idea natural para mejorar la precisión es llevar más términos en la expansión de Taylor. Si la solución \(y \in \mathcal{C}^{m+1}[a,b]\), la expansión en torno a \(t_i\) evaluada en \(t_{i+1}\) es:</p>
+  <div class="math-block">
+    \[y(t_{i+1}) = y(t_i) + h\,y'(t_i) + \frac{h^2}{2!}\,y''(t_i) + \cdots + \frac{h^m}{m!}\,y^{(m)}(t_i) + \frac{h^{m+1}}{(m+1)!}\,y^{(m+1)}(\beta)\]
+  </div>
+
+  <div class="card definition">
+    <div class="card-label">Método de Taylor de Orden m</div>
+    <div class="math-block">
+      \[\begin{cases} w_0 = \alpha \\ w_{i+1} = w_i + h\,f(t_i,w_i) + \dfrac{h^2}{2!}\,f'(t_i,w_i) + \cdots + \dfrac{h^m}{m!}\,f^{(m-1)}(t_i,w_i) \end{cases}\]
+    </div>
+    <p>El error de truncamiento local es \(\mathcal{O}(h^m)\).</p>
+  </div>
+
+  <h3>Cálculo de las derivadas de \(f\)</h3>
+  <p>Como \(f\) depende de \(t\) y de \(y(t)\) (que a su vez depende de \(t\)), las derivadas deben obtenerse por <strong>regla de la cadena</strong>:</p>
+  <div class="math-block">
+    \[f'(t,y(t)) = \frac{\partial f}{\partial t} + \frac{\partial f}{\partial y}\cdot y'(t) = f_t(t,y) + f_y(t,y)\cdot f(t,y)\]
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🔗</div>
+    <div class="tip-body">
+      <div class="tip-label">Profe W — La Trampa de la Regla de la Cadena</div>
+      <p>El punto más delicado de los métodos de Taylor es que \(f' = \tfrac{d}{dt}[f(t,y(t))]\) <strong>no es</strong> simplemente \(\partial f/\partial t\). Como \(y\) también depende de \(t\), aparece el término cruzado \(f_y \cdot f\). Si olvidas este término, el método pierde un orden de precisión completo. Siempre pregúntate: ¿estoy derivando con respecto a \(t\) total o parcial?</p>
+    </div>
+  </div>
+
+  <div class="card definition">
+    <div class="card-label">Método de Taylor — Orden 2</div>
+    <div class="math-block">
+      \[w_{i+1} = w_i + h\,f(t_i,w_i) + \frac{h^2}{2}\bigl[f_t(t_i,w_i) + f_y(t_i,w_i)\cdot f(t_i,w_i)\bigr]\]
+    </div>
+    <p>El error de truncamiento local es \(\mathcal{O}(h^2)\).</p>
+  </div>
+
+  <details>
+    <summary>📝 Ejemplo resuelto — Taylor Orden 2</summary>
+    <div>
+      <p><strong>PVI:</strong> \(y'(t) = \cos(t^2 y) + \dfrac{e^t}{t+4},\quad 1 \le t \le 2,\quad y(1) = 0\) con \(h = \tfrac{1}{3}\).</p>
+      <p>Las derivadas parciales de \(f(t,y) = \cos(t^2 y) + \dfrac{e^t}{t+4}\) son:</p>
+      <div class="math-block">
+        \[f_t = -2ty\sin(t^2 y) + \frac{(t+3)e^t}{(t+4)^2}, \qquad f_y = -t^2\sin(t^2 y)\]
+      </div>
+      <p>Los nodos son \(t_0=1,\, t_1=\tfrac{4}{3},\, t_2=\tfrac{5}{3},\, t_3=2\).</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>i</th><th>tᵢ</th><th>wᵢ ≈ y(tᵢ)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>4/3 ≈ 1.3333</td><td>0.5387</td></tr>
+            <tr><td>2</td><td>5/3 ≈ 1.6667</td><td>0.8305</td></tr>
+            <tr><td>3</td><td>2</td><td>0.8168</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>📝 Comparación Euler vs Taylor 2 vs Taylor 3</summary>
+    <div>
+      <p><strong>PVI:</strong> \(y' = 1 + \dfrac{y}{t},\quad 1 \le t \le 2,\quad y(1) = 2\) con \(h = 0.25\). Solución exacta: \(y(t) = t\ln t + 2t\).</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>tᵢ</th><th>y(tᵢ) exacta</th>
+              <th>w (Euler)</th><th>|Error E|</th>
+              <th>w (Taylor 2)</th><th>|Error T2|</th>
+              <th>w (Taylor 3)</th><th>|Error T3|</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1.00</td><td>2.0000</td><td>2.0000</td><td>0</td><td>2.0000</td><td>0</td><td>2.0000</td><td>0</td></tr>
+            <tr><td>1.25</td><td>2.7789</td><td>2.7500</td><td>0.0289</td><td>2.7813</td><td>0.0024</td><td>2.7786</td><td>0.0003</td></tr>
+            <tr><td>1.50</td><td>3.6082</td><td>3.5500</td><td>0.0582</td><td>3.6125</td><td>0.0043</td><td>3.6077</td><td>0.0005</td></tr>
+            <tr><td>1.75</td><td>4.4793</td><td>4.3917</td><td>0.0876</td><td>4.4854</td><td>0.0061</td><td>4.4787</td><td>0.0006</td></tr>
+            <tr><td>2.00</td><td>5.3863</td><td>5.2690</td><td>0.1173</td><td>5.3940</td><td>0.0077</td><td>5.3855</td><td>0.0008</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>La tabla muestra claramente cómo el error decrece con el orden: Taylor 3 es más de 100 veces más preciso que Euler con el mismo \(h\).</p>
+    </div>
+  </details>
+
+  <div class="tip-profe">
+    <div class="icon">🚀</div>
+    <div class="tip-body">
+      <div class="tip-label">Profe W — El Puente hacia Runge-Kutta</div>
+      <p>Los métodos de Taylor de orden alto son precisos pero caros algebraicamente. La pregunta natural es: ¿podemos obtener la misma precisión <em>sin</em> calcular derivadas de \(f\)? La respuesta es sí, y eso nos lleva a los métodos de <strong>Runge-Kutta</strong>. En esencia, RK4 logra error \(\mathcal{O}(h^4)\) evaluando \(f\) en puntos intermedios astutamente elegidos, imitando el comportamiento de Taylor sin diferenciación explícita.</p>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label">Desventaja de los Métodos de Taylor</div>
+    <p>A mayor orden, es necesario calcular más derivadas de \(f\) (que involucran regla de la cadena anidada), lo que puede ser algebraicamente muy costoso o incluso inviable. Esta es la motivación principal para los <strong>métodos de Runge-Kutta</strong>, que logran precisión de orden alto sin calcular derivadas explícitas.</p>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 4: ERROR ════════════════ -->
+<section class="section" id="error">
+  <h2><span class="section-num">04 · Análisis</span>Error y Convergencia</h2>
+
+  <p>Entender cómo y cuánto se equivocan los métodos numéricos es tan importante como usarlos. Hay dos fuentes principales de error.</p>
+
+  <div class="card definition">
+    <div class="card-label">Error de Truncamiento Local</div>
+    <p>Para un método de diferencias \(w_{i+1} = w_i + h\Phi(t_i, w_i)\), el error de truncamiento local \(\tau_{i+1}(h)\) mide cuánto se equivoca el método en <em>un solo paso</em>, suponiendo que el valor de partida es exacto:</p>
+    <div class="math-block">
+      \[\tau_{i+1}(h) = \frac{y(t_{i+1}) - \bigl[y(t_i) + h\,\Phi(t_i,\, y(t_i))\bigr]}{h}\]
+    </div>
+  </div>
+
+  <h3>Error para el Método de Euler</h3>
+  <div class="math-block">
+    \[|\tau_{i+1}(h)| = \frac{h}{2}\,|y''(\beta)| = \mathcal{O}(h)\]
+  </div>
+  <p>El error es proporcional a \(h\): <strong>si dividimos el paso a la mitad, el error se reduce a la mitad</strong>.</p>
+
+  <h3>Error para el Método de Taylor de Orden m</h3>
+  <div class="math-block">
+    \[|\tau_{i+1}(h)| = \frac{h^m}{(m+1)!}\,|y^{(m+1)}(\beta)| = \mathcal{O}(h^m)\]
+  </div>
+  <p>Con \(h < 1\), un método de orden \(m\) es exponencialmente más preciso al aumentar \(m\).</p>
+
+  <div class="card theorem">
+    <div class="card-label">Comparación de Órdenes</div>
+    <p>Si \(h = 0.1\):</p>
+    <div class="math-block">
+      \[h = 0.1,\quad h^2 = 0.01,\quad h^3 = 0.001, \quad h^4 = 0.0001\]
+    </div>
+    <p>Cada orden ganado representa una mejora de un <em>factor de 10</em> en la precisión (con el mismo \(h\)).</p>
+  </div>
+
+  <h3>Error Global vs. Error Local</h3>
+  <p>El <strong>error local</strong> mide la imprecisión de un solo paso. El <strong>error global</strong> acumula los errores de todos los pasos. Para métodos consistentes y estables, el error global es del mismo orden que el local: un método de orden local \(\mathcal{O}(h^m)\) tiene error global \(\mathcal{O}(h^m)\).</p>
+
+  <div class="tip-profe">
+    <div class="icon">📊</div>
+    <div class="tip-body">
+      <div class="tip-label">Profe W — Cómo Verificar el Orden Empíricamente</div>
+      <p>Una forma elegante de comprobar el orden de un método: corre el algoritmo con tamaño de paso \(h\) y luego con \(h/2\). Si el error se divide aproximadamente entre \(2^m\), el método tiene orden \(m\). Por ejemplo, si con \(h=0.1\) el error es \(0.004\) y con \(h=0.05\) el error es \(0.001\), entonces \(0.004/0.001 \approx 4 = 2^2\), lo que confirma orden 2.</p>
+    </div>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">⚖️</div>
+    <div class="tip-body">
+      <div class="tip-label">Balance Costo–Precisión</div>
+      <p>Para un problema donde necesitas error \(\approx 10^{-6}\):<br>
+      · Euler (\(\mathcal{O}(h)\)) necesitaría \(h \approx 10^{-6}\), es decir, <strong>millones de pasos</strong>.<br>
+      · Taylor 3 (\(\mathcal{O}(h^3)\)) solo necesita \(h \approx 0.01\), es decir, <strong>100 pasos</strong>.<br>
+      El costo adicional de calcular derivadas se amortiza ampliamente.</p>
+    </div>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label">Error de Redondeo</div>
+    <p>Además del error de truncamiento, las operaciones de punto flotante acumulan <em>errores de redondeo</em>. Para pasos \(h\) muy pequeños, el número de operaciones crece, y el error de redondeo puede dominar al error de truncamiento. Existe un \(h\) óptimo que minimiza el error total.</p>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 5: SIMULADOR ════════════════ -->
+<section class="section" id="simulador">
+  <h2><span class="section-num">05 · Simulador</span>Explorador Interactivo</h2>
+
+  <p>Compara visualmente los métodos de Euler y Taylor de orden 2 sobre el PVI clásico \(y' = 1 + y/t\) con solución exacta \(y(t) = t\ln t + 2t\). Ajusta los parámetros y observa cómo cambia la precisión.</p>
+
+  <div class="controls-grid">
+    <div class="input-group">
+      <label>Valor inicial y(1)</label>
+      <input type="number" id="y0-val" value="2" step="0.1">
+    </div>
+    <div class="input-group">
+      <label>t final (b)</label>
+      <input type="number" id="b-val" value="2" step="0.1" min="1.1" max="5">
+    </div>
+    <div class="input-group">
+      <label>Tamaño de paso h</label>
+      <input type="number" id="h-val" value="0.25" step="0.05" min="0.01" max="0.5">
+    </div>
+    <div class="input-group">
+      <label>Método a resaltar</label>
+      <select id="highlight-method">
+        <option value="all">Ambos métodos</option>
+        <option value="euler">Solo Euler</option>
+        <option value="taylor2">Solo Taylor 2</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="action-grid">
+    <button class="btn-primary" onclick="runSimulator()">▶ Calcular y Graficar</button>
+    <button class="btn-secondary" onclick="resetSimulator()">↺ Restablecer</button>
+  </div>
+
+  <div id="sim-result-box">
+    <div class="res-label">Tabla de Aproximaciones</div>
+    <div class="result-table-wrapper" id="sim-table-container"></div>
+  </div>
+
+  <div class="plot-container" id="sim-plot"></div>
+
+  <div class="tip-profe" style="margin-top:20px">
+    <div class="icon">🔍</div>
+    <div class="tip-body">
+      <div class="tip-label">Qué observar</div>
+      <p>Prueba con <strong>h grande (0.5)</strong> y verás cómo Euler se aleja bastante de la curva exacta, mientras que Taylor 2 mantiene mayor fidelidad. Con <strong>h pequeño (0.05)</strong>, ambos convergen bien, pero Taylor 2 lo hace con menos pasos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 6: QUIZ ════════════════ -->
+<section class="section" id="quiz">
+  <h2><span class="section-num">06 · Evaluación</span>Quiz Interactivo</h2>
+  <p>14 preguntas sobre solución numérica de EDOs, progresando desde comprensión conceptual hasta razonamiento aplicado.</p>
+  <div id="quiz-container"></div>
+  <div class="quiz-score">
+    <span class="score-label">Puntaje Actual</span>
+    <span class="score-val" id="quiz-score-val">0 / 14</span>
+  </div>
+</section>
+
+<!-- ════════════════ SECCIÓN 7: RESUMEN ════════════════ -->
+<section class="section" id="resumen">
+  <h2><span class="section-num">07 · Cierre</span>Resumen del Tema</h2>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="s-icon">📐</div>
+      <div class="s-title">PVI Escalar</div>
+      <div class="s-text">Forma estándar: \(y' = f(t,y)\), \(y(a)=\alpha\). La condición de Lipschitz garantiza existencia y unicidad de solución.</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-icon">📏</div>
+      <div class="s-title">Discretización</div>
+      <div class="s-text">El intervalo \([a,b]\) se divide en \(n\) subintervalos iguales de tamaño \(h=(b-a)/n\). Buscamos \(w_i \approx y(t_i)\).</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-icon">→</div>
+      <div class="s-title">Método de Euler</div>
+      <div class="s-text">Orden 1. Ecuación: \(w_{i+1}=w_i+hf(t_i,w_i)\). Simple pero menos preciso. Error \(\mathcal{O}(h)\).</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-icon">⬆</div>
+      <div class="s-title">Taylor Orden m</div>
+      <div class="s-text">Incluye derivadas de orden superior de \(f\). Error \(\mathcal{O}(h^m)\). Mayor precisión al costo de derivadas más complejas.</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-icon">⚠</div>
+      <div class="s-title">Fuentes de Error</div>
+      <div class="s-text">Error de truncamiento (por aproximar con Taylor) y error de redondeo (por aritmética de punto flotante). Existe un \(h\) óptimo.</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-icon">🔗</div>
+      <div class="s-title">Siguiente Paso</div>
+      <div class="s-text">Los métodos de Runge-Kutta logran precisión de orden alto sin calcular derivadas explícitas de \(f\), superando la limitación de Taylor.</div>
+    </div>
+  </div>
+
+  <div class="card theorem" style="margin-top: 28px">
+    <div class="card-label">Fórmulas Clave</div>
+    <p><strong>Condición de Lipschitz (criterio práctico):</strong></p>
+    <div class="math-block">\[\left|\frac{\partial f}{\partial y}(t,y)\right| \le L \quad \Rightarrow \quad f \text{ es Lipschitz con constante } L\]</div>
+    <p><strong>Euler:</strong></p>
+    <div class="math-block">\[w_{i+1} = w_i + h\,f(t_i, w_i)\]</div>
+    <p><strong>Taylor Orden 2:</strong></p>
+    <div class="math-block">\[w_{i+1} = w_i + h\,f + \frac{h^2}{2}\bigl(f_t + f_y \cdot f\bigr)\Big|_{(t_i, w_i)}\]</div>
+    <p><strong>Error de truncamiento local:</strong></p>
+    <div class="math-block">\[|\tau_{i+1}(h)| = \mathcal{O}(h^m) \quad \text{para Taylor de orden } m\]</div>
+  </div>
+
+  <div class="tip-profe" style="margin-top:24px">
+    <div class="icon">🚀</div>
+    <div class="tip-body">
+      <div class="tip-label">Perspectiva Final</div>
+      <p>Los métodos de Euler y Taylor son la base conceptual de toda la teoría de métodos numéricos para EDO. Comprender bien cómo se derivan, cuál es su error y cómo se comparan es el punto de partida para entender métodos más sofisticados como Runge-Kutta 4, métodos multipaso (Adams-Bashforth) y métodos adaptativos.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script>
+/* ── Navigation ── */
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  MathJax.typesetPromise && MathJax.typesetPromise();
+}
+
+/* ═══════════════════════════════════
+   SIMULADOR
+═══════════════════════════════════ */
+function eulerMethod(f, a, b, y0, h) {
+  const nodes = [], vals = [];
+  let t = a, w = y0;
+  nodes.push(t); vals.push(w);
+  while (t < b - 1e-10) {
+    const dt = Math.min(h, b - t);
+    w = w + dt * f(t, w);
+    t = t + dt;
+    nodes.push(parseFloat(t.toFixed(10)));
+    vals.push(w);
+  }
+  return { nodes, vals };
+}
+
+function taylor2Method(f, ft, fy, a, b, y0, h) {
+  const nodes = [], vals = [];
+  let t = a, w = y0;
+  nodes.push(t); vals.push(w);
+  while (t < b - 1e-10) {
+    const dt = Math.min(h, b - t);
+    const fv   = f(t, w);
+    const ftv  = ft(t, w);
+    const fyv  = fy(t, w);
+    w = w + dt * fv + (dt*dt/2) * (ftv + fyv * fv);
+    t = t + dt;
+    nodes.push(parseFloat(t.toFixed(10)));
+    vals.push(w);
+  }
+  return { nodes, vals };
+}
+
+function exactSolution(t) {
+  return t * Math.log(t) + 2 * t; // y = t·ln(t) + 2t (para y' = 1+y/t, y(1)=2)
+}
+
+// f(t,y) = 1 + y/t, ft = -y/t², fy = 1/t
+const f   = (t, y) => 1 + y / t;
+const ft  = (t, y) => -y / (t * t);
+const fy  = (t, y) => 1 / t;
+
+function runSimulator() {
+  if (typeof Plotly === 'undefined') {
+    alert('La librería de gráficas aún está cargando. Espera un momento e intenta de nuevo.');
+    return;
+  }
+  const y0 = parseFloat(document.getElementById('y0-val').value);
+  const b  = parseFloat(document.getElementById('b-val').value);
+  const h  = parseFloat(document.getElementById('h-val').value);
+  const hl = document.getElementById('highlight-method').value;
+
+  if (b <= 1 || h <= 0 || h >= (b-1)) {
+    alert('Verifica los valores: b > 1 y h adecuado.');
+    return;
+  }
+
+  const eul = eulerMethod(f, 1, b, y0, h);
+  const tay = taylor2Method(f, ft, fy, 1, b, y0, h);
+
+  // Exact curve (fine)
+  const tExact = [], yExact = [];
+  for (let t = 1; t <= b + 1e-9; t += (b-1)/200) {
+    tExact.push(t);
+    yExact.push(exactSolution(t));
+  }
+
+  // Build table
+  let html = '<table><thead><tr><th>i</th><th>tᵢ</th><th>Exacta y(tᵢ)</th><th>Euler wᵢ</th><th>|Error E|</th><th>Taylor 2 wᵢ</th><th>|Error T2|</th></tr></thead><tbody>';
+  for (let i = 0; i < eul.nodes.length; i++) {
+    const t   = eul.nodes[i];
+    const ex  = exactSolution(t);
+    const we  = eul.vals[i];
+    const wt  = tay.vals[i] !== undefined ? tay.vals[i] : '—';
+    const erE = Math.abs(ex - we).toFixed(6);
+    const erT = typeof wt === 'number' ? Math.abs(ex - wt).toFixed(6) : '—';
+    html += `<tr><td>${i}</td><td>${t.toFixed(4)}</td><td>${ex.toFixed(6)}</td><td>${we.toFixed(6)}</td><td>${erE}</td><td>${typeof wt==='number'?wt.toFixed(6):'—'}</td><td>${erT}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('sim-table-container').innerHTML = html;
+  document.getElementById('sim-result-box').style.display = 'block';
+
+  // Plot
+  const traces = [
+    {
+      x: tExact, y: yExact, name: 'Solución Exacta',
+      type: 'scatter', mode: 'lines',
+      line: { color: '#1a1a2e', width: 3 },
+    },
+    {
+      x: eul.nodes, y: eul.vals, name: 'Euler',
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: '#b84a1e', width: 2, dash: hl==='taylor2'?'dot':'solid' },
+      marker: { size: 7, symbol: 'circle' },
+      opacity: hl === 'taylor2' ? 0.35 : 1,
+    },
+    {
+      x: tay.nodes, y: tay.vals, name: 'Taylor Orden 2',
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: '#2e6b4f', width: 2, dash: hl==='euler'?'dot':'solid' },
+      marker: { size: 7, symbol: 'square' },
+      opacity: hl === 'euler' ? 0.35 : 1,
+    }
+  ];
+
+  const layout = {
+    paper_bgcolor: 'white', plot_bgcolor: '#fafaf8',
+    font: { family: 'Source Serif 4, serif', size: 13, color: '#1a1a2e' },
+    legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#d8d0be', borderwidth: 1 },
+    xaxis: { title: 't', gridcolor: '#ede8da', zeroline: false },
+    yaxis: { title: 'y(t)', gridcolor: '#ede8da', zeroline: false },
+    margin: { t: 30, r: 20, b: 50, l: 60 },
+    hovermode: 'closest',
+  };
+
+  Plotly.newPlot('sim-plot', traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function resetSimulator() {
+  document.getElementById('y0-val').value = '2';
+  document.getElementById('b-val').value  = '2';
+  document.getElementById('h-val').value  = '0.25';
+  document.getElementById('highlight-method').value = 'all';
+  document.getElementById('sim-result-box').style.display = 'none';
+  if (typeof Plotly !== 'undefined') { initPlot(); }
+}
+
+/* ═══════════════════════════════════
+   QUIZ
+═══════════════════════════════════ */
+const quizData = [
+  /* Q1 — respuesta correcta en índice 2 */
+  {
+    q: '¿Cuál es la ecuación de avance del Método de Euler para el PVI \\(y\'=f(t,y)\\)?',
+    opts: [
+      '\\(w_{i+1} = w_i + h\\,f(t_{i+1}, w_{i+1})\\)',
+      '\\(w_{i+1} = \\frac{w_i + w_{i-1}}{2} + h\\,f\\)',
+      '\\(w_{i+1} = w_i + h\\,f(t_i, w_i)\\)',
+      '\\(w_{i+1} = w_i + \\frac{h^2}{2}\\,f(t_i, w_i)\\)'
+    ],
+    ans: 2,
+    feedback: [
+      '✗ Incorrecto. Eso sería el método de Euler implícito (backward Euler), que requiere resolver una ecuación en cada paso.',
+      '✗ Incorrecto. Combinar puntos anteriores así corresponde a métodos multipaso, no a Euler.',
+      '✓ Correcto. Euler usa la pendiente f(tᵢ, wᵢ) en el punto izquierdo del intervalo y avanza un paso h.',
+      '✗ Incorrecto. Incluir solo el término h² sin el término lineal no tiene sentido como aproximación.'
+    ]
+  },
+  /* Q2 — respuesta correcta en índice 3 */
+  {
+    q: 'La función \\(f(t,y)\\) satisface la condición de Lipschitz en \\(D\\) si existe \\(L>0\\) tal que...',
+    opts: [
+      '\\(|f(t,y)| \\le L\\) para todo \\((t,y)\\in D\\)',
+      '\\(|f(t_1,y)-f(t_2,y)| \\le L|t_1-t_2|\\) para todo \\(t_1,t_2\\in[a,b]\\)',
+      '\\(|\\nabla f(t,y)| \\le L\\) en el interior de \\(D\\)',
+      '\\(|f(t,y_1)-f(t,y_2)| \\le L|y_1-y_2|\\) para todo \\((t,y_1),(t,y_2)\\in D\\)'
+    ],
+    ans: 3,
+    feedback: [
+      '✗ Incorrecto. Eso sería una condición de acotamiento de f, que no garantiza el control de la sensibilidad en y.',
+      '✗ Incorrecto. Eso sería Lipschitz en la variable t, que no es la condición relevante para unicidad del PVI.',
+      '✗ Incorrecto. Acotar el gradiente completo no es suficiente; se necesita específicamente la condición en la variable y.',
+      '✓ Correcto. La condición de Lipschitz controla la variación de f exclusivamente respecto a y, no a t.'
+    ]
+  },
+  /* Q3 — respuesta correcta en índice 1 */
+  {
+    q: 'Si \\(\\left|\\frac{\\partial f}{\\partial y}(t,y)\\right| \\le L\\) en una región convexa \\(D\\), ¿qué podemos concluir?',
+    opts: [
+      'Que \\(f\\) es constante en \\(D\\)',
+      'Que \\(f\\) satisface la condición de Lipschitz con constante \\(L\\) en \\(D\\)',
+      'Que el PVI tiene infinitas soluciones',
+      'Que el método de Euler converge exactamente'
+    ],
+    ans: 1,
+    feedback: [
+      '✗ Incorrecto. Que la derivada parcial esté acotada no implica que f sea constante.',
+      '✓ Correcto. Este es el criterio práctico que convierte la verificación de Lipschitz en un simple cálculo de derivada parcial.',
+      '✗ Incorrecto. Al contrario: junto con continuidad de f, esto garantiza solución única.',
+      '✗ Incorrecto. El criterio garantiza existencia y unicidad de la solución exacta, no exactitud del método numérico.'
+    ]
+  },
+  /* Q4 — respuesta correcta en índice 0 */
+  {
+    q: '¿Cuál es el orden del error de truncamiento local del Método de Euler?',
+    opts: [
+      '\\(\\mathcal{O}(h)\\)',
+      '\\(\\mathcal{O}(h^2)\\)',
+      '\\(\\mathcal{O}(h^3)\\)',
+      '\\(\\mathcal{O}(1)\\)'
+    ],
+    ans: 0,
+    feedback: [
+      '✓ Correcto. El error local de Euler es O(h): reducir h a la mitad reduce el error a la mitad.',
+      '✗ Incorrecto. O(h²) corresponde al método de Taylor de orden 2.',
+      '✗ Incorrecto. O(h³) corresponde al método de Taylor de orden 3.',
+      '✗ Incorrecto. O(1) significaría que el error no decrece al reducir h, haciendo inútil al método.'
+    ]
+  },
+  /* Q5 — respuesta correcta en índice 3 */
+  {
+    q: 'El Método de Euler se basa geométricamente en...',
+    opts: [
+      'Interpolar cuadráticamente entre tres puntos consecutivos',
+      'Promediar las pendientes al inicio y al final del intervalo',
+      'Minimizar el área entre la solución exacta y la aproximación',
+      'Trazar la recta tangente a la curva solución en cada nodo y avanzar a lo largo de ella'
+    ],
+    ans: 3,
+    feedback: [
+      '✗ Incorrecto. La interpolación cuadrática caracteriza métodos de orden superior, no a Euler.',
+      '✗ Incorrecto. Promediar pendientes al inicio y al final corresponde al método del trapecio o al predictor-corrector.',
+      '✗ Incorrecto. Los métodos numéricos no minimizan áreas; construyen la solución paso a paso desde el valor inicial.',
+      '✓ Correcto. Por eso también se llama "método de la tangente": usa la pendiente f(tᵢ, wᵢ) para trazar la recta tangente.'
+    ]
+  },
+  /* Q6 — respuesta correcta en índice 1 */
+  {
+    q: 'En el Método de Taylor de orden \\(m\\), ¿cuántas derivadas de \\(f\\) se necesitan calcular (además de \\(f\\) misma)?',
+    opts: [
+      'Ninguna, solo se evalúa \\(f\\)',
+      '\\(m-1\\) derivadas de \\(f\\)',
+      'Solo la derivada de primer orden de \\(f\\)',
+      '\\(m\\) derivadas de \\(f\\)'
+    ],
+    ans: 1,
+    feedback: [
+      '✗ Incorrecto. Si no se calculan derivadas de f se tiene únicamente el método de Euler (Taylor de orden 1).',
+      '✓ Correcto. La ecuación de avance incluye f, f\', f\'\', …, f^(m-1), es decir m-1 derivadas de f además de f misma.',
+      '✗ Incorrecto. Con solo la primera derivada de f se tendría Taylor de orden 2, no de orden m general.',
+      '✗ Incorrecto. Se necesitan las derivadas de f hasta el orden m-1 (que corresponden a la derivada m de y).'
+    ]
+  },
+  /* Q7 — respuesta correcta en índice 2 */
+  {
+    q: 'Al aplicar el Método de Taylor de orden 2, el término \\(f\'(t,y(t))\\) se calcula como...',
+    opts: [
+      '\\(f_t(t,y) + f_y(t,y)\\)',
+      '\\(f_y(t,y)\\cdot f(t,y)\\)',
+      '\\(f_t(t,y) + f_y(t,y)\\cdot f(t,y)\\)',
+      '\\(\\dfrac{f(t+h,y) - f(t,y)}{h}\\)'
+    ],
+    ans: 2,
+    feedback: [
+      '✗ Incorrecto. Falta el factor multiplicativo f(t,y) en el segundo término: la regla de la cadena requiere multiplicar f_y por y\'=f.',
+      '✗ Incorrecto. Falta el término de derivada parcial respecto a t.',
+      '✓ Correcto. Por regla de la cadena total: d/dt[f(t,y(t))] = f_t + f_y·y\' = f_t + f_y·f.',
+      '✗ Incorrecto. Esa es una diferencia finita de f en t, no la derivada total que necesita el método de Taylor.'
+    ]
+  },
+  /* Q8 — respuesta correcta en índice 0 */
+  {
+    q: '¿Cuál es la principal desventaja de los Métodos de Taylor de orden alto?',
+    opts: [
+      'Requieren calcular derivadas de orden superior de \\(f\\) por regla de la cadena, lo que puede ser algebraicamente muy costoso',
+      'Solo funcionan cuando la solución exacta es un polinomio',
+      'Su error de truncamiento no decrece al reducir \\(h\\)',
+      'No pueden aplicarse a PVI con \\(f\\) no lineal'
+    ],
+    ans: 0,
+    feedback: [
+      '✓ Correcto. La necesidad de calcular f\', f\'\', etc. mediante regla de la cadena anidada hace estos métodos difíciles de implementar en general.',
+      '✗ Incorrecto. Los métodos de Taylor se aplican a cualquier función f suficientemente diferenciable.',
+      '✗ Incorrecto. Precisamente una ventaja clave es que el error decrece como O(hᵐ).',
+      '✗ Incorrecto. Los métodos de Taylor funcionan perfectamente con PVI no lineales, siempre que f sea diferenciable.'
+    ]
+  },
+  /* Q9 — respuesta correcta en índice 3 */
+  {
+    q: 'Para el PVI \\(y\'=1+y/t\\), \\(y(1)=2\\), al usar Euler con \\(h=0.25\\), ¿cuál es el valor aproximado en \\(t=1.25\\)?',
+    opts: [
+      '\\(w_1 = 2.7789\\)',
+      '\\(w_1 = 2.8\\)',
+      '\\(w_1 = 3.0\\)',
+      '\\(w_1 = 2.75\\)'
+    ],
+    ans: 3,
+    feedback: [
+      '✗ Incorrecto. 2.7789 es el valor exacto y(1.25), no la aproximación de Euler.',
+      '✗ Incorrecto. 2.8 sería una sobreestimación no justificada por la fórmula de avance.',
+      '✗ Incorrecto. 3.0 está muy lejos del valor esperado para este PVI.',
+      '✓ Correcto. w₁ = 2 + 0.25·f(1,2) = 2 + 0.25·(1 + 2/1) = 2 + 0.25·3 = 2.75.'
+    ]
+  },
+  /* Q10 — respuesta correcta en índice 1 */
+  {
+    q: 'El error de truncamiento local \\(\\tau_{i+1}(h)\\) de un método de diferencias \\(w_{i+1}=w_i+h\\Phi(t_i,w_i)\\) se define como...',
+    opts: [
+      '\\(\\tau_{i+1}(h) = |y(t_{i+1}) - w_{i+1}|\\)',
+      '\\(\\tau_{i+1}(h) = \\dfrac{y(t_{i+1}) - \\bigl[y(t_i) + h\\,\\Phi(t_i,\\,y(t_i))\\bigr]}{h}\\)',
+      '\\(\\tau_{i+1}(h) = \\dfrac{w_{i+1} - w_i}{h}\\)',
+      '\\(\\tau_{i+1}(h) = h\\cdot|y\'\'(t_i)|\\)'
+    ],
+    ans: 1,
+    feedback: [
+      '✗ Incorrecto. Eso es el error global (absoluto) en el nodo i+1, que acumula todos los errores previos.',
+      '✓ Correcto. El error local mide la discrepancia en un paso partiendo del valor exacto, normalizada por h.',
+      '✗ Incorrecto. Esa expresión es simplemente la aproximación numérica de y\', no el error de truncamiento.',
+      '✗ Incorrecto. Eso es proporcional al error local de Euler en particular, no la definición general.'
+    ]
+  },
+  /* Q11 — respuesta correcta en índice 2 */
+  {
+    q: '¿Qué garantiza el Teorema de Existencia y Unicidad para el PVI \\(y\'=f(t,y)\\), \\(y(a)=\\alpha\\)?',
+    opts: [
+      'Que la solución puede hallarse mediante el Método de Euler con suficiente precisión',
+      'Que la solución es un polinomio de grado \\(n\\)',
+      'Que existe exactamente una solución en \\([a,b]\\) si \\(f\\) es continua y Lipschitz en \\(y\\)',
+      'Que cualquier método numérico converge a la solución verdadera'
+    ],
+    ans: 2,
+    feedback: [
+      '✗ Incorrecto. El teorema no dice nada sobre el método de Euler ni sobre métodos numéricos.',
+      '✗ Incorrecto. La solución puede ser cualquier función diferenciable, no necesariamente un polinomio.',
+      '✓ Correcto. Las condiciones de continuidad de f y Lipschitz en y garantizan existencia y unicidad, sin decir cómo encontrar la solución.',
+      '✗ Incorrecto. La convergencia de métodos numéricos es un resultado independiente que requiere condiciones adicionales del método.'
+    ]
+  },
+  /* Q12 — respuesta correcta en índice 0 */
+  {
+    q: 'Con \\(h=0.1\\), ¿cuánto más preciso es el Método de Taylor de orden 3 respecto al Método de Euler?',
+    opts: [
+      '100 veces más preciso, ya que \\(\\mathcal{O}(h^3)/\\mathcal{O}(h) = h^2 = 0.01\\)',
+      '10 veces más preciso',
+      '1000 veces más preciso',
+      'Igual de preciso, pero con mayor costo computacional'
+    ],
+    ans: 0,
+    feedback: [
+      '✓ Correcto. Error Euler ≈ O(h)=0.1 y error Taylor 3 ≈ O(h³)=0.001; la relación es h²=0.01, o sea 100 veces menor.',
+      '✗ Incorrecto. 10x corresponde a la mejora de Euler a Taylor 2 solo cuando h≈1; con h=0.1 la ganancia de Taylor 3 es mayor.',
+      '✗ Incorrecto. 1000x sería comparar Taylor 4 con Euler: O(h⁴)/O(h) = h³ = 0.001.',
+      '✗ Incorrecto. Taylor 3 es significativamente más preciso que Euler con el mismo h.'
+    ]
+  },
+  /* Q13 — respuesta correcta en índice 3 */
+  {
+    q: '¿Qué sucede si el tamaño de paso \\(h\\) se toma demasiado pequeño en un método numérico?',
+    opts: [
+      'La solución siempre mejora indefinidamente',
+      'El método se convierte en exacto',
+      'El método diverge hacia infinito',
+      'El error de redondeo puede dominar y la precisión total puede empeorar'
+    ],
+    ans: 3,
+    feedback: [
+      '✗ Incorrecto. Existe un h óptimo: al reducir h el truncamiento mejora pero el redondeo empeora.',
+      '✗ Incorrecto. Ningún método de precisión finita se vuelve exacto; siempre hay errores de redondeo.',
+      '✗ Incorrecto. Los métodos estables no divergen al reducir h, pero tampoco mejoran indefinidamente.',
+      '✓ Correcto. Con h muy pequeño se acumulan muchas operaciones aritméticas y el error de redondeo puede superar la ganancia en truncamiento.'
+    ]
+  },
+  /* Q14 — respuesta correcta en índice 1 */
+  {
+    q: 'Una región \\(D = [a,b] \\times \\mathbb{R} \\subset \\mathbb{R}^2\\) es convexa porque...',
+    opts: [
+      'Sus fronteras son curvas convexas',
+      'Todo segmento que conecta dos puntos de \\(D\\) está completamente contenido en \\(D\\)',
+      'La función \\(f\\) definida sobre \\(D\\) es convexa',
+      'El intervalo \\([a,b]\\) es acotado'
+    ],
+    ans: 1,
+    feedback: [
+      '✗ Incorrecto. La convexidad de D es una propiedad de los puntos, no de la forma de sus curvas frontera.',
+      '✓ Correcto. Una región es convexa si cualquier combinación convexa (1-λ)P₁ + λP₂ con λ∈[0,1] permanece dentro de D.',
+      '✗ Incorrecto. La convexidad de D es una propiedad geométrica del dominio, independiente de la convexidad de f.',
+      '✗ Incorrecto. [a,b]×ℝ es no acotado en la dirección y y aun así es convexo; el acotamiento no determina la convexidad.'
+    ]
+  }
+];
+
+let quizScore = 0;
+let quizAnswered = new Array(quizData.length).fill(false);
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizData.forEach((item, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.innerHTML = `<p class="q">${qi+1}. ${item.q}</p>
+      <div class="options" id="opts-${qi}">
+        ${item.opts.map((o,oi) => `
+          <button class="opt-btn" onclick="answerQuiz(${qi},${oi})">
+            <span class="opt-label">${String.fromCharCode(65+oi)}</span>
+            <span>${o}</span>
+          </button>`).join('')}
+      </div>
+      <div class="feedback" id="fb-${qi}"></div>`;
+    container.appendChild(div);
+  });
+  MathJax.typesetPromise && MathJax.typesetPromise();
+}
+
+function answerQuiz(qi, oi) {
+  if (quizAnswered[qi]) return;
+  quizAnswered[qi] = true;
+  const correct = quizData[qi].ans;
+  const opts = document.querySelectorAll(`#opts-${qi} .opt-btn`);
+  opts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === oi)  btn.classList.add('wrong');
+  });
+  const fb = document.getElementById(`fb-${qi}`);
+  const isCorrect = oi === correct;
+  if (isCorrect) quizScore++;
+  fb.className = 'feedback show ' + (isCorrect ? 'ok' : 'err');
+  fb.innerHTML = `<span class="icon">${isCorrect ? '✓' : '✗'}</span> ${quizData[qi].feedback[oi]}`;
+  document.getElementById('quiz-score-val').textContent = `${quizScore} / 14`;
+  MathJax.typesetPromise && MathJax.typesetPromise([fb]);
+}
+
+buildQuiz();
+
+/* ── Initial plot hint (runs after Plotly loads) ── */
+function initPlot() {
+  if (typeof Plotly === 'undefined') return;
+  Plotly.newPlot('sim-plot', [], {
+    paper_bgcolor: '#f5f0e8', plot_bgcolor: '#fafaf8',
+    annotations: [{
+      text: 'Ajusta los parámetros y presiona<br><b>Calcular y Graficar</b>',
+      font: { family: 'Source Serif 4, serif', size: 16, color: '#7a7060' },
+      showarrow: false, xref: 'paper', yref: 'paper', x: 0.5, y: 0.5
+    }],
+    margin: { t: 30, r: 20, b: 50, l: 60 }
+  }, { responsive: true, displayModeBar: false });
+}
+</script>
+
+<!-- Plotly cargado al final del body para no bloquear el renderizado -->
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js" onload="initPlot()"></script>
+</body>
+</html>
