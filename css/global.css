@@ -187,48 +187,25 @@ body.site-home {
   padding: 0.85rem 1.25rem;
   text-align: left;
   font-size: 0.92rem;
-  border-bottom: 1px solid #eeeaf7;
+  border: 1px solid #e0dcee;
 }
 
 .site-home .dates-table th {
-  color: #5b5470;
-  font-weight: 600;
+  color: #3a3550;
+  font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   font-size: 0.78rem;
-  background: #e4ecfb;
+  background: #f3f1fa;
 }
 
 .site-home .dates-table td {
   color: #3a3550;
+  background: #ffffff;
 }
 
-.site-home .dates-table td:last-child {
-  color: #6b6480;
-}
-
-.site-home .dates-table tr:nth-child(1) td {
-  background: #eaf2fb;
-}
-
-.site-home .dates-table tr:nth-child(2) td {
-  background: #fbeaf0;
-}
-
-.site-home .dates-table tr:nth-child(3) td {
-  background: #fdf6e3;
-}
-
-.site-home .dates-table tr:nth-child(4) td {
-  background: #e8f6ee;
-}
-
-.site-home .dates-table tr:nth-child(5) td {
-  background: #f0eafb;
-}
-
-.site-home .dates-table tr:last-child td {
-  border-bottom: none;
+.site-home .dates-table td:first-child {
+  font-weight: 700;
 }
 
 .site-home .link {
