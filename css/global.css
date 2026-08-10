@@ -171,6 +171,46 @@ body.site-home {
   line-height: 1.5;
 }
 
+.site-home .dates-table {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+  background: linear-gradient(145deg, rgba(26, 39, 68, 0.92), rgba(17, 26, 46, 0.98));
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.site-home .dates-table th,
+.site-home .dates-table td {
+  padding: 0.85rem 1.25rem;
+  text-align: left;
+  font-size: 0.92rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
+}
+
+.site-home .dates-table th {
+  color: var(--home-accent);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.site-home .dates-table td {
+  color: var(--home-text);
+}
+
+.site-home .dates-table td:last-child {
+  color: var(--home-muted);
+}
+
+.site-home .dates-table tr:last-child td {
+  border-bottom: none;
+}
+
 .site-home .link {
   display: block;
   margin-top: 0.5rem;
