@@ -87,6 +87,54 @@ body.site-home {
   flex-direction: column;
 }
 
+/* ─── Banner de navegación a capítulos (hub) ─── */
+.chapters-nav {
+  position: sticky;
+  top: 0;
+  z-index: 400;
+  background: rgba(11, 18, 32, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow: 0 4px 24px rgba(2, 6, 23, 0.35);
+}
+
+.chapters-nav-inner {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.6rem clamp(1rem, 4vw, 2.5rem);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chapters-nav a {
+  flex: none;
+  font-family: "Inter", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--home-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.chapters-nav a:hover {
+  color: var(--home-text);
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.chapters-nav a:first-child {
+  color: var(--home-accent);
+}
+
 .site-home .hero {
   padding: clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 2rem);
   text-align: center;
@@ -119,6 +167,7 @@ body.site-home {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  scroll-margin-top: 64px;
 }
 
 .site-home h2 {
