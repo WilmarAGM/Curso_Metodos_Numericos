@@ -63,6 +63,22 @@
 </section>
 
 <section class="section">
+    <h2>Profesores</h2>
+    <table class="profesor-table">
+        <thead>
+            <tr>
+                <th>Profesor</th>
+                <th>Correo</th>
+                <th>Grupo</th>
+                <th>Horario de clase</th>
+                <th>Horario de atención</th>
+            </tr>
+        </thead>
+        <tbody id="profesores-tbody"></tbody>
+    </table>
+</section>
+
+<section class="section">
     <h2>Capítulo 1 · Raíces</h2>
     <div class="grid">
         <div class="card" onclick="location.href='capitulo1/Biseccion.html'" role="link" tabindex="0" onkeydown="if(event.key==='Enter')location.href='capitulo1/Biseccion.html'">
@@ -179,5 +195,71 @@
 </section>
 
 </div>
+
+<script>
+    // Datos de los profesores del curso — grupo y horarios son valores de
+    // ejemplo (aún no definidos oficialmente): edita este array cuando se
+    // confirmen. "horarioAtencion" es opcional: solo los profesores que
+    // ofrecen horario de atención lo incluyen.
+    const PROFESORES = [
+        {
+            nombre: "Wilmar Alberto Gonzalez",
+            correo: "wagonzalezm@unal.edu.co",
+            grupo: "Grupo 4",
+            horarioClase: "Lunes y miércoles, 16:00 - 18:00"
+        }
+        {
+            nombre: "Manuela Bastidas",
+            correo: "mbastidaso@unal.edu.co",
+            grupo: "Grupo 1",
+            horarioClase: "Martes y jueves, 10:00 - 12:00",
+            horarioAtencion: "Miércoles, 14:00 - 16:00"
+        },
+        {
+            nombre: "Edgar Arturo Ramos",
+            correo: "earamosn@unal.edu.co",
+            grupo: "Grupo 2",
+            horarioClase: "Lunes y miércoles, 08:00 - 10:00",
+            horarioAtencion: "Viernes, 10:00 - 12:00"
+        },
+        {
+            nombre: "Manuel Danilo Echeverry",
+            correo: "mdecheve@unal.edu.co",
+            grupo: "Grupo 3",
+            horarioClase: "Martes y jueves, 14:00 - 16:00"
+        }
+    ];
+
+    function iniciales(nombre) {
+        return nombre
+            .split(" ")
+            .filter(p => /^[A-ZÁÉÍÓÚÑ]/.test(p))
+            .slice(0, 2)
+            .map(p => p[0])
+            .join("");
+    }
+
+    function crearFilaProfesor(profesor) {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td>
+                <div class="profesor-celda">
+                    <span class="profesor-avatar" aria-hidden="true">${iniciales(profesor.nombre)}</span>
+                    <span class="profesor-nombre">${profesor.nombre}</span>
+                </div>
+            </td>
+            <td data-label="Correo"><a class="profesor-correo" href="mailto:${profesor.correo}">${profesor.correo}</a></td>
+            <td data-label="Grupo"><span class="profesor-grupo">${profesor.grupo}</span></td>
+            <td data-label="Horario de clase">${profesor.horarioClase}</td>
+            <td data-label="Horario de atención">${profesor.horarioAtencion ? profesor.horarioAtencion : '<span class="profesor-sin-dato">—</span>'}</td>
+        `;
+        return fila;
+    }
+
+    document.getElementById("profesores-tbody").append(
+        ...PROFESORES.map(crearFilaProfesor)
+    );
+</script>
+
 </body>
 </html>
