@@ -185,6 +185,52 @@ body.site-home {
   gap: 1rem;
 }
 
+/* ─── Mini-cards de enlaces (Drive institucional) ─── */
+.site-home .mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.site-home .mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: rgba(26, 39, 68, 0.55);
+  border: 1px dashed rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.site-home .mini-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(26, 39, 68, 0.85);
+}
+
+.site-home .mini-card:focus-visible {
+  outline: 2px solid var(--home-accent);
+  outline-offset: 2px;
+}
+
+.site-home .mini-card h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--home-text);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.site-home .mini-card p {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--home-muted);
+}
+
 .site-home .card {
   background: linear-gradient(145deg, rgba(26, 39, 68, 0.92), rgba(17, 26, 46, 0.98));
   border: 1px solid rgba(56, 189, 248, 0.14);
@@ -196,16 +242,25 @@ body.site-home {
 }
 
 .site-home .card.python {
-  border-color: rgba(42, 107, 110, 0.4);
+  background: linear-gradient(145deg, var(--teal-lt), #c3e4e5);
+  border-color: var(--teal);
+}
+
+.site-home .card.python h3 {
+  color: var(--teal);
+}
+
+.site-home .card.python p {
+  color: rgba(42, 107, 110, 0.78);
 }
 
 .site-home .card.python:hover {
   border-color: var(--teal);
-  box-shadow: 0 16px 48px rgba(42, 107, 110, 0.28);
+  box-shadow: 0 16px 48px rgba(42, 107, 110, 0.32);
 }
 
 .site-home .card.python:focus-visible {
-  outline-color: var(--teal-lt);
+  outline-color: var(--teal);
 }
 
 .site-home .card:hover {

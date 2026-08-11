@@ -153,6 +153,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.88rem;
     line-height: 1.6;
+    white-space: pre;
   }
   .code-block .c { color: #7a8a9a; } /* comentarios */
   .code-out {
@@ -342,7 +343,7 @@
 
   <div class="card example-card">
     <div class="card-label">Pruébalo</div>
-    <div class="code-block">(3*4)/(2**2 + 4/2)</div>
+    <div class="code-block">(3*4)/(2**2 + 4/2)  <span class="c"># potencias y multiplicación primero, luego la suma y la división</span></div>
     <div class="code-out">Out: 2.0</div>
   </div>
 
@@ -396,10 +397,10 @@ pip show nombre_paquete             <span class="c"># info del paquete</span></d
   </div>
 
   <h3>Las tres librerías del curso</h3>
-  <div class="code-block">import numpy as np
-import scipy
-from scipy import linalg
-import matplotlib.pyplot as plt</div>
+  <div class="code-block">import numpy as np              <span class="c"># arreglos y álgebra lineal básica</span>
+import scipy                    <span class="c"># métodos numéricos ya implementados</span>
+from scipy import linalg        <span class="c"># álgebra lineal avanzada (sistemas, factorizaciones)</span>
+import matplotlib.pyplot as plt <span class="c"># gráficas de funciones y resultados</span></div>
 
   <div class="omega-grid">
     <div class="omega-card">
@@ -496,7 +497,7 @@ import matplotlib.pyplot as plt</div>
   <div class="card example-card">
     <div class="card-label">Pruébalo</div>
     <p>¿Hay más de 100 000 segundos en una quincena (14 días)?</p>
-    <div class="code-block">(14 * 24 * 60 * 60) > 100000</div>
+    <div class="code-block">(14 * 24 * 60 * 60) > 100000  <span class="c"># 14 días en segundos, comparado contra 100 000</span></div>
     <div class="code-out">Out: True</div>
   </div>
 
