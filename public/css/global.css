@@ -161,6 +161,86 @@ body.site-home {
   font-weight: 400;
 }
 
+.hero-actions {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.install-app-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.qr-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: var(--radius-md, 14px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.qr-block:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.qr-block img {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: var(--paper, #f5f0e8);
+  padding: 8px;
+}
+
+.qr-block span {
+  max-width: 18ch;
+  font-family: "Inter", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--home-muted);
+  text-align: center;
+}
+
+.install-app-btn {
+  font-family: "Inter", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--home-text);
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.install-app-btn:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.6);
+}
+
+.install-app-hint {
+  max-width: 34ch;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--home-muted);
+  text-align: center;
+}
+
 .site-home .section {
   flex: 1;
   padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2.5rem);
@@ -288,8 +368,15 @@ body.site-home {
   line-height: 1.5;
 }
 
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .site-home .dates-table {
   width: 100%;
+  min-width: 420px;
   margin-top: 1.5rem;
   border-collapse: collapse;
   background: #ffffff;

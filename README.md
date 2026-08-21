@@ -16,13 +16,17 @@ El objetivo es transformar el aprendizaje tradicional en una experiencia más **
 
 ```bash
 .
-├── Parcial/        # Material evaluativo o ejercicios tipo parcial
-├── capitulo1/      # Contenido del capítulo 1
-├── capitulo2/      # Contenido del capítulo 2
-├── css/            # Estilos globales del sitio
-├── img/            # Imágenes y recursos gráficos
-├── index.html      # Página principal
-└── README.md       # Documentación del proyecto
+├── index.html          # Página principal (única página procesada por Vite)
+├── vite.config.js       # Config de Vite + vite-plugin-pwa
+├── src/                 # Botón de instalación PWA (installPrompt.js, InstallAppButton.js)
+├── public/              # Servido tal cual, sin procesar (Vite lo copia a dist/ verbatim)
+│   ├── capitulo1..5/     # Contenido de cada capítulo (HTML autocontenido)
+│   ├── python/           # Introducción a Python
+│   ├── Parcial/          # Material evaluativo
+│   ├── css/              # Estilos globales del sitio
+│   ├── img/               # Imágenes y recursos gráficos
+│   └── *.pdf, *.doc       # Programa del curso, cronograma
+└── README.md
 ```
 
 ---
@@ -69,21 +73,37 @@ Cada capítulo contiene:
 
 ## Uso
 
-1. Clona el repositorio:
+El sitio es una PWA instalable construida con [Vite](https://vitejs.dev). Las páginas de
+capítulo (`capitulo1/`…`capitulo5/`, `python/`, `Parcial/`) son HTML autocontenido servido tal
+cual desde `public/`; `index.html` es la única página que pasa por el build de Vite.
+
+1. Clona el repositorio y entra a la carpeta:
 
 ```bash
-git clone https://github.com/tu-usuario/tu-repo.git
+git clone https://github.com/WilmarAGM/Curso_Metodos_Numericos.git
+cd Curso_Metodos_Numericos
 ```
 
-2. Abre el proyecto:
+2. Instala dependencias:
 
 ```bash
-cd tu-repo
+npm install
 ```
 
-3. Ejecuta:
+3. Desarrollo local (recarga en caliente):
 
-* Abre `index.html` en tu navegador
+```bash
+npm run dev
+```
+
+4. Build de producción + preview (necesario para probar el Service Worker/PWA):
+
+```bash
+npm run build && npm run preview
+```
+
+> Nota: como `index.html` referencia `/css/global.css` con ruta absoluta, abrirlo directamente
+> con doble clic (`file://`) ya no carga los estilos — usa `npm run dev` o `npm run preview`.
 
 ---
 
