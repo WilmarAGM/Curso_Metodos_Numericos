@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Métodos Numéricos — material interactivo: raíces, métodos iterativos y ejercicios. Universidad Nacional de Colombia, Sede Medellín.">
 <title>Métodos Numéricos</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#1a1412">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="/css/global.css">
 </head>
 <body class="site-home">
 
@@ -28,6 +31,13 @@
 <section class="hero" id="top">
     <h1>Métodos Numéricos Universidad Nacional de Colombia, Sede Medellín</h1>
     <p>Aprende de forma interactiva, visual y ordenada: teoría, ejemplos y práctica.</p>
+    <div class="hero-actions">
+        <div id="install-app-slot" class="install-app-slot"></div>
+        <a class="qr-block" href="https://curso-metodos-numericos.vercel.app/" target="_blank" rel="noopener" aria-label="Escanea el código QR o haz clic para abrir el sitio del curso">
+            <img src="/qr-curso.svg" alt="Código QR hacia curso-metodos-numericos.vercel.app" width="120" height="120">
+            <span>Escanea para abrir el sitio del curso</span>
+        </a>
+    </div>
 </section>
 
 <section class="section">
@@ -56,6 +66,7 @@
             <p>Carpeta de Drive · requiere cuenta institucional.</p>
         </div>
     </div>
+    <div class="table-scroll">
     <table class="dates-table">
         <thead>
             <tr>
@@ -86,6 +97,7 @@
             </tr>
         </tbody>
     </table>
+    </div>
 </section>
 
 <section class="section">
@@ -223,6 +235,11 @@
 </section>
 
 </div>
+
+<script type="module">
+    import { mountInstallAppButton } from './src/InstallAppButton.js';
+    mountInstallAppButton(document.getElementById('install-app-slot'));
+</script>
 
 <script>
     // Datos de los profesores del curso — grupo y horarios son valores de
