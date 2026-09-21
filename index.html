@@ -328,11 +328,15 @@
     const MONITORES = [
         {
             monitora: "Valeria Sofía Castro Martínez",
-            taller1: "Miércoles, 14:00 - 16:00 (Aula 43-304)",
-            taller2: "Viernes, 14:00 - 16:00 (Aula 46-204)",
-            asesoria: "Viernes, 10:00 - 12:00 (Aula 21-102)"
+            taller1: { horario: "Miércoles, 14:00 - 16:00", aula: "Aula 43-304" },
+            taller2: { horario: "Viernes, 14:00 - 16:00", aula: "Aula 46-204" },
+            asesoria: { horario: "Viernes, 10:00 - 12:00", aula: "Aula 21-102" }
         }
     ];
+
+    function celdaHorarioAula(dato) {
+        return `${dato.horario}<br><span class="monitor-aula">${dato.aula}</span>`;
+    }
 
     function crearFilaMonitor(monitor) {
         const fila = document.createElement("tr");
@@ -343,9 +347,9 @@
                     <span class="profesor-nombre">${monitor.monitora}</span>
                 </div>
             </td>
-            <td data-label="Taller #1">${monitor.taller1}</td>
-            <td data-label="Taller #2">${monitor.taller2}</td>
-            <td data-label="Asesoría">${monitor.asesoria}</td>
+            <td data-label="Taller #1">${celdaHorarioAula(monitor.taller1)}</td>
+            <td data-label="Taller #2">${celdaHorarioAula(monitor.taller2)}</td>
+            <td data-label="Asesoría">${celdaHorarioAula(monitor.asesoria)}</td>
         `;
         return fila;
     }

@@ -582,6 +582,11 @@ body.site-home {
   background: var(--highlight);
 }
 
+.monitor-aula {
+  color: #8a6d00;
+  font-size: 0.82rem;
+}
+
 @media (max-width: 720px) {
   .monitor-table thead {
     display: none;
