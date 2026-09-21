@@ -120,6 +120,21 @@
     </table>
 </section>
 
+<section class="section">
+    <h2>Monitores</h2>
+    <table class="monitor-table">
+        <thead>
+            <tr>
+                <th>Monitora</th>
+                <th>Taller #1</th>
+                <th>Taller #2</th>
+                <th>Asesoría</th>
+            </tr>
+        </thead>
+        <tbody id="monitores-tbody"></tbody>
+    </table>
+</section>
+
 <section class="section" id="capitulo-1">
     <h2>Capítulo 1 · Raíces</h2>
     <div class="grid">
@@ -307,6 +322,36 @@
 
     document.getElementById("profesores-tbody").append(
         ...PROFESORES.map(crearFilaProfesor)
+    );
+
+    // Datos de los monitores del curso.
+    const MONITORES = [
+        {
+            monitora: "Valeria Sofía Castro Martínez",
+            taller1: "Miércoles, 14:00 - 16:00 (Aula 43-304)",
+            taller2: "Viernes, 14:00 - 16:00 (Aula 46-204)",
+            asesoria: "Viernes, 10:00 - 12:00 (Aula 21-102)"
+        }
+    ];
+
+    function crearFilaMonitor(monitor) {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td data-label="Monitora">
+                <div class="profesor-celda">
+                    <span class="profesor-avatar" aria-hidden="true">${iniciales(monitor.monitora)}</span>
+                    <span class="profesor-nombre">${monitor.monitora}</span>
+                </div>
+            </td>
+            <td data-label="Taller #1">${monitor.taller1}</td>
+            <td data-label="Taller #2">${monitor.taller2}</td>
+            <td data-label="Asesoría">${monitor.asesoria}</td>
+        `;
+        return fila;
+    }
+
+    document.getElementById("monitores-tbody").append(
+        ...MONITORES.map(crearFilaMonitor)
     );
 </script>
 
