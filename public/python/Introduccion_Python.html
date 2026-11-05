@@ -297,6 +297,8 @@
   <button onclick="showSection('jupyter',this)">④ Jupyter/Colab</button>
   <button onclick="showSection('logica',this)">⑤ Lógica</button>
   <button onclick="showSection('resumen',this)">⑥ Resumen</button>
+  <button onclick="showSection('interpolacion',this)">⑦ Interpolación</button>
+  <button onclick="showSection('integracion',this)">⑧ Integración</button>
 </nav>
 
 <main>
@@ -611,6 +613,332 @@ import matplotlib.pyplot as plt <span class="c"># gráficas de funciones y resul
     <div class="tip-body">
       <div class="tip-label">Próxima clase de Python</div>
       <p>Retomamos justo donde queda esta clase: funciones, <code>if</code>/<code>for</code>, y graficación con Matplotlib.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════ SECCIÓN 7: INTERPOLACIÓN ══════════════ -->
+<div class="section" id="interpolacion">
+  <h2><span class="section-num">Sección 07</span>Guía de Python: Interpolación</h2>
+
+  <p>Resumen de las rutinas de <code>scipy.interpolate</code> y <code>numpy</code> que
+  usamos en el capítulo de interpolación. Es el mismo contenido de la guía de una página,
+  para consultar sin tener que imprimirla.</p>
+
+  <div class="card python">
+    <div class="card-label">1. Los datos y la evaluación</div>
+    <p>Los <code>x<sub>i</sub></code> deben ir <strong>ordenados</strong> y
+    <strong>sin repetirse</strong>.</p>
+    <div class="code-block">import numpy as np
+
+x = np.array([1.0, 2.0, 3.0, 4.0])
+y = np.array([0.0, 0.6, 1.1, 1.3])
+
+xq = 2.5                       <span class="c"># un punto</span>
+xx = np.linspace(1, 4, 200)    <span class="c"># malla de 1 a 4 con 200 puntos</span></div>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">2. Polinomio de Lagrange (<code>lagrange</code>)</div>
+    <p>Devuelve un objeto <code>numpy.poly1d</code>, que se evalúa con paréntesis.
+    Grado menor o igual que <code>n</code> con <code>n+1</code> nodos.</p>
+    <div class="code-block">from scipy.interpolate import lagrange
+
+P = lagrange(x, y)
+
+P(2.5)        <span class="c"># 0.88</span>
+P.coef        <span class="c"># coeficientes de mayor a menor grado</span>
+P.deriv()     <span class="c"># derivada, otro poly1d</span></div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);">Reemplazo oficial en
+    versiones recientes de SciPy: <code>BarycentricInterpolator(x, y)</code>, mismo valor.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">3. Newton y <code>polyfit</code>: el mismo polinomio</div>
+    <p>Por <strong>unicidad</strong> del interpolante, la forma de Lagrange y la de Newton
+    son el mismo polinomio. SciPy no tiene una rutina de Newton.</p>
+    <div class="code-block">import numpy as np
+
+x = np.array([1.0, 2.0, 3.0, 4.0])
+y = np.array([0.0, 0.6, 1.1, 1.3])
+
+p = np.polyfit(x, y, 3)   <span class="c"># 4 puntos -> grado 3</span>
+
+np.polyval(p, 2.5)        <span class="c"># 0.88</span>
+
+<span class="c"># p = [-0.03, 0.15, 0.38, -0.50]</span></div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);"><code>polyfit</code>
+    devuelve los coeficientes de <strong>mayor a menor</strong> grado, y
+    <code>polyval</code> los espera en ese orden.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">4. Nodos de Chebyshev</div>
+    <p>Para <code>[a, b]</code> se trasladan con
+    <code>0.5*(b-a)*x_k + 0.5*(a+b)</code>.</p>
+    <div class="code-block">import numpy as np
+
+n = 10
+x_eq = np.linspace(-1, 1, n+1)    <span class="c"># 11 nodos entre -1 y 1</span>
+
+k      = np.arange(n+1)
+x_cheb = np.cos(k*np.pi/n)        <span class="c"># Chebyshev</span>
+
+f = lambda x: x**2
+
+p = np.polyfit(x_cheb, f(x_cheb), n)
+<span class="c"># coeficientes de mayor a menor</span></div>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">5. Mínimos cuadrados (<code>polyfit</code> con grado menor)</div>
+    <p>Con <code>m</code> puntos y grado menor que <code>m-1</code> el sistema es
+    sobredeterminado y <code>polyfit</code> devuelve la solución de mínimos cuadrados.</p>
+    <div class="code-block">import numpy as np
+
+xd = np.array([0., 1., 2., 3., 4., 5.])
+yd = np.array([1.1, 2.0, 3.2, 3.9, 5.1, 6.0])
+
+c = np.polyfit(xd, yd, 1)   <span class="c"># recta</span>
+<span class="c"># c = [0.99, 1.09]</span>
+
+r = yd - np.polyval(c, xd)  <span class="c"># residuos</span>
+np.sum(r**2)</div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);">Ajustes exponencial o
+    racional: linealizar con logaritmos y usar <code>polyfit</code> de grado 1.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">6. Spline lineal (<code>np.interp</code>)</div>
+    <p>Interpolación lineal por tramos: une los nodos con segmentos de recta.</p>
+    <div class="code-block">import numpy as np
+
+x = np.array([1.0, 2.0, 3.0, 4.0])
+y = np.array([0.0, 0.6, 1.1, 1.3])
+
+xq = 2.5                      <span class="c"># un punto</span>
+xx = np.linspace(1, 4, 200)
+
+np.interp(xq, x, y)   <span class="c"># evaluación en xq</span>
+np.interp(xx, x, y)   <span class="c"># vectorizado: evaluación en xx</span></div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);">Orden de los
+    argumentos: <code>np.interp(donde_evaluo, x, y)</code>.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">7. Spline cúbico (<code>CubicSpline</code>)</div>
+    <p><code>bc_type</code> fija las dos condiciones de frontera:</p>
+    <ul style="margin:0 0 10px 20px; font-size:0.95rem;">
+      <li><strong>Natural</strong>: <code>S''(a) = S''(b) = 0</code></li>
+      <li><strong>Clamped</strong>: <code>S'(a)</code>, <code>S'(b)</code> dados</li>
+      <li><strong>Not-a-knot</strong> (por defecto): continuidad de la tercera derivada en
+      los primeros y últimos nudos interiores</li>
+    </ul>
+    <div class="code-block">import numpy as np
+from scipy.interpolate import CubicSpline
+
+x = np.array([1.0, 2.0, 3.0, 4.0])
+y = np.array([0.0, 0.6, 1.1, 1.3])
+
+S = CubicSpline(x, y, bc_type='natural')
+
+S(2.5)             <span class="c"># 0.88</span>
+S(2.5, 1)          <span class="c"># derivada: 0.52</span></div>
+  </div>
+
+  <div class="alert-box">
+    <div class="icon">⚠️</div>
+    <p>Si el enunciado pide el <strong>spline natural</strong>, hay que escribir
+    <code>bc_type='natural'</code>. Sin ese argumento SciPy usa <code>'not-a-knot'</code>,
+    que es otra condición y da otro resultado.</p>
+  </div>
+
+  <h3>Resumen: método del tablero y su rutina</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Método</th><th>Llamada típica</th></tr></thead>
+      <tbody>
+        <tr><td>Lagrange</td><td><code>lagrange(x, y)(xq)</code></td></tr>
+        <tr><td>Newton (dif. divididas)</td><td><code>np.polyval(np.polyfit(x, y, n), xq)</code></td></tr>
+        <tr><td>Nodos de Chebyshev</td><td><code>np.cos(np.arange(n+1)*np.pi/n)</code></td></tr>
+        <tr><td>Mínimos cuadrados</td><td><code>np.polyfit(x, y, deg)</code> con <code>deg &lt; n</code></td></tr>
+        <tr><td>Spline lineal</td><td><code>np.interp(xq, x, y)</code></td></tr>
+        <tr><td>Spline cúbico natural</td><td><code>CubicSpline(x, y, bc_type='natural')(xq)</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ SECCIÓN 8: INTEGRACIÓN ══════════════ -->
+<div class="section" id="integracion">
+  <h2><span class="section-num">Sección 08</span>Guía de Python: Integración numérica</h2>
+
+  <p>Resumen de las rutinas de <code>scipy.integrate</code> y <code>numpy</code> que usamos
+  para aproximar <code>I = ∫ f(x) dx</code> entre <code>a</code> y <code>b</code>. La primera
+  pregunta decide la rutina: <strong>si tengo muestras</strong>, <code>trapezoid</code> o
+  <code>simpson</code>; <strong>si tengo la función</strong>, <code>fixed_quad</code> o
+  <code>quad</code>.</p>
+
+  <div class="card python">
+    <div class="card-label">1. Funciones o puntos</div>
+    <div class="code-block">import numpy as np
+
+f = lambda x: np.exp(-x**2)
+
+a, b = 0.0, 1.0   <span class="c"># extremos de la integral</span>
+
+N = 8             <span class="c"># subintervalos</span>
+
+xs = np.linspace(a, b, N+1)   <span class="c"># N+1 PUNTOS</span>
+ys = f(xs)                    <span class="c"># función evaluada</span>
+
+h = (b - a)/N     <span class="c"># tamaño de paso</span></div>
+  </div>
+
+  <div class="alert-box">
+    <div class="icon">⚠️</div>
+    <p>El error más frecuente del capítulo: confundir <code>N</code> subintervalos con
+    <code>N</code> puntos. Para <code>N</code> subintervalos hacen falta
+    <code>N+1</code> nodos.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">2. Regla del trapecio (<code>trapezoid</code>)</div>
+    <p>Trapecio compuesto. No exige nodos equiespaciados. Error del orden de
+    <code>h<sup>2</sup></code>.</p>
+    <div class="code-block">import numpy as np
+from scipy import integrate
+
+xs = np.linspace(a, b, N+1)   <span class="c"># N+1 PUNTOS</span>
+ys = f(xs)                    <span class="c"># función evaluada</span>
+h  = (b - a)/N                <span class="c"># tamaño de paso</span>
+
+I1 = integrate.trapezoid(ys, x=xs)   <span class="c"># si conozco los nodos</span>
+I2 = integrate.trapezoid(ys, dx=h)   <span class="c"># si solo conozco h</span></div>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">3. Regla de Simpson (<code>simpson</code>)</div>
+    <p>Parábolas por cada par de subintervalos. Error del orden de
+    <code>h<sup>4</sup></code>.</p>
+    <div class="code-block">import numpy as np
+from scipy import integrate
+
+xs = np.linspace(a, b, N+1)   <span class="c"># N+1 PUNTOS</span>
+ys = f(xs)                    <span class="c"># función evaluada</span>
+h  = (b - a)/N                <span class="c"># tamaño de paso</span>
+
+I1 = integrate.simpson(ys, x=xs)   <span class="c"># si conozco los nodos</span>
+I2 = integrate.simpson(ys, dx=h)   <span class="c"># si solo conozco h</span></div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);">Simpson necesita un
+    número <strong>par</strong> de subintervalos (impar de puntos).</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">4. Cuadratura gaussiana (<code>fixed_quad</code>)</div>
+    <p>Gauss-Legendre de orden fijo <code>n</code>: exacta para polinomios de grado hasta
+    <code>2n-1</code>. El cambio de variable a <code>[a, b]</code> lo hace por dentro.</p>
+    <div class="code-block">from scipy.integrate import fixed_quad
+
+I1 = fixed_quad(f, a, b, n=2)[0]  <span class="c"># 0.75</span>
+I2 = fixed_quad(f, a, b, n=3)[0]  <span class="c"># 0.75</span>
+I3 = fixed_quad(f, a, b, n=5)[0]  <span class="c"># 0.75</span></div>
+    <p style="margin-top:10px; font-size:0.9rem; color:var(--muted);">Con dos decimales los
+    tres coinciden. La diferencia está más abajo: <code>0.74659</code>,
+    <code>0.746815</code> y <code>0.7468241</code>, cada vez más cerca del valor exacto.</p>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">5. Pesos de Newton-Cotes (<code>newton_cotes</code>)</div>
+    <p>Devuelve los pesos <code>a<sub>i</sub></code> de la fórmula de integración
+    <code>∫ f ≈ dx · Σ a<sub>i</sub> f(x<sub>i</sub>)</code>.</p>
+    <div class="code-block">from scipy.integrate import newton_cotes
+import numpy as np
+
+def f(x):
+    return np.sin(x)
+
+a, b = 0, np.pi
+exact = 2   <span class="c"># integral exacta, para comparar</span>
+
+for N in [2, 4, 6, 8, 10]:
+    x = np.linspace(a, b, N + 1)
+
+    an, _ = newton_cotes(N, 1)   <span class="c"># fórmula con N+1 puntos equiespaciados</span>
+    <span class="c"># an : coeficientes de la regla de integración</span>
+
+    dx = (b - a) / N
+    cuad = dx * np.sum(an * f(x))   <span class="c"># cálculo de la integral</span>
+    error = abs(cuad - exact)</div>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">6. Nodos y pesos de Gauss (<code>leggauss</code>)</div>
+    <p>Nodos y pesos en el intervalo de referencia <code>[-1, 1]</code>. Hay que hacer el
+    cambio de variable a mano.</p>
+    <div class="code-block">import numpy as np
+
+n = 3   <span class="c"># orden</span>
+xg, wg = np.polynomial.legendre.leggauss(n)
+
+<span class="c"># xg = [-0.77, 0.00, 0.77]   (0, +-sqrt(3/5))</span>
+<span class="c"># wg = [ 0.56, 0.89, 0.56]   (5/9, 8/9, 5/9)</span>
+
+<span class="c"># cambio de variable</span>
+t = 0.5*(b-a)*xg + 0.5*(a+b)
+
+<span class="c"># integral</span>
+I = 0.5*(b-a)*np.sum(wg*f(t))   <span class="c"># 0.75</span></div>
+  </div>
+
+  <div class="card python">
+    <div class="card-label">7. Impropias (<code>quad</code>)</div>
+    <p>Trapecio y Simpson no sirven aquí. <code>quad</code> devuelve una tupla
+    <code>(valor, error estimado)</code>, por eso el <code>[0]</code>.</p>
+    <div class="code-block">import numpy as np
+from scipy.integrate import quad
+
+<span class="c"># integral de 1/sqrt(t) entre 0 y 1: singular en 0, pero converge</span>
+quad(lambda t: 1/np.sqrt(t), 0, 1)[0]     <span class="c"># 2.00</span>
+
+<span class="c"># integral de exp(-t) entre 0 e infinito: converge</span>
+quad(lambda t: np.exp(-t), 0, np.inf)[0]  <span class="c"># 1.00</span>
+
+<span class="c"># integral de exp(t) entre 0 e infinito: DIVERGE</span>
+quad(lambda t: np.exp(t), 0, np.inf)[0]   <span class="c"># inf</span></div>
+  </div>
+
+  <div class="alert-box">
+    <div class="icon">⚠️</div>
+    <p>Cuando la integral no converge, <code>quad</code> <strong>no lanza un error</strong>:
+    devuelve <code>inf</code> junto con un aviso. Siempre hay que mirar el resultado, no
+    asumir que todo número que sale es correcto.</p>
+  </div>
+
+  <h3>Resumen: método del tablero y su rutina</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead><tr><th>Método</th><th>Llamada típica</th><th>Recibe</th></tr></thead>
+      <tbody>
+        <tr><td>Trapecio compuesto</td><td><code>integrate.trapezoid(ys, x=xs)</code></td><td>muestras</td></tr>
+        <tr><td>Simpson compuesto</td><td><code>integrate.simpson(ys, x=xs)</code></td><td>muestras</td></tr>
+        <tr><td>Pesos de Newton-Cotes</td><td><code>newton_cotes(N, 1)</code></td><td>el orden</td></tr>
+        <tr><td>Cuadratura gaussiana</td><td><code>fixed_quad(f, a, b, n=3)[0]</code></td><td>función</td></tr>
+        <tr><td>Nodos y pesos de Gauss</td><td><code>np.polynomial.legendre.leggauss(n)</code></td><td>el orden</td></tr>
+        <tr><td>Adaptativo e impropias</td><td><code>quad(f, a, b)[0]</code></td><td>función</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip-profe">
+    <div class="icon">🎓</div>
+    <div class="tip-body">
+      <div class="tip-label">Lo mínimo que hay que llevarse</div>
+      <p>Muestras: <code>trapezoid</code> o <code>simpson</code>. Función:
+      <code>quad</code> si quiero el valor, <code>fixed_quad</code> si piden cuadratura
+      gaussiana de orden <code>n</code>. Infinitos o singularidades: siempre
+      <code>quad</code>.</p>
     </div>
   </div>
 </div>
